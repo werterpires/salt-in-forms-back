@@ -6,12 +6,7 @@ import { join } from 'path'
 export class CustomLoggerService implements LoggerService {
   private logFilePath = join(__dirname, '..', '..', '..', 'logs', 'app.log')
 
-  private writeLog(
-    level: string,
-    message: any,
-    trace?: string,
-    context?: string
-  ) {
+  private writeLog(level: string, message: any, trace?: any, context?: string) {
     const timestamp = new Date().toISOString()
     const logMessage = `[${timestamp}] [${level}] ${context ? `{${context}}` : ''} ${message} ${trace ? `\nStacktrace: ${trace}` : ''}\n`
     appendFileSync(this.logFilePath, logMessage)
@@ -21,8 +16,7 @@ export class CustomLoggerService implements LoggerService {
     this.writeLog('LOG', message, undefined, context)
   }
 
-  error(message: any, trace?: string, context?: string) {
-    console.log('trace', trace)
+  error(message: any, trace?: any, context?: string) {
     this.writeLog('ERROR', message, trace, context)
   }
 
@@ -30,11 +24,11 @@ export class CustomLoggerService implements LoggerService {
     this.writeLog('WARN', message, undefined, context)
   }
 
-  debug?(message: any) {
+  debug(message: any) {
     this.writeLog('DEBUG', message)
   }
 
-  verbose?(message: any) {
+  verbose(message: any) {
     this.writeLog('VERBOSE', message)
   }
 }
