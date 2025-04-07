@@ -61,7 +61,6 @@ describe('CustomLoggerService', () => {
     }
 
     service.error(message, undefined, context)
-    // expect(mockedAppendFileSync).toHaveBeenCalledTimes(1)
     expect(mockedAppendFileSync).toHaveBeenCalledWith(
       logFilePath,
       expect.stringContaining(`[ERROR] {${context}} ${message} \n`)
