@@ -20,6 +20,7 @@ export class GlobalErrorsFilter implements ExceptionFilter {
   }
   catch(exception: Error, host: ArgumentsHost) {
     this.logger.error(exception.message, exception.stack)
+
     const isHttpException = exception instanceof HttpException
     const status = isHttpException
       ? exception.getStatus()

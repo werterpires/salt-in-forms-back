@@ -1,11 +1,11 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
-import { CustomLoggerService } from '../utils-module/custom-logger/custom-logger.service'
+
+export const defaultError =
+  '#Erro interno. Informe o time de suporte para correção.'
 
 @Injectable()
 export class CustomErrorHandlerService {
-  constructor(private readonly logger: CustomLoggerService) {
-    this.logger.setContext(CustomErrorHandlerService.name)
-  }
+  constructor() {}
 
   internalErrors = [
     'ERR_ASSERTION',
@@ -16,14 +16,10 @@ export class CustomErrorHandlerService {
   ]
 
   handleErrors(error: Error): Error {
-    this.logger.error(error.message)
-
     if (error.message.startsWith('#')) {
       return error
     } else {
-      return new InternalServerErrorException(
-        '#Erro interno. Informe o time de suporte para correção.'
-      )
+      return new InternalServerErrorException(defaultError)
     }
   }
 }
