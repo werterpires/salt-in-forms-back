@@ -8,6 +8,9 @@ import { GlobalErrorsFilter } from './shared/custom-error-handler/global-errors.
 import { CustomErrorHandlerService } from './shared/custom-error-handler/custom-error-handler.service'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { KnexModule } from 'nest-knexjs'
+import { toSnakeCase } from './shared/utils'
+import camelcaseKeys from 'camelcase-keys'
+
 import { config } from 'dotenv'
 
 config()
@@ -52,6 +55,13 @@ const knex = KnexModule.forRoot({
         }
         return next()
       }
+    },
+    wrapIdentifier: (value, origImpl) => origImpl(toSnakeCase(value)),
+    postProcessResponse: (result) => {
+      if (Array.isArray(result)) {
+        return result.map((row) => camelcaseKeys(row, { deep: true }))
+      }
+      return camelcaseKeys(result, { deep: true })
     }
   }
 })
