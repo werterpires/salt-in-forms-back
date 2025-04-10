@@ -1,12 +1,29 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import type { Knex } from 'knex'
+import * as dotenv from 'dotenv'
+import { toSnakeCase } from './src/shared/utils'
+import camelcaseKeys from 'camelcase-keys'
+dotenv.config()
 
 // Update with your config settings.
 
 const config: { [key: string]: Knex.Config } = {
   development: {
-    client: 'sqlite3',
+    client: 'mysql2',
     connection: {
-      filename: './dev.sqlite3'
+      host: process.env.SQL_HOST,
+      user: process.env.SQL_USER,
+      password: process.env.SQL_PASS,
+      database: process.env.SQL_DB,
+      port: 3306
+    },
+    wrapIdentifier: (value, origImpl) => origImpl(toSnakeCase(value)),
+    postProcessResponse: (result) => {
+      if (Array.isArray(result)) {
+        return result.map((row) => camelcaseKeys(row, { deep: true }))
+      }
+      return camelcaseKeys(result, { deep: true })
     }
   },
 
