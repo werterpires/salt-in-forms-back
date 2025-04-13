@@ -12,6 +12,7 @@ import { toSnakeCase } from './shared/utils'
 import camelcaseKeys from 'camelcase-keys'
 
 import { config } from 'dotenv'
+import { AuthModule } from './shared/auth/auth.module';
 
 config()
 
@@ -70,7 +71,7 @@ const knex = KnexModule.forRoot(
 )
 
 @Module({
-  imports: [UtilsModuleModule, throttler, knex],
+  imports: [UtilsModuleModule, throttler, knex, AuthModule],
   controllers: [],
   providers: [
     CustomErrorHandlerService,
