@@ -12,7 +12,6 @@ import { toSnakeCase } from './shared/utils'
 import camelcaseKeys from 'camelcase-keys'
 
 import { config } from 'dotenv'
-import { UsersModule } from './users/users.module';
 
 config()
 
@@ -25,50 +24,53 @@ const throttler = ThrottlerModule.forRoot({
   ]
 })
 
-const knex = KnexModule.forRoot({
-  config: {
-    client: 'mysql2',
-    connection: {
-      host: process.env.SQL_HOST,
-      user: process.env.SQL_USER,
-      password: process.env.SQL_PASS,
-      database: process.env.SQL_DB,
-      port: 3306,
-      typeCast: function (field, next) {
-        if (field.type === 'TINY' && field.length === 1) {
-          // retorna tipo booleano ou null
-          switch (field.string()) {
-            case null:
-            case undefined:
-            case '':
-            case 'null':
-            case 'NULL':
-              return null
-            case '0':
-              return false
-            case '1':
-              return true
+const knex = KnexModule.forRoot(
+  {
+    config: {
+      client: 'mysql2',
+      connection: {
+        host: process.env.SQL_HOST,
+        user: process.env.SQL_USER,
+        password: process.env.SQL_PASS,
+        database: process.env.SQL_DB,
+        port: 3306,
+        typeCast: function (field, next) {
+          if (field.type === 'TINY' && field.length === 1) {
+            // retorna tipo booleano ou null
+            switch (field.string()) {
+              case null:
+              case undefined:
+              case '':
+              case 'null':
+              case 'NULL':
+                return null
+              case '0':
+                return false
+              case '1':
+                return true
+            }
+          } else if (field.type === 'DATE' && field.length > 1) {
+            return field.string() // 1 = true, 0 = false
+          } else if (field.type === 'DATETIME' && field.length > 1) {
+            return field.string().substring(0, 10) // 1 = true, 0 = false
           }
-        } else if (field.type === 'DATE' && field.length > 1) {
-          return field.string() // 1 = true, 0 = false
-        } else if (field.type === 'DATETIME' && field.length > 1) {
-          return field.string().substring(0, 10) // 1 = true, 0 = false
+          return next()
         }
-        return next()
+      },
+      wrapIdentifier: (value, origImpl) => origImpl(toSnakeCase(value)),
+      postProcessResponse: (result) => {
+        if (Array.isArray(result)) {
+          return result.map((row) => camelcaseKeys(row, { deep: true }))
+        }
+        return camelcaseKeys(result, { deep: true })
       }
-    },
-    wrapIdentifier: (value, origImpl) => origImpl(toSnakeCase(value)),
-    postProcessResponse: (result) => {
-      if (Array.isArray(result)) {
-        return result.map((row) => camelcaseKeys(row, { deep: true }))
-      }
-      return camelcaseKeys(result, { deep: true })
     }
-  }
-})
+  },
+  'knexx'
+)
 
 @Module({
-  imports: [UtilsModuleModule, throttler, knex, UsersModule],
+  imports: [UtilsModuleModule, throttler, knex],
   controllers: [],
   providers: [
     CustomErrorHandlerService,
