@@ -25,5 +25,5 @@ export class LoginDto {
         '#A senha deve possuir letras minúsculas, maiúsculas, numeros, caracteres especiais e ter de 8 a 16 caracteres.'
     }
   )
-  userPassword: string
+  password: string
 }
