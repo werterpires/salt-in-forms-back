@@ -1,5 +1,9 @@
+export interface CreateUser {
+  userEmail: string
+  userName: string
+}
+
 export interface User {
-  userPassword: string
   userId: number
   userEmail: string
   userActive: boolean

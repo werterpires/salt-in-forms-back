@@ -1,6 +1,6 @@
 import { ConsoleLogger, Injectable, Scope } from '@nestjs/common'
-import { appendFileSync } from 'fs'
-import { join } from 'path'
+import { appendFileSync, existsSync, mkdirSync } from 'fs'
+import { join, dirname } from 'path'
 
 @Injectable({ scope: Scope.TRANSIENT })
 export class CustomLoggerService extends ConsoleLogger {
@@ -14,6 +14,13 @@ export class CustomLoggerService extends ConsoleLogger {
     'app.log'
   )
 
+  private ensureLogDirectoryExists() {
+    const dir = dirname(this.logFilePath)
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true })
+    }
+  }
+
   private writeLog(level: string, message: any, trace?: any, context?: string) {
     const timestamp = new Date().toISOString()
     const logMessage = `[${timestamp}] [${level}] ${context ? `{${context}}` : ''} ${message} ${trace ? `\nStacktrace: ${trace}` : ''}\n`
@@ -23,6 +30,7 @@ export class CustomLoggerService extends ConsoleLogger {
       return
     }
 
+    this.ensureLogDirectoryExists()
     appendFileSync(this.logFilePath, logMessage)
   }
 

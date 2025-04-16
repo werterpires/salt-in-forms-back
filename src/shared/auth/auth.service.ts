@@ -3,7 +3,6 @@ import {
   Injectable,
   UnauthorizedException
 } from '@nestjs/common'
-import { User } from 'src/users/types'
 import { AuthRepo } from './auth.repo'
 import * as bcrypt from 'bcrypt'
 import { CustomErrors } from '../custom-error-handler/erros.enum'
@@ -16,8 +15,8 @@ export class AuthService {
     private readonly authRepo: AuthRepo,
     private readonly jwtService: JwtService
   ) {}
-  async validateUser(email: string, password: string): Promise<User> {
-    const user: User | undefined =
+  async validateUser(email: string, password: string): Promise<ValidateUser> {
+    const user: ValidateUser | undefined =
       await this.authRepo.findUserByEmailForLogin(email)
 
     if (user && user.userId > 0) {

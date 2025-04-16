@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Module } from '@nestjs/common'
 import { UtilsModuleModule } from './shared/utils-module/utils-module.module'
 import { APP_FILTER, APP_GUARD } from '@nestjs/core'
@@ -12,7 +9,8 @@ import { toSnakeCase } from './shared/utils'
 import camelcaseKeys from 'camelcase-keys'
 
 import { config } from 'dotenv'
-import { AuthModule } from './shared/auth/auth.module';
+import { AuthModule } from './shared/auth/auth.module'
+import { UsersModule } from './users/users.module'
 
 config()
 
@@ -71,7 +69,7 @@ const knex = KnexModule.forRoot(
 )
 
 @Module({
-  imports: [UtilsModuleModule, throttler, knex, AuthModule],
+  imports: [UtilsModuleModule, throttler, knex, AuthModule, UsersModule],
   controllers: [],
   providers: [
     CustomErrorHandlerService,
