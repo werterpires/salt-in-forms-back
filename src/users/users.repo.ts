@@ -9,11 +9,12 @@ export class UsersRepo {
   constructor(@InjectConnection('knexx') private readonly knex: Knex) {}
 
   async createUser(createUserData: CreateUser): Promise<number> {
-    const { userEmail, userName } = createUserData
+    const { userEmail, userName, userInviteCode } = createUserData
     const [userId] = await this.knex(db.Tables.USERS).insert({
       [db.Users.USER_NAME]: userName,
       [db.Users.USER_EMAIL]: userEmail,
-      [db.Users.USER_ACTIVE]: true
+      [db.Users.USER_ACTIVE]: true,
+      [db.Users.USER_INVITE_CODE]: userInviteCode
     })
 
     return userId

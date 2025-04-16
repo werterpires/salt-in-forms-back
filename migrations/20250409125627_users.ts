@@ -13,6 +13,8 @@ export async function up(knex: Knex): Promise<void> {
     table.string(db.Users.USER_PASSWORD, 60)
     table.string(db.Users.USER_PASSWORD_RECOVER_CODE, 45)
     table.boolean(db.Users.USER_ACTIVE).defaultTo(true).notNullable()
+    table.string(db.Users.USER_INVITE_CODE, 45).unique().notNullable()
+    table.timestamps(true, true)
   })
 }
 

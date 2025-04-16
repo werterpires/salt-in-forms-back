@@ -22,3 +22,11 @@ export interface UserPayload {
 export interface AuthRequest extends Request {
   user: ValidateUser
 }
+
+export interface Logon {
+  userId: number
+  userNameHash: string
+  cpfHash: string
+  passwordHash: string
+  userEmail: string
+}

@@ -9,5 +9,6 @@ export enum Users {
   USER_EMAIL = 'userEmail',
   USER_PASSWORD = 'userPassword',
   USER_PASSWORD_RECOVER_CODE = 'userPasswordRecoverCode',
-  USER_ACTIVE = 'userActive'
+  USER_ACTIVE = 'userActive',
+  USER_INVITE_CODE = 'userInviteCode'
 }
