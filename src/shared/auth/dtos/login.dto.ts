@@ -1,10 +1,4 @@
-import {
-  IsEmail,
-  IsNotEmpty,
-  Matches,
-  MaxLength,
-  MinLength
-} from 'class-validator'
+import { IsEmail, IsNotEmpty, Length, Matches } from 'class-validator'
 
 export class LoginDto {
   @IsEmail(
@@ -15,9 +9,12 @@ export class LoginDto {
   )
   userEmail: string
 
-  @IsNotEmpty()
-  @MinLength(8)
-  @MaxLength(16)
+  @IsNotEmpty({
+    message: '#A senha deve ser informada.'
+  })
+  @Length(8, 16, {
+    message: '#A senha deve ter de 8 a 16 caracteres.'
+  })
   @Matches(
     /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+-={}|[\]:";'<>,.?/~`]).{8,}$/,
     {

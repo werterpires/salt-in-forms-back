@@ -4,15 +4,7 @@ import { join, dirname } from 'path'
 
 @Injectable({ scope: Scope.TRANSIENT })
 export class CustomLoggerService extends ConsoleLogger {
-  private logFilePath = join(
-    __dirname,
-    '..',
-    '..',
-    '..',
-    '..',
-    'logs',
-    'app.log'
-  )
+  private logFilePath = join(process.cwd(), 'logs', 'app.log')
 
   private ensureLogDirectoryExists() {
     const dir = dirname(this.logFilePath)

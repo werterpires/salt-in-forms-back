@@ -9,12 +9,13 @@ export class AuthRepo {
   constructor(@InjectConnection('knexx') private readonly knex: Knex) {}
 
   async updateUserToLogon(userLogon: Logon) {
-    const { userId, passwordHash, userNameHash, userEmail } = userLogon
+    const { userId, passwordHash, userNameHash, userEmail, cpfHash } = userLogon
     await this.knex(Tables.USERS)
       .update({
         [Users.USER_PASSWORD]: passwordHash,
         [Users.USER_NAME]: userNameHash,
-        [Users.USER_EMAIL]: userEmail
+        [Users.USER_EMAIL]: userEmail,
+        [Users.USER_CPF]: cpfHash
       })
       .where(Users.USER_ID, userId)
   }

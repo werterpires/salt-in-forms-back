@@ -4,16 +4,25 @@ import { AuthController } from './auth.controller'
 import { LoginValidationMiddleware } from './middlewares/login-validation.middleware'
 import { JwtModule } from '@nestjs/jwt'
 import { AuthRepo } from './auth.repo'
+import { LocalStrategy } from './strategies/local.strategy'
+import { PassportModule } from '@nestjs/passport'
+import { ConfigModule, ConfigService } from '@nestjs/config'
 
-const jwtModule = JwtModule.register({
-  secret: process.env.JWT_SECRET,
-  signOptions: { expiresIn: '12h' }
-})
-
-const services = [AuthService, AuthRepo]
+const services = [AuthService, AuthRepo, LocalStrategy]
 
 @Module({
-  imports: [jwtModule],
+  imports: [
+    ConfigModule, // Importa aqui no módulo local
+    PassportModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '12h' }
+      })
+    })
+  ],
   controllers: [AuthController],
   providers: services
 })
