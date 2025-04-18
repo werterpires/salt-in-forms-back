@@ -12,11 +12,13 @@ import { AuthService } from './auth.service'
 import { LocalAuthGuard } from './guards/local-auth.guard'
 import { AuthRequest } from './types'
 import { LogonDto } from './dtos/logon.dto'
+import { IsPublic } from './decorators/is-public.decorator'
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @IsPublic()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard)

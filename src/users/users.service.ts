@@ -3,7 +3,7 @@ import { UsersRepo } from './users.repo'
 import { CreateUserDto } from './dtos/create-user.dto'
 import { CreateUser, User } from './types'
 import { randomBytes } from 'crypto'
-import { RoleId } from 'src/constants/roles.const'
+import { ERoles } from 'src/constants/roles.const'
 
 @Injectable()
 export class UsersService {
@@ -26,7 +26,7 @@ export class UsersService {
   }
 
   areValidRoles(userRoles: number[]): boolean {
-    const validIds = Object.values(RoleId)
+    const validIds = Object.values(ERoles)
     return userRoles.every((roleId) => validIds.includes(roleId))
   }
 

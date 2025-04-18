@@ -38,7 +38,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         throw new UnauthorizedException(error.message)
       }
 
-      throw new UnauthorizedException()
+      throw new UnauthorizedException(
+        '#É preciso fazer login para acessar esse recurso'
+      )
     })
   }
 }
