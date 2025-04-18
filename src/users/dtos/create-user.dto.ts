@@ -1,4 +1,4 @@
-import { IsString, Length } from 'class-validator'
+import { IsArray, IsNumber, IsString, Length } from 'class-validator'
 
 export class CreateUserDto {
   @IsString()
@@ -12,4 +12,13 @@ export class CreateUserDto {
     message: '#O email deve ter no mínimo 5 e no máximo 255 caracteres'
   })
   userEmail: string
+
+  @IsNumber(
+    {},
+    { each: true, message: '#Os IDs dos papéis de usuário devem ser numéricos' }
+  )
+  @IsArray({
+    message: '#Os IDs dos papéis de usuário devem ser uma sequencia de números'
+  })
+  userRoles: number[]
 }

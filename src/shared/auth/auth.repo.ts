@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
-import { Tables, Users } from 'src/constants/db-schema.enum'
+import { Tables, Users, UsersRoles } from 'src/constants/db-schema.enum'
 import { Logon, ValidateUser as ValidateUser } from './types'
 
 @Injectable()
@@ -23,7 +23,7 @@ export class AuthRepo {
   async findUserByEmailForLogin(
     email: string
   ): Promise<ValidateUser | undefined> {
-    const user = (await this.knex<ValidateUser>(Tables.USERS)
+    const user = await this.knex<ValidateUser>(Tables.USERS)
       .select(
         Users.USER_PASSWORD,
         Users.USER_ID,
@@ -32,9 +32,15 @@ export class AuthRepo {
         Users.USER_NAME
       )
       .where(Users.USER_EMAIL, email)
-      .first()) as ValidateUser | undefined
+      .first()
 
-    return user
+    const userRoles = await this.knex<ValidateUser>(Tables.USERS_ROLES)
+      .select(UsersRoles.ROLE_ID)
+      .where(UsersRoles.USER_ID, user.userId)
+
+    user.userRoles = userRoles.map((role) => role.roleId)
+
+    return user as ValidateUser
   }
 
   async findUserByInvitationCodeForLogon(

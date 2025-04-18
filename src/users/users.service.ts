@@ -3,12 +3,18 @@ import { UsersRepo } from './users.repo'
 import { CreateUserDto } from './dtos/create-user.dto'
 import { CreateUser, User } from './types'
 import { randomBytes } from 'crypto'
+import { RoleId } from 'src/constants/roles.const'
 
 @Injectable()
 export class UsersService {
   constructor(private readonly usersRepo: UsersRepo) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
+    const unexistingRoles = createUserDto.userRoles.length == 0
+    if (unexistingRoles || !this.areValidRoles(createUserDto.userRoles)) {
+      throw new Error('#Um ou mais papéis de usuário são inválidos.')
+    }
+
     const createUserData: CreateUser = {
       ...createUserDto,
       userInviteCode: this.generateInviteCode()
@@ -17,6 +23,11 @@ export class UsersService {
     const userId = await this.usersRepo.createUser(createUserData)
     const user = await this.usersRepo.findUserById(userId)
     return user
+  }
+
+  areValidRoles(userRoles: number[]): boolean {
+    const validIds = Object.values(RoleId)
+    return userRoles.every((roleId) => validIds.includes(roleId))
   }
 
   generateInviteCode(): string {

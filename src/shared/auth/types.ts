@@ -4,6 +4,7 @@ export interface ValidateUser {
   userEmail: string
   userActive: boolean
   userName: string
+  userRoles: number[]
 }
 
 export interface UserToken {
@@ -15,6 +16,7 @@ export interface UserPayload {
   sub: number
   userName: string
   userActive: boolean
+  usersRoles: number[]
   iat?: number
   exp?: number
 }

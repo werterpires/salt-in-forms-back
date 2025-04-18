@@ -2,6 +2,7 @@ export interface CreateUser {
   userEmail: string
   userName: string
   userInviteCode: string
+  userRoles: number[]
 }
 
 export interface User {

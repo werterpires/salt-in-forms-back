@@ -5,5 +5,6 @@ export const user: ValidateUser = {
   userName: 'João',
   userEmail: 'o6lXj@example.com',
   userPassword: 'senha123',
-  userActive: true
+  userActive: true,
+  userRoles: [1, 2]
 }
