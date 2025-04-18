@@ -11,6 +11,7 @@ import camelcaseKeys from 'camelcase-keys'
 import { config } from 'dotenv'
 import { AuthModule } from './shared/auth/auth.module'
 import { UsersModule } from './users/users.module'
+import { JwtAuthGuard } from './shared/auth/guards/jwt-auth.guard'
 
 config()
 
@@ -74,7 +75,8 @@ const knex = KnexModule.forRoot(
   providers: [
     CustomErrorHandlerService,
     { provide: APP_FILTER, useClass: GlobalErrorsFilter },
-    { provide: APP_GUARD, useClass: ThrottlerGuard }
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: JwtAuthGuard }
   ]
 })
 export class AppModule {}
