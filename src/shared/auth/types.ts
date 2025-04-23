@@ -8,7 +8,7 @@ export interface ValidateUser {
 }
 
 export interface UserToken {
-  access_token: string
+  accessToken: string
 }
 
 export interface UserPayload {

@@ -2,10 +2,16 @@ import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { CustomLoggerService } from './shared/utils-module/custom-logger/custom-logger.service'
 import { ValidationPipe } from '@nestjs/common'
+import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface'
+
+const corsOptions: CorsOptions = {
+  origin: 'http://localhost:4200'
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    bufferLogs: true
+    bufferLogs: true,
+    cors: corsOptions
   })
   app.useGlobalPipes(
     new ValidationPipe({
