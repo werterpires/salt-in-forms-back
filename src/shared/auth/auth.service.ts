@@ -70,6 +70,8 @@ export class AuthService {
         throw new ForbiddenException(CustomErrors.INACTIVE_USER)
       }
 
+      user.userName = this.encryptionService.decrypt(user.userName)
+
       return {
         ...user,
         userPassword: ''
