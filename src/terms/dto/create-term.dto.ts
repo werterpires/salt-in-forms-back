@@ -1,4 +1,4 @@
-import { IsNumber, IsString } from 'class-validator'
+import { IsNumber, IsString, MinLength } from 'class-validator'
 
 export class CreateTermDto {
   @IsNumber({}, { message: '#O ID do papel de usuário deve ser numérico.' })
@@ -8,6 +8,9 @@ export class CreateTermDto {
   termTypeId: number
 
   @IsString({ message: '#Texto do termos de usuário inválido.' })
+  @MinLength(100, {
+    message: '#Texto do termo deve ter pelo menos 100 caracteres.'
+  })
   termText: string
 
   @IsString({

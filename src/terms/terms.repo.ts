@@ -177,8 +177,10 @@ export class TermsRepo {
       applyFilters(filters, query)
     }
     query.countDistinct(db.Terms.TERM_ID)
-    const results = await query
+    const [results] = await query
 
-    return Math.ceil(results[0]?.count / this.elementsPerPage) || 0
+    const countKey = Object.keys(results)[0]
+    const count = Number(results[countKey])
+    return Math.ceil(count / this.elementsPerPage) || 0
   }
 }

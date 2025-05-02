@@ -7,6 +7,7 @@ import { UpdateTermDto } from './dto/update-term.dto'
 import { TermsRepo } from './terms.repo'
 import { Knex } from 'knex'
 import * as db from 'src/constants/db-schema.enum'
+import * as utils from 'src/shared/utils'
 
 export enum UpdateCases {
   TEXT_BEGIN_DATE_TYPE = 3,
@@ -24,8 +25,10 @@ export function getUpdateCase(
   const diferentType = updateTermDto.termTypeId != term.termTypeId
   // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
   const diferentRole = updateTermDto.roleId != term.roleId
+
   const diferentBeginDate =
-    new Date(updateTermDto.beginDate).getTime() !== term.beginDate.getTime()
+    new Date(updateTermDto.beginDate).getTime() !==
+    new Date(term.beginDate).getTime()
 
   if (diferentType || diferentRole) {
     return UpdateCases.TEXT_BEGIN_DATE_TYPE
@@ -39,7 +42,7 @@ export function getUpdateCase(
 }
 
 export function getCreateTermData(createTermDto: CreateTermDto): CreateTerm {
-  const beginDate = new Date(createTermDto.beginDate)
+  const beginDate = utils.getDateFromString(createTermDto.beginDate)
 
   const createTermData: CreateTerm = {
     ...createTermDto,
@@ -91,8 +94,9 @@ export function validateDto(createTermDto: CreateTermDto) {
 }
 
 export function validateOpenTerm(currentTerm: Term | undefined) {
+  console.log('currentTerm', currentTerm)
   if (currentTerm !== undefined) {
-    const openTermIsActive = currentTerm.beginDate > new Date()
+    const openTermIsActive = new Date(currentTerm.beginDate) <= new Date()
     if (!openTermIsActive) {
       throw new BadRequestException(
         '#Você já criou um termo substituto para o papel e tipo de termo selecionado. '
@@ -108,7 +112,7 @@ export function subtractDays(date: Date, days: number): Date {
 }
 
 export function validateCurrentTermTo(term: Term) {
-  if (term.beginDate <= new Date()) {
+  if (new Date(term.beginDate) <= new Date()) {
     throw new BadRequestException(
       '#Termo não pode ser excluído ou editado, pois ele está ou já esteve ativo.'
     )

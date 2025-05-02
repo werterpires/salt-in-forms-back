@@ -9,6 +9,7 @@ import {
 import { Request, Response } from 'express'
 import { CustomErrorHandlerService } from './custom-error-handler.service'
 import { CustomLoggerService } from '../utils-module/custom-logger/custom-logger.service'
+import { v4 as uuidv4 } from 'uuid'
 
 @Catch()
 export class GlobalErrorsFilter implements ExceptionFilter {
@@ -19,7 +20,8 @@ export class GlobalErrorsFilter implements ExceptionFilter {
     this.logger.setContext(GlobalErrorsFilter.name)
   }
   catch(exception: Error, host: ArgumentsHost) {
-    this.logger.error(exception.message, exception.stack)
+    const uniqueId = uuidv4()
+    this.logger.error(`[${uniqueId}] ${exception.message}`, exception.stack)
 
     const isHttpException = exception instanceof HttpException
     const status = isHttpException
@@ -30,10 +32,11 @@ export class GlobalErrorsFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>()
 
     let errorResponse: string | object
-    if (isHttpException) {
+
+    if (isHttpException && exception.message.startsWith('#')) {
       errorResponse = exception.getResponse()
     } else {
-      errorResponse = this.errorsService.handleErrors(exception)
+      errorResponse = this.errorsService.handleErrors(exception, uniqueId)
     }
 
     response.status(status).json({

@@ -30,7 +30,7 @@ export class TermsService {
 
     const createTermData: CreateTerm = getCreateTermData(createTermDto)
 
-    await this.termsRepo.createTerm(createTermData)
+    await this.termsRepo.createTerm(createTermData, openTerm)
   }
 
   async findAllTerms(paginator: Paginator, filters?: TermFilter) {

@@ -7,8 +7,9 @@ import { AuthRepo } from './auth.repo'
 import { LocalStrategy } from './strategies/local.strategy'
 import { PassportModule } from '@nestjs/passport'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { JwtStrategy } from './strategies/jwt.strategy'
 
-const services = [AuthService, AuthRepo, LocalStrategy]
+const services = [AuthService, AuthRepo, LocalStrategy, JwtStrategy]
 
 @Module({
   imports: [

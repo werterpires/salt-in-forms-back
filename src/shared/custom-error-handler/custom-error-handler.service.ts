@@ -1,7 +1,14 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common'
+import {
+  BadRequestException,
+  HttpException,
+  Injectable,
+  InternalServerErrorException
+} from '@nestjs/common'
 
 export const defaultError =
-  '#Erro interno. Informe o time de suporte para correção.'
+  '#Erro interno. Informe o seguinte ID para o time de suporte: '
+
+const conectError = 'connect ECONNREFUSED'
 
 @Injectable()
 export class CustomErrorHandlerService {
@@ -15,11 +22,29 @@ export class CustomErrorHandlerService {
     'ER_NON_UNIQ_ERROR'
   ]
 
-  handleErrors(error: Error): Error {
+  handleErrors(error: Error, uniqueId: string): Error {
     if (error.message.startsWith('#')) {
       return error
+    } else if (error.message.includes(conectError)) {
+      return new InternalServerErrorException(
+        '#Erro de conexão com o banco de dados. Informe o seguinte ID para o time de suporte: ' +
+          uniqueId
+      )
+    } else if (error instanceof HttpException) {
+      const response = error.getResponse()
+      if (
+        typeof response === 'object' &&
+        'message' in response &&
+        Array.isArray(response.message) &&
+        response.message.length > 0 &&
+        typeof response.message[0].startsWith('#')
+      ) {
+        return new BadRequestException(response.message[0])
+      }
+
+      return error
     } else {
-      return new InternalServerErrorException(defaultError)
+      return new InternalServerErrorException(defaultError + uniqueId)
     }
   }
 }

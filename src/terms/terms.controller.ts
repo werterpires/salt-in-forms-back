@@ -23,12 +23,12 @@ export class TermsController {
 
   @Roles(ERoles.ADMIN)
   @Post()
-  createTerm(@Body() createTermDto: CreateTermDto) {
-    return this.termsService.createTerm(createTermDto)
+  async createTerm(@Body() createTermDto: CreateTermDto): Promise<void> {
+    return await this.termsService.createTerm(createTermDto)
   }
 
   @Roles(ERoles.ADMIN)
-  @Get('')
+  @Get()
   findAll(
     @Query('direction') direction: string,
     @Query('page') page: string,
@@ -38,19 +38,19 @@ export class TermsController {
     @Query('onlyActive') onlyActive: boolean
   ) {
     const paginator: Paginator = {
-      column: Object.keys(db.Terms).includes(column)
+      column: Object.values(db.Terms).includes(column as db.Terms)
         ? column
         : db.Terms.BEGIN_DATE,
-      direction: Object.keys(Direction).includes(direction)
+      direction: Object.values(Direction).includes(direction as Direction)
         ? (direction as Direction)
         : Direction.ASC,
       page: +page || 1
     }
 
     const filters: TermFilter = {
-      roleId: +roleId,
-      termTypeId: +termTypeId,
-      onlyActive
+      roleId: +roleId || undefined,
+      termTypeId: +termTypeId || undefined,
+      onlyActive: onlyActive || undefined
     }
 
     return this.termsService.findAllTerms(paginator, filters)
