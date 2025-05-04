@@ -1,23 +1,32 @@
-import { Injectable } from '@nestjs/common'
-import { UsersRepo } from './users.repo'
+import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { UserFromJwt } from 'src/shared/auth/types'
+import { FindAllResponse, Paginator } from 'src/shared/types/types'
 import { CreateUserDto } from './dtos/create-user.dto'
-import { CreateUser, User } from './types'
-import { randomBytes } from 'crypto'
-import { ERoles } from 'src/constants/roles.const'
+import { UpdateOwnUserDto } from './dtos/update-own-user.dto'
+import { UpdateUserDto } from './dtos/update-user.dto'
+import { CreateUser, User, UserFilter } from './types'
+import { areValidRoles, generateInviteCode } from './users.helper'
+import { UsersRepo } from './users.repo'
+import { UpdatePasswordDto } from './dtos/update-pass.dto'
+import * as bcrypt from 'bcrypt'
+import { EncryptionService } from 'src/shared/utils-module/encryption/encryption.service'
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepo: UsersRepo) {}
+  constructor(
+    private readonly usersRepo: UsersRepo,
+    private readonly encryptionService: EncryptionService
+  ) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     const unexistingRoles = createUserDto.userRoles.length == 0
-    if (unexistingRoles || !this.areValidRoles(createUserDto.userRoles)) {
+    if (unexistingRoles || !areValidRoles(createUserDto.userRoles)) {
       throw new Error('#Um ou mais papéis de usuário são inválidos.')
     }
 
     const createUserData: CreateUser = {
       ...createUserDto,
-      userInviteCode: this.generateInviteCode()
+      userInviteCode: generateInviteCode()
     }
 
     const userId = await this.usersRepo.createUser(createUserData)
@@ -25,15 +34,62 @@ export class UsersService {
     return user
   }
 
-  areValidRoles(userRoles: number[]): boolean {
-    const validIds = Object.values(ERoles)
-    return userRoles.every((roleId) => validIds.includes(roleId))
+  async findAllUsers(orderBy: Paginator, filters?: UserFilter) {
+    const users: User[] = await this.usersRepo.findAllUsers(orderBy, filters)
+    for (const user of users) {
+      user.userName = this.encryptionService.decrypt(user.userName)
+
+      const roles = await this.usersRepo.findRolesByUserId(user.userId)
+
+      console.log('ROLES', roles)
+
+      user.userRoles = roles
+    }
+    const usersQuantity = await this.usersRepo.findUsersQuantity(filters)
+
+    const usersResponse: FindAllResponse<User> = {
+      data: users,
+      pagesQuantity: usersQuantity
+    }
+
+    console.log('RESPONSE', usersResponse.data[0].userRoles)
+
+    return usersResponse
   }
 
-  generateInviteCode(): string {
-    const timestamp = Date.now().toString(36)
-    const randomPart = randomBytes(32).toString('base64url')
-    const inviteCode = (timestamp + randomPart).slice(0, 45)
-    return inviteCode
+  async updateUser(updateUserData: UpdateUserDto) {
+    await this.usersRepo.updateUser(updateUserData)
+  }
+
+  async updateOwnUser(
+    updateUserData: UpdateOwnUserDto,
+    userFromJwt: UserFromJwt
+  ) {
+    const realUpdatedUser = this.usersRepo.findUserById(updateUserData.userId)
+    if ((await realUpdatedUser).userId != userFromJwt.userId) {
+      throw new UnauthorizedException('#Não é possivel atualizar outro usuario')
+    }
+
+    await this.usersRepo.updateOwnUser(updateUserData)
+  }
+
+  async findOwnUser(userId: number) {
+    return await this.usersRepo.findUserById(userId)
+  }
+
+  async updatePassword(userId: number, updatePasswordDto: UpdatePasswordDto) {
+    const currentPassHash = await this.usersRepo.findPasswordByUserId(userId)
+    const isValidPassword = await bcrypt.compare(
+      updatePasswordDto.oldPassword,
+      currentPassHash
+    )
+
+    if (!isValidPassword) {
+      throw new Error('#A senha antiga fornecida é inválida.')
+    }
+
+    const passwordHash = await bcrypt.hash(updatePasswordDto.newPassword, 10)
+
+    await this.usersRepo.updatePassword(userId, passwordHash)
   }
 }

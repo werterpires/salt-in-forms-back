@@ -19,14 +19,14 @@ import { UpdateTermDto } from './dto/update-term.dto'
 export class TermsService {
   constructor(private readonly termsRepo: TermsRepo) {}
   async createTerm(createTermDto: CreateTermDto) {
-    validateDto(createTermDto) //ok 1
+    validateDto(createTermDto)
 
     const openTerm = await this.termsRepo.findCurrentTermByRoleAndType(
       createTermDto.roleId,
       createTermDto.termTypeId
     )
 
-    validateOpenTerm(openTerm) //
+    validateOpenTerm(openTerm)
 
     const createTermData: CreateTerm = getCreateTermData(createTermDto)
 

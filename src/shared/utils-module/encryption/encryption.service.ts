@@ -20,6 +20,7 @@ export class EncryptionService {
   }
 
   decrypt(encryptedText: string): string {
+    if (!encryptedText.includes(':')) return encryptedText
     const [ivHex, encryptedHex] = encryptedText.split(':')
     const iv = Buffer.from(ivHex, this.bufferFormat)
     const encrypted = Buffer.from(encryptedHex, this.bufferFormat)

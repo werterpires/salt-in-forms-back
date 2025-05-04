@@ -6,11 +6,15 @@ export async function up(knex: Knex): Promise<void> {
   if (hasTable) return
 
   return knex.schema.createTable(db.Tables.USERS_ROLES, (table) => {
-    table.integer(db.UsersRoles.USER_ID).primary().unsigned()
-    table.integer(db.UsersRoles.ROLE_ID).primary().unsigned()
+    table.integer(db.UsersRoles.USER_ID).unsigned().notNullable()
+    table.integer(db.UsersRoles.ROLE_ID).unsigned().notNullable()
     table.boolean(db.UsersRoles.USER_ROLE_ACTIVE).defaultTo(true).notNullable()
     table.timestamps(true, true)
 
+    // Define a chave primária composta
+    table.primary([db.UsersRoles.USER_ID, db.UsersRoles.ROLE_ID])
+
+    // Chave estrangeira para usuários
     table
       .foreign(db.UsersRoles.USER_ID)
       .references(db.Users.USER_ID)
