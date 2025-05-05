@@ -40,6 +40,16 @@ export class CustomErrorHandlerService {
         typeof response.message[0].startsWith('#')
       ) {
         return new BadRequestException(response.message[0])
+      } else {
+        if (
+          typeof response === 'object' &&
+          'message' in response &&
+          response.message == 'Unauthorized'
+        ) {
+          return new BadRequestException(
+            '#Seção expirada. Faca login para continuar.'
+          )
+        }
       }
 
       return error

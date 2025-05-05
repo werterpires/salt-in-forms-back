@@ -1,3 +1,6 @@
+import { ERoles } from 'src/constants/roles.const'
+import { Term } from 'src/terms/types'
+
 export interface ValidateUser {
   userPassword: string
   userId: number
@@ -5,6 +8,12 @@ export interface ValidateUser {
   userActive: boolean
   userName: string
   userRoles: number[]
+}
+
+export interface UserToLogon {
+  userName: string
+  userRoles: ERoles[]
+  noSignedTerms: Term[]
 }
 
 export interface UserToken {

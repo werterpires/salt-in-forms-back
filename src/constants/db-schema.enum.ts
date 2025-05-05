@@ -1,7 +1,8 @@
 export enum Tables {
   USERS = 'users',
   USERS_ROLES = 'usersRoles',
-  TERMS = 'terms'
+  TERMS = 'terms',
+  TERMS_SIGNATURES = 'termsSignatures'
 }
 
 export enum Users {
@@ -28,4 +29,10 @@ export enum Terms {
   TERM_TEXT = 'termText',
   BEGIN_DATE = 'beginDate',
   END_DATE = 'endDate'
+}
+
+export enum TermsSignatures {
+  TERM_SIGNATURE_ID = 'termSignatureId',
+  TERM_ID = 'termId',
+  USER_ID = 'userId'
 }

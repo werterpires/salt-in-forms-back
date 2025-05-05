@@ -1,8 +1,15 @@
 import { Injectable } from '@nestjs/common'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
-import { Tables, Users, UsersRoles } from 'src/constants/db-schema.enum'
+import {
+  Tables,
+  Users,
+  UsersRoles,
+  TermsSignatures,
+  Terms
+} from 'src/constants/db-schema.enum'
 import { Logon, ValidateUser as ValidateUser } from './types'
+import { Term } from 'src/terms/types'
 
 @Injectable()
 export class AuthRepo {
@@ -41,6 +48,40 @@ export class AuthRepo {
     user.userRoles = userRoles.map((role) => role.roleId)
 
     return user as ValidateUser
+  }
+
+  async findNoSignedTermsByUserAndRoleId(
+    userId: number,
+    rolesId: number[]
+  ): Promise<Term[]> {
+    const termsConsult = await this.knex<boolean>(Tables.TERMS)
+      .innerJoin(
+        Tables.TERMS_SIGNATURES,
+        TermsSignatures.TERM_ID,
+        Terms.TERM_ID
+      )
+      .select(
+        Terms.ROLE_ID,
+        Terms.TERM_ID,
+        Terms.BEGIN_DATE,
+        Terms.END_DATE,
+        Terms.TERM_TYPE_ID,
+        Terms.TERM_TEXT
+      )
+      .where(Terms.ROLE_ID, 'in', rolesId)
+      .andWhere(Terms.END_DATE, '>', new Date())
+      .andWhereNot(TermsSignatures.USER_ID, 'in', userId)
+
+    const terms: Term[] = termsConsult.map((term) => ({
+      roleId: term.roleId,
+      termId: term.termId,
+      beginDate: term.beginDate,
+      endDate: term.endDate,
+      termTypeId: term.termTypeId,
+      termText: term.termText
+    }))
+
+    return terms
   }
 
   async findUserByInvitationCodeForLogon(

@@ -90,7 +90,6 @@ export class UsersRepo {
         .where(db.UsersRoles.USER_ID, userId)
 
       const currentRoleIds = currentRoles.map((r) => r.roleId)
-      console.log('currentRoleIds', currentRoleIds)
 
       const rolesToDelete = currentRoleIds.filter(
         (id) => !userRoles.includes(id)
@@ -101,7 +100,6 @@ export class UsersRepo {
       )
 
       for (const id of rolesToDelete) {
-        console.log('id', id)
         await trx(db.Tables.USERS_ROLES)
           .delete()
           .where({

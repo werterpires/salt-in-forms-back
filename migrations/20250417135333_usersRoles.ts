@@ -11,10 +11,8 @@ export async function up(knex: Knex): Promise<void> {
     table.boolean(db.UsersRoles.USER_ROLE_ACTIVE).defaultTo(true).notNullable()
     table.timestamps(true, true)
 
-    // Define a chave primária composta
     table.primary([db.UsersRoles.USER_ID, db.UsersRoles.ROLE_ID])
 
-    // Chave estrangeira para usuários
     table
       .foreign(db.UsersRoles.USER_ID)
       .references(db.Users.USER_ID)

@@ -41,8 +41,6 @@ export class UsersService {
 
       const roles = await this.usersRepo.findRolesByUserId(user.userId)
 
-      console.log('ROLES', roles)
-
       user.userRoles = roles
     }
     const usersQuantity = await this.usersRepo.findUsersQuantity(filters)
@@ -51,8 +49,6 @@ export class UsersService {
       data: users,
       pagesQuantity: usersQuantity
     }
-
-    console.log('RESPONSE', usersResponse.data[0].userRoles)
 
     return usersResponse
   }

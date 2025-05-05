@@ -8,7 +8,13 @@ import {
 import { AuthRepo } from './auth.repo'
 import * as bcrypt from 'bcrypt'
 import { CustomErrors } from '../custom-error-handler/erros.enum'
-import { Logon, UserPayload, UserToken, ValidateUser } from './types'
+import {
+  Logon,
+  UserPayload,
+  UserToken,
+  UserToLogon,
+  ValidateUser
+} from './types'
 import { JwtService } from '@nestjs/jwt'
 import { LogonDto } from './dtos/logon.dto'
 import { EncryptionService } from '../utils-module/encryption/encryption.service'
@@ -90,5 +96,33 @@ export class AuthService {
     }
     const jwtToken = this.jwtService.sign(payload)
     return { accessToken: jwtToken }
+  }
+
+  async getNewUserToLogon(invitationCode: string): Promise<UserToLogon> {
+    const user: ValidateUser | undefined =
+      await this.authRepo.findUserByInvitationCodeForLogon(invitationCode)
+
+    if (!user) {
+      throw new NotFoundException(
+        CustomErrors.USER_NOT_FOUND_BY_INVITATION_CODE
+      )
+    }
+
+    if (this.isInviteCodeExpired(invitationCode)) {
+      throw new GoneException(CustomErrors.INVITE_CODE_EXPIRED)
+    }
+
+    const noSignedTerms = await this.authRepo.findNoSignedTermsByUserAndRoleId(
+      user.userId,
+      user.userRoles
+    )
+
+    const userToLogon: UserToLogon = {
+      userName: this.encryptionService.decrypt(user.userName),
+      userRoles: user.userRoles,
+      noSignedTerms
+    }
+
+    return userToLogon
   }
 }

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
@@ -32,5 +33,10 @@ export class AuthController {
     @Body() body: LogonDto
   ) {
     return this.authService.logon(invitationCode, body)
+  }
+
+  @Get(':invitationCode')
+  async getNewUserToLogon(@Param('invitationCode') invitationCode: string) {
+    return await this.authService.getNewUserToLogon(invitationCode)
   }
 }

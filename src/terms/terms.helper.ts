@@ -94,7 +94,6 @@ export function validateDto(createTermDto: CreateTermDto) {
 }
 
 export function validateOpenTerm(currentTerm: Term | undefined) {
-  console.log('currentTerm', currentTerm)
   if (currentTerm !== undefined) {
     const openTermIsActive = new Date(currentTerm.beginDate) <= new Date()
     if (!openTermIsActive) {
