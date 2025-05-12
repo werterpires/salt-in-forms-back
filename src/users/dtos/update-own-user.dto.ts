@@ -1,4 +1,10 @@
-import { IsEmail, IsNumber, IsString, Length } from 'class-validator'
+import {
+  IsEmail,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Length
+} from 'class-validator'
 
 export class UpdateOwnUserDto {
   @IsNumber({}, { message: '#O ID do usuário deve ser numérico.' })
@@ -17,8 +23,9 @@ export class UpdateOwnUserDto {
   })
   userName: string
 
+  @IsOptional()
   @Length(11, 11, {
     message: '#O CPF deve ter 11 caracteres'
   })
-  userCpf: string
+  userCpf?: string
 }

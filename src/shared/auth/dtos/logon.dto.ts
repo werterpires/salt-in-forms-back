@@ -1,6 +1,7 @@
 import {
-  IsEmail,
+  IsArray,
   IsNotEmpty,
+  IsNumber,
   IsString,
   Length,
   Matches,
@@ -31,11 +32,12 @@ export class LogonDto {
   })
   userCpf: string
 
-  @IsEmail(
+  @IsArray({
+    message: '#O array de roles deve ser um array'
+  })
+  @IsNumber(
     {},
-    {
-      message: '#O email enviado não é um email válido.'
-    }
+    { each: true, message: '#Os IDs dos papéis de usuário devem ser numéricos' }
   )
-  userEmail: string
+  signedTerms: number[]
 }

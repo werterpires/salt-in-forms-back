@@ -11,6 +11,7 @@ export interface ValidateUser {
 }
 
 export interface UserToLogon {
+  userId: number
   userName: string
   userRoles: ERoles[]
   noSignedTerms: Term[]
@@ -39,7 +40,7 @@ export interface Logon {
   userNameHash: string
   cpfHash: string
   passwordHash: string
-  userEmail: string
+  signedTerms: number[]
 }
 
 export interface UserFromJwt {

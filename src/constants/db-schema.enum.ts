@@ -34,5 +34,6 @@ export enum Terms {
 export enum TermsSignatures {
   TERM_SIGNATURE_ID = 'termSignatureId',
   TERM_ID = 'termId',
-  USER_ID = 'userId'
+  USER_ID = 'userId',
+  TERM_UNSIGNED_TIME = 'termUnsigned'
 }

@@ -29,6 +29,8 @@ const services = [AuthService, AuthRepo, LocalStrategy, JwtStrategy]
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoginValidationMiddleware).forRoutes('auth/login')
+    consumer
+      .apply(LoginValidationMiddleware)
+      .forRoutes('auth/login', 'auth/policies')
   }
 }

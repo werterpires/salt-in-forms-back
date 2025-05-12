@@ -70,7 +70,9 @@ export class UsersService {
   }
 
   async findOwnUser(userId: number) {
-    return await this.usersRepo.findUserById(userId)
+    const ownUser = await this.usersRepo.findUserById(userId)
+    ownUser.userName = this.encryptionService.decrypt(ownUser.userName)
+    return ownUser
   }
 
   async updatePassword(userId: number, updatePasswordDto: UpdatePasswordDto) {

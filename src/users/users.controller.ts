@@ -57,6 +57,11 @@ export class UsersController {
     return this.usersService.updateUser(UpdateUserDto)
   }
 
+  @Get('own')
+  findOwn(@CurrentUser() userFromJwt: UserFromJwt) {
+    return this.usersService.findOwnUser(userFromJwt.userId)
+  }
+
   @Put('own')
   updateOwn(
     @Body() UpdateOwnUserDto: UpdateOwnUserDto,

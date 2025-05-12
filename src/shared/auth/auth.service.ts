@@ -18,6 +18,7 @@ import {
 import { JwtService } from '@nestjs/jwt'
 import { LogonDto } from './dtos/logon.dto'
 import { EncryptionService } from '../utils-module/encryption/encryption.service'
+import { areArraysEqual } from '../utils'
 
 @Injectable()
 export class AuthService {
@@ -28,8 +29,8 @@ export class AuthService {
   ) {}
 
   async logon(invitationCode: string, logonDto: LogonDto) {
-    const user: ValidateUser | undefined =
-      await this.authRepo.findUserByInvitationCodeForLogon(invitationCode)
+    const user: UserToLogon | undefined =
+      await this.authRepo.findUserToLogonByInvitationCode(invitationCode)
 
     if (!user) {
       throw new NotFoundException(
@@ -46,7 +47,7 @@ export class AuthService {
       passwordHash: await bcrypt.hash(logonDto.userPassword, 10),
       userId: user.userId,
       userNameHash: this.encryptionService.encrypt(logonDto.userName),
-      userEmail: logonDto.userEmail
+      signedTerms: logonDto.signedTerms
     }
 
     await this.authRepo.updateUserToLogon(logonData)
@@ -86,7 +87,24 @@ export class AuthService {
     throw new Error(CustomErrors.UNAUTHORIZED_EXCEPTION)
   }
 
-  login(user: ValidateUser): UserToken {
+  async login(user: ValidateUser, termsIds: number[]): Promise<UserToken> {
+    const notSignedPolicies = await this.authRepo.findActiveTermsNotSigned(
+      user.userRoles,
+      user.userId
+    )
+
+    const notSignedPoliciesIds = notSignedPolicies.map(
+      (policy) => policy.termId
+    )
+
+    if (notSignedPoliciesIds.length > 0) {
+      if (!areArraysEqual(notSignedPoliciesIds, termsIds)) {
+        throw new ForbiddenException(CustomErrors.TERMS_NOT_SIGNED)
+      }
+
+      await this.authRepo.signTerms(user.userId, termsIds)
+    }
+
     const payload: UserPayload = {
       sub: user.userId,
       userEmail: user.userEmail,
@@ -98,9 +116,17 @@ export class AuthService {
     return { accessToken: jwtToken }
   }
 
+  async getPolicies(user: ValidateUser) {
+    const activeTermsNotSigned = await this.authRepo.findActiveTermsNotSigned(
+      user.userRoles,
+      user.userId
+    )
+    return activeTermsNotSigned
+  }
+
   async getNewUserToLogon(invitationCode: string): Promise<UserToLogon> {
-    const user: ValidateUser | undefined =
-      await this.authRepo.findUserByInvitationCodeForLogon(invitationCode)
+    const user: UserToLogon | undefined =
+      await this.authRepo.findUserToLogonByInvitationCode(invitationCode)
 
     if (!user) {
       throw new NotFoundException(
@@ -112,17 +138,8 @@ export class AuthService {
       throw new GoneException(CustomErrors.INVITE_CODE_EXPIRED)
     }
 
-    const noSignedTerms = await this.authRepo.findNoSignedTermsByUserAndRoleId(
-      user.userId,
-      user.userRoles
-    )
+    console.log('user', user)
 
-    const userToLogon: UserToLogon = {
-      userName: this.encryptionService.decrypt(user.userName),
-      userRoles: user.userRoles,
-      noSignedTerms
-    }
-
-    return userToLogon
+    return user
   }
 }

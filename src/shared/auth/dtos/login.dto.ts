@@ -1,4 +1,11 @@
-import { IsEmail, IsNotEmpty, Length, Matches } from 'class-validator'
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  Length,
+  Matches
+} from 'class-validator'
 
 export class LoginDto {
   @IsEmail(
@@ -23,4 +30,8 @@ export class LoginDto {
     }
   )
   password: string
+
+  @IsOptional()
+  @IsNumber({}, { each: true })
+  termsIds?: number[]
 }

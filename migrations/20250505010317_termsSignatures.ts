@@ -9,6 +9,7 @@ export async function up(knex: Knex): Promise<void> {
     table.increments(db.TermsSignatures.TERM_SIGNATURE_ID).primary()
     table.integer(db.TermsSignatures.TERM_ID).unsigned().notNullable()
     table.integer(db.TermsSignatures.USER_ID).unsigned().notNullable()
+    table.dateTime(db.TermsSignatures.TERM_UNSIGNED_TIME)
     table.timestamps(true, true)
 
     table
