@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 import { UserFromJwt } from 'src/shared/auth/types'
 import { FindAllResponse, Paginator } from 'src/shared/types/types'
 import { CreateUserDto } from './dtos/create-user.dto'
@@ -34,6 +34,15 @@ export class UsersService {
     return user
   }
 
+  async reinviteUser(userId: number) {
+    const userDoneId = await this.usersRepo.findUserByIdAndDoneInvite(userId)
+    if (userDoneId) {
+      throw new BadRequestException('#O usuário já se cadastrou.')
+    }
+    const inviteCode = generateInviteCode()
+    await this.usersRepo.reinviteUser(userId, inviteCode)
+  }
+
   async findAllUsers(orderBy: Paginator, filters?: UserFilter) {
     const users: User[] = await this.usersRepo.findAllUsers(orderBy, filters)
     for (const user of users) {
@@ -61,12 +70,7 @@ export class UsersService {
     updateUserData: UpdateOwnUserDto,
     userFromJwt: UserFromJwt
   ) {
-    const realUpdatedUser = this.usersRepo.findUserById(updateUserData.userId)
-    if ((await realUpdatedUser).userId != userFromJwt.userId) {
-      throw new UnauthorizedException('#Não é possivel atualizar outro usuario')
-    }
-
-    await this.usersRepo.updateOwnUser(updateUserData)
+    await this.usersRepo.updateOwnUser(updateUserData, userFromJwt.userId)
   }
 
   async findOwnUser(userId: number) {

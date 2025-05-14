@@ -40,6 +40,22 @@ export class UsersRepo {
     return userId
   }
 
+  async reinviteUser(userId: number, userInviteCode: string) {
+    return await this.knex(db.Tables.USERS)
+      .where(db.Users.USER_ID, userId)
+      .update({
+        [db.Users.USER_INVITE_CODE]: userInviteCode
+      })
+  }
+
+  async findUserByIdAndDoneInvite(userId: number) {
+    return await this.knex(db.Tables.USERS)
+      .select(db.Users.USER_ID)
+      .where(db.Users.USER_ID, userId)
+      .where(db.Users.USER_INVITE_CODE, 'like', 'done%')
+      .first()
+  }
+
   async findUserById(userId: number) {
     const userConsult = await this.knex(db.Tables.USERS)
       .select(
@@ -86,7 +102,7 @@ export class UsersRepo {
         })
 
       const currentRoles = await trx(db.Tables.USERS_ROLES)
-        .select(db.UsersRoles.ROLE_ID, db.UsersRoles.USER_ROLE_ACTIVE)
+        .select(db.UsersRoles.ROLE_ID)
         .where(db.UsersRoles.USER_ID, userId)
 
       const currentRoleIds = currentRoles.map((r) => r.roleId)
@@ -118,12 +134,11 @@ export class UsersRepo {
     })
   }
 
-  async updateOwnUser(updateUserData: UpdateOwnUser) {
-    const { userEmail, userId, userName } = updateUserData
+  async updateOwnUser(updateUserData: UpdateOwnUser, userId: number) {
+    const { userEmail } = updateUserData
     return await this.knex(db.Tables.USERS)
       .where(db.Users.USER_ID, userId)
       .update({
-        [db.Users.USER_NAME]: userName,
         [db.Users.USER_EMAIL]: userEmail
       })
   }
@@ -183,7 +198,6 @@ export class UsersRepo {
             db.UsersRoles.USER_ID
           )
           .where(db.UsersRoles.ROLE_ID, filters.roleId)
-          .where(db.UsersRoles.USER_ROLE_ACTIVE, true)
       }
       if (filters.userEmail) {
         query.where(db.Users.USER_EMAIL, 'like', `%${filters.userEmail}%`)
@@ -205,7 +219,6 @@ export class UsersRepo {
     const rolesConsult = await this.knex(db.Tables.USERS_ROLES)
       .select(db.UsersRoles.ROLE_ID)
       .where(db.UsersRoles.USER_ID, userId)
-      .where(db.UsersRoles.USER_ROLE_ACTIVE, true)
 
     return rolesConsult.map((r) => r.roleId)
   }

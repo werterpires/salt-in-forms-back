@@ -26,7 +26,7 @@ export class AuthRepo {
           [Users.USER_PASSWORD]: passwordHash,
           [Users.USER_NAME]: userNameHash,
           [Users.USER_CPF]: cpfHash,
-          [Users.USER_INVITE_CODE]: 'done'
+          [Users.USER_INVITE_CODE]: 'done' + userId
         })
         .where(Users.USER_ID, userId)
 

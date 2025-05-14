@@ -18,11 +18,11 @@ export interface User {
 export interface UpdateUser extends UpdateOwnUser {
   userRoles: ERoles[]
   userActive: boolean
+  userName: string
+  userId: number
 }
 
 export interface UpdateOwnUser {
-  userId: number
-  userName: string
   userEmail: string
 }
 

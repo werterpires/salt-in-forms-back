@@ -23,6 +23,17 @@ export class UsersController {
   }
 
   @Roles(ERoles.ADMIN)
+  @Post('reinvite')
+  async reinviteUser(@Body('userId') userId: number) {
+    return await this.usersService.reinviteUser(userId)
+  }
+
+  @Get('own')
+  findOwn(@CurrentUser() userFromJwt: UserFromJwt) {
+    return this.usersService.findOwnUser(userFromJwt.userId)
+  }
+
+  @Roles(ERoles.ADMIN)
   @Get()
   findAll(
     @Query('direction') direction: string,
@@ -51,17 +62,6 @@ export class UsersController {
     return this.usersService.findAllUsers(paginator, filters)
   }
 
-  @Roles(ERoles.ADMIN)
-  @Put()
-  update(@Body() UpdateUserDto: UpdateUserDto) {
-    return this.usersService.updateUser(UpdateUserDto)
-  }
-
-  @Get('own')
-  findOwn(@CurrentUser() userFromJwt: UserFromJwt) {
-    return this.usersService.findOwnUser(userFromJwt.userId)
-  }
-
   @Put('own')
   updateOwn(
     @Body() UpdateOwnUserDto: UpdateOwnUserDto,
@@ -79,5 +79,11 @@ export class UsersController {
       userFromJwt.userId,
       updatePasswordDto
     )
+  }
+
+  @Roles(ERoles.ADMIN)
+  @Put()
+  update(@Body() UpdateUserDto: UpdateUserDto) {
+    return this.usersService.updateUser(UpdateUserDto)
   }
 }
