@@ -43,9 +43,9 @@ export class UsersController {
     @Query('userEmail') userEmail: string,
     @Query('userActive') userActive: boolean
   ) {
-    const paginator: Paginator = {
+    const paginator: Paginator<typeof db.Users> = {
       column: Object.values(db.Users).includes(column as db.Users)
-        ? column
+        ? (column as db.Users)
         : db.Users.USER_NAME,
       direction: Object.values(Direction).includes(direction as Direction)
         ? (direction as Direction)

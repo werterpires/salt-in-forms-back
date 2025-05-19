@@ -144,7 +144,10 @@ export class TermsRepo {
     return terms
   }
 
-  async findAllTerms(orderBy: Paginator, filters?: TermFilter) {
+  async findAllTerms(
+    orderBy: Paginator<typeof db.Terms>,
+    filters?: TermFilter
+  ) {
     const query = this.knex<Term>(db.Tables.TERMS).select(
       db.Terms.BEGIN_DATE,
       db.Terms.END_DATE,

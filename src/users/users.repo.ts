@@ -151,7 +151,10 @@ export class UsersRepo {
       })
   }
 
-  async findAllUsers(orderBy: Paginator, filters?: UserFilter) {
+  async findAllUsers(
+    orderBy: Paginator<typeof db.Users>,
+    filters?: UserFilter
+  ) {
     const query = this.knex(db.Tables.USERS).select(
       db.Users.USER_NAME,
       db.Users.USER_EMAIL,

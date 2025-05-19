@@ -14,6 +14,7 @@ import { UsersModule } from './users/users.module'
 import { JwtAuthGuard } from './shared/auth/guards/jwt-auth.guard'
 import { RolesGuard } from './users/guards/roles.guard'
 import { TermsModule } from './terms/terms.module'
+import { ProcessesModule } from './processes/processes.module';
 
 config()
 
@@ -78,7 +79,8 @@ const knex = KnexModule.forRoot(
     knex,
     AuthModule,
     UsersModule,
-    TermsModule
+    TermsModule,
+    ProcessesModule
   ],
   controllers: [],
   providers: [

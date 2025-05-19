@@ -14,6 +14,7 @@ import {
 import { TermsRepo } from './terms.repo'
 import { FindAllResponse, Paginator } from 'src/shared/types/types'
 import { UpdateTermDto } from './dto/update-term.dto'
+import * as db from 'src/constants/db-schema.enum'
 
 @Injectable()
 export class TermsService {
@@ -33,7 +34,10 @@ export class TermsService {
     await this.termsRepo.createTerm(createTermData, openTerm)
   }
 
-  async findAllTerms(paginator: Paginator, filters?: TermFilter) {
+  async findAllTerms(
+    paginator: Paginator<typeof db.Terms>,
+    filters?: TermFilter
+  ) {
     const terms = await this.termsRepo.findAllTerms(paginator, filters)
     const termsQuantity = await this.termsRepo.findTermsQuantity(filters)
 

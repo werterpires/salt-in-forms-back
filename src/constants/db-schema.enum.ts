@@ -2,7 +2,8 @@ export enum Tables {
   USERS = 'users',
   USERS_ROLES = 'usersRoles',
   TERMS = 'terms',
-  TERMS_SIGNATURES = 'termsSignatures'
+  TERMS_SIGNATURES = 'termsSignatures',
+  PROCESSES = 'processes'
 }
 
 export enum Users {
@@ -36,4 +37,12 @@ export enum TermsSignatures {
   TERM_ID = 'termId',
   USER_ID = 'userId',
   TERM_UNSIGNED_TIME = 'termUnsigned'
+}
+
+export enum Processes {
+  PROCESS_ID = 'processId',
+  PROCESS_TITLE = 'processName',
+  PROCESS_TOTVS_ID = 'processTotvsId',
+  PROCESS_BEGIN_DATE = 'processBeginDate',
+  PROCESS_END_DATE = 'processEndDate'
 }

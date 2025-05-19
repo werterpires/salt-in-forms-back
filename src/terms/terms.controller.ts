@@ -37,9 +37,9 @@ export class TermsController {
     @Query('termTypeId') termTypeId: string,
     @Query('onlyActive') onlyActive: boolean
   ) {
-    const paginator: Paginator = {
+    const paginator: Paginator<typeof db.Terms> = {
       column: Object.values(db.Terms).includes(column as db.Terms)
-        ? column
+        ? (column as db.Terms)
         : db.Terms.BEGIN_DATE,
       direction: Object.values(Direction).includes(direction as Direction)
         ? (direction as Direction)

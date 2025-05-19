@@ -10,6 +10,7 @@ import { UsersRepo } from './users.repo'
 import { UpdatePasswordDto } from './dtos/update-pass.dto'
 import * as bcrypt from 'bcrypt'
 import { EncryptionService } from 'src/shared/utils-module/encryption/encryption.service'
+import * as db from 'src/constants/db-schema.enum'
 
 @Injectable()
 export class UsersService {
@@ -43,7 +44,10 @@ export class UsersService {
     await this.usersRepo.reinviteUser(userId, inviteCode)
   }
 
-  async findAllUsers(orderBy: Paginator, filters?: UserFilter) {
+  async findAllUsers(
+    orderBy: Paginator<typeof db.Users>,
+    filters?: UserFilter
+  ) {
     const users: User[] = await this.usersRepo.findAllUsers(orderBy, filters)
     for (const user of users) {
       user.userName = this.encryptionService.decrypt(user.userName)
