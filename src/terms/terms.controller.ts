@@ -11,11 +11,11 @@ import {
 import { TermsService } from './terms.service'
 import { CreateTermDto } from './dto/create-term.dto'
 import { UpdateTermDto } from './dto/update-term.dto'
-import { Direction, Paginator } from 'src/shared/types/types'
 import { TermFilter } from './types'
 import * as db from 'src/constants/db-schema.enum'
 import { Roles } from 'src/users/decorators/roles.decorator'
 import { ERoles } from 'src/constants/roles.const'
+import { Paginator } from 'src/shared/types/types'
 
 @Controller('terms')
 export class TermsController {
@@ -37,15 +37,23 @@ export class TermsController {
     @Query('termTypeId') termTypeId: string,
     @Query('onlyActive') onlyActive: boolean
   ) {
-    const paginator: Paginator<typeof db.Terms> = {
-      column: Object.values(db.Terms).includes(column as db.Terms)
-        ? (column as db.Terms)
-        : db.Terms.BEGIN_DATE,
-      direction: Object.values(Direction).includes(direction as Direction)
-        ? (direction as Direction)
-        : Direction.ASC,
-      page: +page || 1
-    }
+    const paginator = new Paginator<typeof db.Terms>(
+      +page,
+      direction,
+      column,
+      db.Terms.BEGIN_DATE,
+      db.Terms
+    )
+
+    // const paginator: Paginator<typeof db.Terms> = {
+    //   column: Object.values(db.Terms).includes(column as db.Terms)
+    //     ? (column as db.Terms)
+    //     : db.Terms.BEGIN_DATE,
+    //   direction: Object.values(Direction).includes(direction as Direction)
+    //     ? (direction as Direction)
+    //     : Direction.ASC,
+    //   page: +page || 1
+    // }
 
     const filters: TermFilter = {
       roleId: +roleId || undefined,

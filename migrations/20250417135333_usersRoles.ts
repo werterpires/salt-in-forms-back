@@ -17,6 +17,8 @@ export async function up(knex: Knex): Promise<void> {
       .foreign(db.UsersRoles.USER_ID)
       .references(db.Users.USER_ID)
       .inTable(db.Tables.USERS)
+      .onDelete('RESTRICT')
+      .onUpdate('CASCADE')
   })
 }
 

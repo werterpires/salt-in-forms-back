@@ -6,6 +6,12 @@ export interface CreateProcess {
   [db.Processes.PROCESS_END_DATE]?: Date
 }
 
+export interface UpdateProcess extends CreateProcess {
+  [db.Processes.PROCESS_ID]: number
+}
+
+export type Process = UpdateProcess
+
 export interface ProcessesFilter {
   title?: string
   status?: ProcessStatus

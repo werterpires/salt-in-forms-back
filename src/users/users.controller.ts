@@ -3,7 +3,6 @@ import { UsersService } from './users.service'
 import { CreateUserDto } from './dtos/create-user.dto'
 import { Roles } from './decorators/roles.decorator'
 import { ERoles } from 'src/constants/roles.const'
-import { Direction, Paginator } from 'src/shared/types/types'
 import * as db from '../constants/db-schema.enum'
 import { UserFilter } from './types'
 import { UpdateUserDto } from './dtos/update-user.dto'
@@ -11,6 +10,7 @@ import { UpdateOwnUserDto } from './dtos/update-own-user.dto'
 import { CurrentUser } from './decorators/current-user.decorator'
 import { UserFromJwt } from 'src/shared/auth/types'
 import { UpdatePasswordDto } from './dtos/update-pass.dto'
+import { Paginator } from 'src/shared/types/types'
 
 @Controller('users')
 export class UsersController {
@@ -43,15 +43,23 @@ export class UsersController {
     @Query('userEmail') userEmail: string,
     @Query('userActive') userActive: boolean
   ) {
-    const paginator: Paginator<typeof db.Users> = {
-      column: Object.values(db.Users).includes(column as db.Users)
-        ? (column as db.Users)
-        : db.Users.USER_NAME,
-      direction: Object.values(Direction).includes(direction as Direction)
-        ? (direction as Direction)
-        : Direction.ASC,
-      page: +page || 1
-    }
+    const paginator = new Paginator<typeof db.Users>(
+      +page,
+      direction,
+      column,
+      db.Users.USER_NAME,
+      db.Users
+    )
+
+    // const paginator: Paginator<typeof db.Users> = {
+    //   column: Object.values(db.Users).includes(column as db.Users)
+    //     ? (column as db.Users)
+    //     : db.Users.USER_NAME,
+    //   direction: Object.values(Direction).includes(direction as Direction)
+    //     ? (direction as Direction)
+    //     : Direction.ASC,
+    //   page: +page || 1
+    // }
 
     const filters: UserFilter = {
       roleId: +roleId || undefined,

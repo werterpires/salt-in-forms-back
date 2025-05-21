@@ -16,11 +16,15 @@ export async function up(knex: Knex): Promise<void> {
       .foreign(db.TermsSignatures.TERM_ID)
       .references(db.Terms.TERM_ID)
       .inTable(db.Tables.TERMS)
+      .onDelete('RESTRICT')
+      .onUpdate('CASCADE')
 
     table
       .foreign(db.TermsSignatures.USER_ID)
       .references(db.Users.USER_ID)
       .inTable(db.Tables.USERS)
+      .onDelete('RESTRICT')
+      .onUpdate('CASCADE')
   })
 }
 

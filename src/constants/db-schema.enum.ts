@@ -41,7 +41,7 @@ export enum TermsSignatures {
 
 export enum Processes {
   PROCESS_ID = 'processId',
-  PROCESS_TITLE = 'processName',
+  PROCESS_TITLE = 'processTitle',
   PROCESS_TOTVS_ID = 'processTotvsId',
   PROCESS_BEGIN_DATE = 'processBeginDate',
   PROCESS_END_DATE = 'processEndDate'
