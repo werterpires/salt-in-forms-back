@@ -13,10 +13,7 @@ export class ProcessesRepo {
   constructor(@InjectConnection('knexx') private readonly knex: Knex) {}
 
   async createProcess(createProcessData: CreateProcess) {
-    return this.knex
-      .insert(createProcessData)
-      .into(db.Tables.PROCESSES)
-      .returning(db.Processes.PROCESS_ID)
+    return this.knex.insert(createProcessData).into(db.Tables.PROCESSES)
   }
 
   async findAllProcesses(
@@ -32,13 +29,7 @@ export class ProcessesRepo {
     )
 
     if (filters) {
-      if (filters.title) {
-        query.where(db.Processes.PROCESS_TITLE, 'like', `%${filters.title}%`)
-      }
-
-      if (filters.status) {
-        applyFilters(filters, query)
-      }
+      applyFilters(filters, query)
     }
 
     query.orderBy(orderBy.column, orderBy.direction)
@@ -47,7 +38,7 @@ export class ProcessesRepo {
       .limit(this.elementsPerPage)
       .offset((orderBy.page - 1 || 0) * this.elementsPerPage)
 
-    return query
+    return await query
   }
 
   async updateProcess(updateProcessData: UpdateProcess) {

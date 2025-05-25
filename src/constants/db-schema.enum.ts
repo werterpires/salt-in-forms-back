@@ -3,7 +3,8 @@ export enum Tables {
   USERS_ROLES = 'usersRoles',
   TERMS = 'terms',
   TERMS_SIGNATURES = 'termsSignatures',
-  PROCESSES = 'processes'
+  PROCESSES = 'processes',
+  S_FORMS = 'sForms'
 }
 
 export enum Users {
@@ -45,4 +46,11 @@ export enum Processes {
   PROCESS_TOTVS_ID = 'processTotvsId',
   PROCESS_BEGIN_DATE = 'processBeginDate',
   PROCESS_END_DATE = 'processEndDate'
+}
+
+export enum SForms {
+  S_FORM_ID = 'sFormId',
+  PROCESS_ID = 'sProcessId',
+  S_FORM_NAME = 'sFormName',
+  S_FORM_TYPE = 'sFormType'
 }

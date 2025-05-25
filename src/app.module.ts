@@ -15,6 +15,7 @@ import { JwtAuthGuard } from './shared/auth/guards/jwt-auth.guard'
 import { RolesGuard } from './users/guards/roles.guard'
 import { TermsModule } from './terms/terms.module'
 import { ProcessesModule } from './processes/processes.module';
+import { SFormsModule } from './s-forms/s-forms.module';
 
 config()
 
@@ -80,7 +81,8 @@ const knex = KnexModule.forRoot(
     AuthModule,
     UsersModule,
     TermsModule,
-    ProcessesModule
+    ProcessesModule,
+    SFormsModule
   ],
   controllers: [],
   providers: [
