@@ -1,4 +1,9 @@
-import { SFormFilter, SFormToValidate } from './types'
+import {
+  SFormFilter,
+  SFormToValidate,
+  SFormType,
+  sFormTypesArray
+} from './types'
 import { Knex } from 'knex'
 import * as db from '../constants/db-schema.enum'
 import { CreateSFormDto } from './dto/create-s-form.dto'
@@ -19,9 +24,8 @@ export function validateUpdateDto(
   sForms: SFormToValidate[]
 ) {
   const { sFormType } = updateSFormDto
-  const sFormTypesArray = Array.from(sFormType)
 
-  if (!sFormTypesArray.includes(sFormType)) {
+  if (!isValidFormType(sFormType)) {
     throw new BadRequestException(`#O tipo do formulário nâo existe.`)
   }
 
@@ -59,9 +63,8 @@ export function validateCreateDto(
   sForms: SFormToValidate[]
 ) {
   const { sFormType } = createSFormDto
-  const sFormTypesArray = Array.from(sFormType)
 
-  if (!sFormTypesArray.includes(sFormType)) {
+  if (!isValidFormType(sFormType)) {
     throw new BadRequestException(`#O tipo do formulário nâo existe.`)
   }
 
@@ -80,4 +83,8 @@ export function validateCreateDto(
       )
     }
   }
+}
+
+function isValidFormType(value: string): value is SFormType {
+  return sFormTypesArray.includes(value as SFormType)
 }

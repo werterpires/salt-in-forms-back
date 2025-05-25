@@ -1,11 +1,16 @@
 import { Injectable } from '@nestjs/common'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
-import { CreateSForm, SFormFilter, SFormToValidate, UpdateSForm } from './types'
+import {
+  CreateSForm,
+  SForm,
+  SFormFilter,
+  SFormToValidate,
+  UpdateSForm
+} from './types'
 import * as db from '../constants/db-schema.enum'
 import { Paginator } from 'src/shared/types/types'
 import { applyFilters } from './s-forms.helper'
-import { SForm } from './entities/s-form.entity'
 
 @Injectable()
 export class SFormsRepo {

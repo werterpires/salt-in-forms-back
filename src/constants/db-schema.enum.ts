@@ -50,7 +50,7 @@ export enum Processes {
 
 export enum SForms {
   S_FORM_ID = 'sFormId',
-  PROCESS_ID = 'sProcessId',
+  PROCESS_ID = 'processId',
   S_FORM_NAME = 'sFormName',
   S_FORM_TYPE = 'sFormType'
 }

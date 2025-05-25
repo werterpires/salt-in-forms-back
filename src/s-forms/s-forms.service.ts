@@ -3,9 +3,15 @@ import { CreateSFormDto } from './dto/create-s-form.dto'
 import { UpdateSFormDto } from './dto/update-s-form.dto'
 import { SFormsRepo } from './s-forms.repo'
 import * as db from 'src/constants/db-schema.enum'
-import { Paginator } from 'src/shared/types/types'
+import { FindAllResponse, Paginator } from 'src/shared/types/types'
 import { validateCreateDto, validateUpdateDto } from './s-forms.helper'
-import { CreateSForm, SFormFilter, SFormType, UpdateSForm } from './types'
+import {
+  CreateSForm,
+  SForm,
+  SFormFilter,
+  SFormType,
+  UpdateSForm
+} from './types'
 
 @Injectable()
 export class SFormsService {
@@ -42,7 +48,12 @@ export class SFormsService {
       filters
     )
 
-    return { sForms, sFormsQuantity }
+    const response: FindAllResponse<SForm> = {
+      data: sForms,
+      pagesQuantity: sFormsQuantity
+    }
+
+    return response
   }
 
   async updateSForm(updateSFormDto: UpdateSFormDto) {
