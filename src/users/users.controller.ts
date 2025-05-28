@@ -11,6 +11,7 @@ import { CurrentUser } from './decorators/current-user.decorator'
 import { UserFromJwt } from 'src/shared/auth/types'
 import { UpdatePasswordDto } from './dtos/update-pass.dto'
 import { Paginator } from 'src/shared/types/types'
+import { BoolenOrUndefinedPipe } from 'src/shared/pipes/boolen-or-undefined/boolen-or-undefined.pipe'
 
 @Controller('users')
 export class UsersController {
@@ -41,7 +42,7 @@ export class UsersController {
     @Query('column') column: string,
     @Query('roleId') roleId: string,
     @Query('userEmail') userEmail: string,
-    @Query('userActive') userActive: boolean
+    @Query('userActive', BoolenOrUndefinedPipe) userActive: boolean
   ) {
     const paginator = new Paginator<typeof db.Users>(
       +page,

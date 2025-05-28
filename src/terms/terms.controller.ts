@@ -6,7 +6,8 @@ import {
   Param,
   Delete,
   Query,
-  Put
+  Put,
+  ParseIntPipe
 } from '@nestjs/common'
 import { TermsService } from './terms.service'
 import { CreateTermDto } from './dto/create-term.dto'
@@ -16,6 +17,7 @@ import * as db from 'src/constants/db-schema.enum'
 import { Roles } from 'src/users/decorators/roles.decorator'
 import { ERoles } from 'src/constants/roles.const'
 import { Paginator } from 'src/shared/types/types'
+import { BoolenOrUndefinedPipe } from 'src/shared/pipes/boolen-or-undefined/boolen-or-undefined.pipe'
 
 @Controller('terms')
 export class TermsController {
@@ -35,7 +37,7 @@ export class TermsController {
     @Query('column') column: string,
     @Query('roleId') roleId: string,
     @Query('termTypeId') termTypeId: string,
-    @Query('onlyActive') onlyActive: boolean
+    @Query('onlyActive', BoolenOrUndefinedPipe) onlyActive: boolean
   ) {
     const paginator = new Paginator<typeof db.Terms>(
       +page,
@@ -44,16 +46,6 @@ export class TermsController {
       db.Terms.BEGIN_DATE,
       db.Terms
     )
-
-    // const paginator: Paginator<typeof db.Terms> = {
-    //   column: Object.values(db.Terms).includes(column as db.Terms)
-    //     ? (column as db.Terms)
-    //     : db.Terms.BEGIN_DATE,
-    //   direction: Object.values(Direction).includes(direction as Direction)
-    //     ? (direction as Direction)
-    //     : Direction.ASC,
-    //   page: +page || 1
-    // }
 
     const filters: TermFilter = {
       roleId: +roleId || undefined,
@@ -72,7 +64,7 @@ export class TermsController {
 
   @Roles(ERoles.ADMIN)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.termsService.deleteTerm(+id)
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.termsService.deleteTerm(id)
   }
 }

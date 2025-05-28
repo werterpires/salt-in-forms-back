@@ -4,7 +4,8 @@ export enum Tables {
   TERMS = 'terms',
   TERMS_SIGNATURES = 'termsSignatures',
   PROCESSES = 'processes',
-  S_FORMS = 'sForms'
+  S_FORMS = 'sForms',
+  QUESTIONS_AREAS = 'questionsAreas'
 }
 
 export enum Users {
@@ -53,4 +54,11 @@ export enum SForms {
   PROCESS_ID = 'processId',
   S_FORM_NAME = 'sFormName',
   S_FORM_TYPE = 'sFormType'
+}
+
+export enum QuestionsAreas {
+  QUESTION_AREA_ID = 'questionAreaId',
+  QUESTION_AREA_NAME = 'questionAreaName',
+  QUESTION_AREA_DESCRIPTION = 'questionAreaDescription',
+  QUESTION_AREA_ACTIVE = 'questionAreaActive'
 }
