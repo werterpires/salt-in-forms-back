@@ -5,7 +5,8 @@ export enum Tables {
   TERMS_SIGNATURES = 'termsSignatures',
   PROCESSES = 'processes',
   S_FORMS = 'sForms',
-  QUESTIONS_AREAS = 'questionsAreas'
+  QUESTIONS_AREAS = 'questionsAreas',
+  MINISTERIALS = 'ministerials'
 }
 
 export enum Users {
@@ -61,4 +62,12 @@ export enum QuestionsAreas {
   QUESTION_AREA_NAME = 'questionAreaName',
   QUESTION_AREA_DESCRIPTION = 'questionAreaDescription',
   QUESTION_AREA_ACTIVE = 'questionAreaActive'
+}
+
+export enum Ministerials {
+  MINISTERIAL_ID = 'ministerialId',
+  MINISTERIAL_NAME = 'ministerialName',
+  MINISTERIAL_FIELD = 'ministerialField',
+  MINISTERIAL_EMAIL = 'ministerialEmail',
+  MINISTERIAL_ACTIVE = 'ministerialActive'
 }
