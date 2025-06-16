@@ -129,18 +129,23 @@ export class AuthRepo {
       .andWhere(function () {
         this.where(Terms.END_DATE, '>=', new Date()).orWhereNull(Terms.END_DATE)
       })
-      .whereNotExists(function () {
-        this.select(TermsSignatures.TERM_ID)
-          .from(Tables.TERMS_SIGNATURES)
-          .where(
-            Tables.TERMS_SIGNATURES + '.' + TermsSignatures.TERM_ID,
-            Tables.TERMS + '.' + Terms.TERM_ID
-          )
-          .where(TermsSignatures.USER_ID, userId)
-          .where(TermsSignatures.TERM_UNSIGNED_TIME, null)
-      })
 
-    return noSignedTermsConsult
+    const termIds = noSignedTermsConsult.map((term) => term.termId)
+
+    const signatures = await this.knex(Tables.TERMS_SIGNATURES)
+      .select(TermsSignatures.TERM_ID)
+      .where(TermsSignatures.TERM_ID, 'in', termIds)
+      .andWhere(TermsSignatures.USER_ID, userId)
+      .andWhere(TermsSignatures.TERM_UNSIGNED_TIME, null)
+
+    const thermsFiltered = noSignedTermsConsult.filter(
+      (term) =>
+        !signatures.find((signature) => signature.termId === term.termId)
+    )
+
+    console.log('thermsFiltered', thermsFiltered)
+
+    return thermsFiltered
   }
 
   async signTerms(userId: number, termIds: number[]) {
