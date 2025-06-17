@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { FormSectionsService } from './form-sections.service';
-import { CreateFormSectionDto } from './dto/create-form-section.dto';
-import { UpdateFormSectionDto } from './dto/update-form-section.dto';
+
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common'
+import { FormSectionsService } from './form-sections.service'
+import { CreateFormSectionDto } from './dto/create-form-section.dto'
+import { UpdateFormSectionDto } from './dto/update-form-section.dto'
 
 @Controller('form-sections')
 export class FormSectionsController {
@@ -9,26 +10,21 @@ export class FormSectionsController {
 
   @Post()
   create(@Body() createFormSectionDto: CreateFormSectionDto) {
-    return this.formSectionsService.create(createFormSectionDto);
+    return this.formSectionsService.create(createFormSectionDto)
   }
 
-  @Get()
-  findAll() {
-    return this.formSectionsService.findAll();
+  @Get('by-form/:sFormId')
+  findAllBySFormId(@Param('sFormId', ParseIntPipe) sFormId: number) {
+    return this.formSectionsService.findAllBySFormId(sFormId)
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.formSectionsService.findOne(+id);
+  @Patch()
+  update(@Body() updateFormSectionDto: UpdateFormSectionDto) {
+    return this.formSectionsService.update(updateFormSectionDto)
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFormSectionDto: UpdateFormSectionDto) {
-    return this.formSectionsService.update(+id, updateFormSectionDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.formSectionsService.remove(+id);
+  @Delete(':formSectionId')
+  remove(@Param('formSectionId', ParseIntPipe) formSectionId: number) {
+    return this.formSectionsService.remove(formSectionId)
   }
 }
