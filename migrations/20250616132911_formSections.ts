@@ -21,7 +21,6 @@ export async function up(knex: Knex): Promise<void> {
     table
       .integer(db.FormSections.FORM_SECTION_DISPLAY_LINK)
       .unsigned()
-      .notNullable()
       .references(db.FormSections.FORM_SECTION_ID)
       .inTable(db.Tables.FORM_SECTIONS)
       .onDelete('CASCADE')
