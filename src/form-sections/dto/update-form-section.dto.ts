@@ -17,10 +17,6 @@ export class UpdateFormSectionDto {
   formSectionDisplayRule: number
 
   @IsOptional()
-  @IsNumber(
-    {},
-    { message: '#O link de seção da regra de exibição deve ser numérico.' }
-  )
+  @IsNumber()
   formSectionDisplayLink?: number
-}splayLink?: number
 }
