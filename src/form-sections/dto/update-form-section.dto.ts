@@ -22,4 +22,5 @@ export class UpdateFormSectionDto {
     { message: '#O link de seção da regra de exibição deve ser numérico.' }
   )
   formSectionDisplayLink?: number
+}splayLink?: number
 }
