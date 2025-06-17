@@ -22,4 +22,5 @@ export class CreateFormSectionDto {
     { message: '#O link de seção da regra de exibição deve ser numérico.' }
   )
   formSectionDisplayLink?: number
+}playLink?: number
 }

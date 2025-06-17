@@ -6,11 +6,13 @@ import {
   Param,
   Delete,
   ParseIntPipe,
-  Put
+  Put,
+  Patch
 } from '@nestjs/common'
 import { FormSectionsService } from './form-sections.service'
 import { CreateFormSectionDto } from './dto/create-form-section.dto'
 import { UpdateFormSectionDto } from './dto/update-form-section.dto'
+import { ReorderFormSectionsDto } from './dto/reorder-form-sections.dto'
 
 @Controller('form-sections')
 export class FormSectionsController {
@@ -34,5 +36,10 @@ export class FormSectionsController {
   @Delete(':formSectionId')
   remove(@Param('formSectionId', ParseIntPipe) formSectionId: number) {
     return this.formSectionsService.remove(formSectionId)
+  }
+
+  @Patch('reorder')
+  reorder(@Body() reorderFormSectionsDto: ReorderFormSectionsDto) {
+    return this.formSectionsService.reorder(reorderFormSectionsDto)
   }
 }

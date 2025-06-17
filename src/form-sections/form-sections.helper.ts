@@ -21,7 +21,6 @@ export class FormSectionsHelper {
     return {
       formSectionId: dto.formSectionId,
       formSectionName: dto.formSectionName,
-      formSectionOrder: dto.formSectionOrder,
       formSectionDisplayRule: dto.formSectionDisplayRule,
       formSectionDisplayLink: dto.formSectionDisplayLink
     }
@@ -88,6 +87,56 @@ export class FormSectionsHelper {
     return {
       ...this.mapCreateDtoToEntity(createFormSectionDto),
       formSectionDisplayLink: processedDisplayLink
+    }
+  }
+
+  static async validateReorderData(
+    sections: { formSectionId: number; formSectionOrder: number }[],
+    formSectionsRepo: FormSectionsRepo
+  ): Promise<void> {
+    if (sections.length === 0) {
+      throw new BadRequestException('#Array de seções não pode estar vazio')
+    }
+
+    // Buscar todas as seções para validação
+    const firstSectionId = sections[0].formSectionId
+    const firstSection = await formSectionsRepo.findById(firstSectionId)
+    
+    if (!firstSection) {
+      throw new BadRequestException('#Seção não encontrada')
+    }
+
+    const sFormId = firstSection.sFormId
+    const allFormSections = await formSectionsRepo.findAllBySFormId(sFormId)
+
+    // Validar se todas as seções são do mesmo formulário
+    for (const section of sections) {
+      const foundSection = allFormSections.find(s => s.formSectionId === section.formSectionId)
+      if (!foundSection) {
+        throw new BadRequestException('#Todas as seções devem pertencer ao mesmo formulário')
+      }
+    }
+
+    // Validar se todas as seções do formulário estão no array
+    if (sections.length !== allFormSections.length) {
+      throw new BadRequestException('#Todas as seções do formulário devem estar presentes no array')
+    }
+
+    // Validar se todos os IDs do formulário estão no array
+    const sectionIds = sections.map(s => s.formSectionId).sort((a, b) => a - b)
+    const formSectionIds = allFormSections.map(s => s.formSectionId).sort((a, b) => a - b)
+    
+    if (JSON.stringify(sectionIds) !== JSON.stringify(formSectionIds)) {
+      throw new BadRequestException('#Todas as seções do formulário devem estar presentes no array')
+    }
+
+    // Validar ordenação sequencial sem saltos nem repetições
+    const orders = sections.map(s => s.formSectionOrder).sort((a, b) => a - b)
+    
+    for (let i = 0; i < orders.length; i++) {
+      if (orders[i] !== i + 1) {
+        throw new BadRequestException('#A ordenação deve ser sequencial, começando em 1 e sem saltos ou repetições')
+      }
     }
   }
 }

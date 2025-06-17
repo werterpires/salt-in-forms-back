@@ -73,4 +73,21 @@ export class FormSectionsRepo {
       return formSection
     })
   }
+
+  async reorderFormSections(sections: { formSectionId: number; formSectionOrder: number }[]): Promise<FormSection[]> {
+    return this.knex.transaction(async (trx) => {
+      const updatedSections: FormSection[] = []
+
+      for (const section of sections) {
+        const [updatedSection] = await trx(db.Tables.FORM_SECTIONS)
+          .where(db.FormSections.FORM_SECTION_ID, section.formSectionId)
+          .update({ [db.FormSections.FORM_SECTION_ORDER]: section.formSectionOrder })
+          .returning('*')
+        
+        updatedSections.push(updatedSection)
+      }
+
+      return updatedSections.sort((a, b) => a.formSectionOrder - b.formSectionOrder)
+    })
+  }
 }

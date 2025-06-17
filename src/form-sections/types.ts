@@ -21,7 +21,6 @@ export interface CreateFormSection {
 export interface UpdateFormSection {
   formSectionId: number
   formSectionName: string
-  formSectionOrder: number
   formSectionDisplayRule: number
   formSectionDisplayLink?: number
 }

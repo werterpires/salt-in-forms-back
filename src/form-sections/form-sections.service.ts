@@ -2,6 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common'
 import { FormSectionsRepo } from './form-sections.repo'
 import { CreateFormSectionDto } from './dto/create-form-section.dto'
 import { UpdateFormSectionDto } from './dto/update-form-section.dto'
+import { ReorderFormSectionsDto } from './dto/reorder-form-sections.dto'
 import { FormSection } from './types'
 import { FormSectionsHelper } from './form-sections.helper'
 
@@ -29,5 +30,13 @@ export class FormSectionsService {
 
   async remove(formSectionId: number): Promise<void> {
     return this.formSectionsRepo.deleteFormSection(formSectionId)
+  }
+
+  async reorder(reorderFormSectionsDto: ReorderFormSectionsDto): Promise<FormSection[]> {
+    await FormSectionsHelper.validateReorderData(
+      reorderFormSectionsDto.sections,
+      this.formSectionsRepo
+    )
+    return this.formSectionsRepo.reorderFormSections(reorderFormSectionsDto.sections)
   }
 }
