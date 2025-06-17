@@ -18,6 +18,7 @@ import { ProcessesModule } from './processes/processes.module'
 import { SFormsModule } from './s-forms/s-forms.module'
 import { QuestionsAreasModule } from './questions-areas/questions-areas.module'
 import { MinisterialsModule } from './ministerials/ministerials.module'
+import { FormSectionsModule } from './form-sections/form-sections.module'
 
 config()
 
@@ -86,7 +87,8 @@ const knex = KnexModule.forRoot(
     ProcessesModule,
     SFormsModule,
     QuestionsAreasModule,
-    MinisterialsModule
+    MinisterialsModule,
+    FormSectionsModule
   ],
   controllers: [],
   providers: [

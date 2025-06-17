@@ -6,7 +6,8 @@ export enum Tables {
   PROCESSES = 'processes',
   S_FORMS = 'sForms',
   QUESTIONS_AREAS = 'questionsAreas',
-  MINISTERIALS = 'ministerials'
+  MINISTERIALS = 'ministerials',
+  FORM_SECTIONS = 'formSections'
 }
 
 export enum Users {
@@ -70,4 +71,13 @@ export enum Ministerials {
   MINISTERIAL_FIELD = 'ministerialField',
   MINISTERIAL_EMAIL = 'ministerialEmail',
   MINISTERIAL_ACTIVE = 'ministerialActive'
+}
+
+export enum FormSections {
+  FORM_SECTION_ID = 'formSectionId',
+  S_FORM_ID = 'sFormId',
+  FORM_SECTION_NAME = 'formSectionName',
+  FORM_SECTION_ORDER = 'formSectionOrder',
+  FORM_SECTION_DISPLAY_RULE = 'formSectionDisplayRule',
+  FORM_SECTION_DISPLAY_LINK = 'formSectionDisplayLink'
 }
