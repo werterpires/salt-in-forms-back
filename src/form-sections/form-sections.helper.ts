@@ -1,4 +1,3 @@
-
 import { CreateFormSection, FormSection, UpdateFormSection } from './types'
 import { CreateFormSectionDto } from './dto/create-form-section.dto'
 import { UpdateFormSectionDto } from './dto/update-form-section.dto'
@@ -31,26 +30,48 @@ export class FormSectionsHelper {
   }
 
   static validateDisplayRule(displayRule: number): boolean {
-    return Object.values(FormSectionDisplayRules).includes(displayRule as FormSectionDisplayRules)
+    return Object.values(FormSectionDisplayRules).includes(
+      displayRule as FormSectionDisplayRules
+    )
   }
 
-  static validateDisplayRuleAndLink(displayRule: number, displayLink?: number): void {
+  static validateDisplayRuleAndLink(
+    displayRule: number,
+    displayLink?: number
+  ): void {
     if (!this.validateDisplayRule(displayRule)) {
       throw new BadRequestException('#Regra de exibição inválida')
     }
 
-    if (displayRule !== FormSectionDisplayRules.ALWAYS_SHOW && !displayLink) {
-      throw new BadRequestException('#Link de exibição é obrigatório quando a regra não é "Sempre aparecer"')
+    if (
+      (displayRule as FormSectionDisplayRules) !==
+        FormSectionDisplayRules.ALWAYS_SHOW &&
+      !displayLink
+    ) {
+      throw new BadRequestException(
+        '#Link de exibição é obrigatório quando a regra não é "Sempre aparecer"'
+      )
     }
   }
 
-  static processDisplayLink(displayRule: number, displayLink?: number): number | undefined {
-    return displayRule === FormSectionDisplayRules.ALWAYS_SHOW ? undefined : displayLink
+  static processDisplayLink(
+    displayRule: number,
+    displayLink?: number
+  ): number | undefined {
+    return (displayRule as FormSectionDisplayRules) ===
+      FormSectionDisplayRules.ALWAYS_SHOW
+      ? undefined
+      : displayLink
   }
 
-  static validateDisplayLinkOrder(linkSection: FormSection, newSectionOrder: number): void {
+  static validateDisplayLinkOrder(
+    linkSection: FormSection,
+    newSectionOrder: number
+  ): void {
     if (linkSection.formSectionOrder >= newSectionOrder) {
-      throw new BadRequestException('#A seção referenciada no link de exibição deve ter ordem menor que a seção sendo criada')
+      throw new BadRequestException(
+        '#A seção referenciada no link de exibição deve ter ordem menor que a seção sendo criada'
+      )
     }
   }
 
@@ -72,10 +93,15 @@ export class FormSectionsHelper {
       )
 
       if (!linkedSection) {
-        throw new BadRequestException('#Seção referenciada no link de exibição não encontrada')
+        throw new BadRequestException(
+          '#Seção referenciada no link de exibição não encontrada'
+        )
       }
 
-      this.validateDisplayLinkOrder(linkedSection, createFormSectionDto.formSectionOrder)
+      this.validateDisplayLinkOrder(
+        linkedSection,
+        createFormSectionDto.formSectionOrder
+      )
     }
 
     // 3. Processar o displayLink conforme a regra
@@ -101,7 +127,7 @@ export class FormSectionsHelper {
     // Buscar todas as seções para validação
     const firstSectionId = sections[0].formSectionId
     const firstSection = await formSectionsRepo.findById(firstSectionId)
-    
+
     if (!firstSection) {
       throw new BadRequestException('#Seção não encontrada')
     }
@@ -111,31 +137,45 @@ export class FormSectionsHelper {
 
     // Validar se todas as seções são do mesmo formulário
     for (const section of sections) {
-      const foundSection = allFormSections.find(s => s.formSectionId === section.formSectionId)
+      const foundSection = allFormSections.find(
+        (s) => s.formSectionId === section.formSectionId
+      )
       if (!foundSection) {
-        throw new BadRequestException('#Todas as seções devem pertencer ao mesmo formulário')
+        throw new BadRequestException(
+          '#Todas as seções devem pertencer ao mesmo formulário'
+        )
       }
     }
 
     // Validar se todas as seções do formulário estão no array
     if (sections.length !== allFormSections.length) {
-      throw new BadRequestException('#Todas as seções do formulário devem estar presentes no array')
+      throw new BadRequestException(
+        '#Todas as seções do formulário devem estar presentes no array'
+      )
     }
 
     // Validar se todos os IDs do formulário estão no array
-    const sectionIds = sections.map(s => s.formSectionId).sort((a, b) => a - b)
-    const formSectionIds = allFormSections.map(s => s.formSectionId).sort((a, b) => a - b)
-    
+    const sectionIds = sections
+      .map((s) => s.formSectionId)
+      .sort((a, b) => a - b)
+    const formSectionIds = allFormSections
+      .map((s) => s.formSectionId)
+      .sort((a, b) => a - b)
+
     if (JSON.stringify(sectionIds) !== JSON.stringify(formSectionIds)) {
-      throw new BadRequestException('#Todas as seções do formulário devem estar presentes no array')
+      throw new BadRequestException(
+        '#Todas as seções do formulário devem estar presentes no array'
+      )
     }
 
     // Validar ordenação sequencial sem saltos nem repetições
-    const orders = sections.map(s => s.formSectionOrder).sort((a, b) => a - b)
-    
+    const orders = sections.map((s) => s.formSectionOrder).sort((a, b) => a - b)
+
     for (let i = 0; i < orders.length; i++) {
       if (orders[i] !== i + 1) {
-        throw new BadRequestException('#A ordenação deve ser sequencial, começando em 1 e sem saltos ou repetições')
+        throw new BadRequestException(
+          '#A ordenação deve ser sequencial, começando em 1 e sem saltos ou repetições'
+        )
       }
     }
   }
