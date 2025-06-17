@@ -1,4 +1,3 @@
-
 import { IsNumber, IsOptional, Length, Min } from 'class-validator'
 
 export class CreateFormSectionDto {
@@ -18,6 +17,9 @@ export class CreateFormSectionDto {
   formSectionDisplayRule: number
 
   @IsOptional()
-  @IsNumber({}, { message: '#O link de exibição deve ser numérico.' })
+  @IsNumber(
+    {},
+    { message: '#O link de seção da regra de exibição deve ser numérico.' }
+  )
   formSectionDisplayLink?: number
 }

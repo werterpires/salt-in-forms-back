@@ -1,5 +1,13 @@
-
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  ParseIntPipe,
+  Put
+} from '@nestjs/common'
 import { FormSectionsService } from './form-sections.service'
 import { CreateFormSectionDto } from './dto/create-form-section.dto'
 import { UpdateFormSectionDto } from './dto/update-form-section.dto'
@@ -18,7 +26,7 @@ export class FormSectionsController {
     return this.formSectionsService.findAllBySFormId(sFormId)
   }
 
-  @Patch()
+  @Put()
   update(@Body() updateFormSectionDto: UpdateFormSectionDto) {
     return this.formSectionsService.update(updateFormSectionDto)
   }

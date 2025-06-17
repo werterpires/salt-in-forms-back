@@ -1,4 +1,3 @@
-
 import { Injectable } from '@nestjs/common'
 import * as knex from 'knex'
 import * as db from '../constants/db-schema.enum'
@@ -15,21 +14,25 @@ export class FormSectionsRepo {
       .select('*')
   }
 
-  async createFormSection(createFormSection: CreateFormSection): Promise<FormSection> {
+  async createFormSection(
+    createFormSection: CreateFormSection
+  ): Promise<FormSection> {
     const [formSection] = await this.knex(db.Tables.FORM_SECTIONS)
       .insert(createFormSection)
       .returning('*')
     return formSection
   }
 
-  async updateFormSection(updateFormSection: UpdateFormSection): Promise<FormSection> {
+  async updateFormSection(
+    updateFormSection: UpdateFormSection
+  ): Promise<FormSection> {
     const { formSectionId, ...updateData } = updateFormSection
-    
+
     const [formSection] = await this.knex(db.Tables.FORM_SECTIONS)
       .where(db.FormSections.FORM_SECTION_ID, formSectionId)
       .update(updateData)
       .returning('*')
-    
+
     return formSection
   }
 
@@ -43,7 +46,7 @@ export class FormSectionsRepo {
     const formSection = await this.knex(db.Tables.FORM_SECTIONS)
       .where(db.FormSections.FORM_SECTION_ID, formSectionId)
       .first()
-    
+
     return formSection || null
   }
 }

@@ -1,4 +1,3 @@
-
 import { CreateFormSection, FormSection, UpdateFormSection } from './types'
 import { CreateFormSectionDto } from './dto/create-form-section.dto'
 import { UpdateFormSectionDto } from './dto/update-form-section.dto'
@@ -22,14 +21,6 @@ export class FormSectionsHelper {
       formSectionDisplayRule: dto.formSectionDisplayRule,
       formSectionDisplayLink: dto.formSectionDisplayLink
     }
-  }
-
-  static validateFormSectionOrder(formSections: FormSection[], newOrder: number, excludeId?: number): boolean {
-    const existingOrders = formSections
-      .filter(section => excludeId ? section.formSectionId !== excludeId : true)
-      .map(section => section.formSectionOrder)
-    
-    return !existingOrders.includes(newOrder)
   }
 
   static sortFormSectionsByOrder(formSections: FormSection[]): FormSection[] {
