@@ -1,4 +1,3 @@
-
 export enum FormSectionDisplayRules {
   ALWAYS_SHOW = 1,
   SHOW_IF = 2,

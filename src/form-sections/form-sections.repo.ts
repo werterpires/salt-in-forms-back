@@ -14,23 +14,14 @@ export class FormSectionsRepo {
       .orderBy(db.FormSections.FORM_SECTION_ORDER, 'asc')
   }
 
-  async createFormSection(
-    createFormSection: CreateFormSection
-  ): Promise<FormSection> {
-    const [formSection] = await this.knex(db.Tables.FORM_SECTIONS)
-      .insert(createFormSection)
-      .returning('*')
-    return formSection
+  async createFormSection(createFormSection: CreateFormSection): Promise<void> {
+    await this.knex(db.Tables.FORM_SECTIONS).insert(createFormSection)
   }
 
-  async updateFormSection(
-    updateFormSection: UpdateFormSection
-  ): Promise<FormSection> {
-    const [formSection] = await this.knex(db.Tables.FORM_SECTIONS)
+  async updateFormSection(updateFormSection: UpdateFormSection): Promise<void> {
+    await this.knex(db.Tables.FORM_SECTIONS)
       .where(db.FormSections.FORM_SECTION_ID, updateFormSection.formSectionId)
       .update(updateFormSection)
-      .returning('*')
-    return formSection
   }
 
   async deleteFormSection(formSectionId: number): Promise<void> {
@@ -69,7 +60,7 @@ export class FormSectionsRepo {
 
   async createFormSectionWithReorder(
     createFormSection: CreateFormSection
-  ): Promise<FormSection> {
+  ): Promise<void> {
     return this.knex.transaction(async (trx) => {
       // Incrementa as ordens das seções a partir da ordem desejada
       await trx(db.Tables.FORM_SECTIONS)
@@ -82,34 +73,21 @@ export class FormSectionsRepo {
         .increment(db.FormSections.FORM_SECTION_ORDER, 1)
 
       // Cria a nova seção
-      const [formSection] = await trx(db.Tables.FORM_SECTIONS)
-        .insert(createFormSection)
-        .returning('*')
-
-      return formSection
+      await trx(db.Tables.FORM_SECTIONS).insert(createFormSection)
     })
   }
 
   async reorderFormSections(
     sections: { formSectionId: number; formSectionOrder: number }[]
-  ): Promise<FormSection[]> {
-    return this.knex.transaction(async (trx) => {
-      const updatedSections: FormSection[] = []
-
+  ): Promise<void> {
+    await this.knex.transaction(async (trx) => {
       for (const section of sections) {
-        const [updatedSection] = await trx(db.Tables.FORM_SECTIONS)
+        await trx(db.Tables.FORM_SECTIONS)
           .where(db.FormSections.FORM_SECTION_ID, section.formSectionId)
           .update({
             [db.FormSections.FORM_SECTION_ORDER]: section.formSectionOrder
           })
-          .returning('*')
-
-        updatedSections.push(updatedSection)
       }
-
-      return updatedSections.sort(
-        (a, b) => a.formSectionOrder - b.formSectionOrder
-      )
     })
   }
 }

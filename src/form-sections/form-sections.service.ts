@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { FormSectionsRepo } from './form-sections.repo'
 import { CreateFormSectionDto } from './dto/create-form-section.dto'
 import { UpdateFormSectionDto } from './dto/update-form-section.dto'
@@ -15,7 +15,7 @@ export class FormSectionsService {
     return FormSectionsHelper.sortFormSectionsByOrder(formSections)
   }
 
-  async create(createFormSectionDto: CreateFormSectionDto): Promise<FormSection> {
+  async create(createFormSectionDto: CreateFormSectionDto): Promise<void> {
     const createFormSection = await FormSectionsHelper.processCreateFormSection(
       createFormSectionDto,
       this.formSectionsRepo
@@ -23,8 +23,9 @@ export class FormSectionsService {
     return this.formSectionsRepo.createFormSectionWithReorder(createFormSection)
   }
 
-  async update(updateFormSectionDto: UpdateFormSectionDto): Promise<FormSection> {
-    const updateFormSection = FormSectionsHelper.mapUpdateDtoToEntity(updateFormSectionDto)
+  async update(updateFormSectionDto: UpdateFormSectionDto): Promise<void> {
+    const updateFormSection =
+      FormSectionsHelper.mapUpdateDtoToEntity(updateFormSectionDto)
     return this.formSectionsRepo.updateFormSection(updateFormSection)
   }
 
@@ -32,11 +33,13 @@ export class FormSectionsService {
     return this.formSectionsRepo.deleteFormSection(formSectionId)
   }
 
-  async reorder(reorderFormSectionsDto: ReorderFormSectionsDto): Promise<FormSection[]> {
+  async reorder(reorderFormSectionsDto: ReorderFormSectionsDto): Promise<void> {
     await FormSectionsHelper.validateReorderData(
       reorderFormSectionsDto.sections,
       this.formSectionsRepo
     )
-    return this.formSectionsRepo.reorderFormSections(reorderFormSectionsDto.sections)
+    return this.formSectionsRepo.reorderFormSections(
+      reorderFormSectionsDto.sections
+    )
   }
 }
