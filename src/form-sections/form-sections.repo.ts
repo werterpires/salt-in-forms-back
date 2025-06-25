@@ -25,9 +25,27 @@ export class FormSectionsRepo {
   }
 
   async deleteFormSection(formSectionId: number): Promise<void> {
-    await this.knex(db.Tables.FORM_SECTIONS)
-      .where(db.FormSections.FORM_SECTION_ID, formSectionId)
-      .del()
+    return this.knex.transaction(async (trx) => {
+      // Buscar a seção que será deletada para obter sFormId e order
+      const sectionToDelete = await trx(db.Tables.FORM_SECTIONS)
+        .where(db.FormSections.FORM_SECTION_ID, formSectionId)
+        .first()
+
+      if (!sectionToDelete) {
+        return
+      }
+
+      // Deletar a seção
+      await trx(db.Tables.FORM_SECTIONS)
+        .where(db.FormSections.FORM_SECTION_ID, formSectionId)
+        .del()
+
+      // Decrementar a ordem das seções com order maior que a seção deletada
+      await trx(db.Tables.FORM_SECTIONS)
+        .where(db.FormSections.S_FORM_ID, sectionToDelete.sFormId)
+        .andWhere(db.FormSections.FORM_SECTION_ORDER, '>', sectionToDelete.formSectionOrder)
+        .decrement(db.FormSections.FORM_SECTION_ORDER, 1)
+    })
   }
 
   async findById(formSectionId: number): Promise<FormSection | null> {
