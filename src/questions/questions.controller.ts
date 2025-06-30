@@ -1,34 +1,55 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { QuestionsService } from './questions.service';
-import { CreateQuestionDto } from './dto/create-question.dto';
-import { UpdateQuestionDto } from './dto/update-question.dto';
+
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  ParseIntPipe,
+  Put,
+  HttpCode,
+  HttpStatus
+} from '@nestjs/common'
+import { QuestionsService } from './questions.service'
+import { CreateQuestionDto } from './dto/create-question.dto'
+import { UpdateQuestionDto } from './dto/update-question.dto'
+import { ReorderQuestionsDto } from './dto/reorder-questions.dto'
+import { Roles } from 'src/users/decorators/roles.decorator'
+import { ERoles } from 'src/constants/roles.const'
 
 @Controller('questions')
 export class QuestionsController {
   constructor(private readonly questionsService: QuestionsService) {}
 
+  @Roles(ERoles.ADMIN)
   @Post()
   create(@Body() createQuestionDto: CreateQuestionDto) {
-    return this.questionsService.create(createQuestionDto);
+    return this.questionsService.create(createQuestionDto)
   }
 
-  @Get()
-  findAll() {
-    return this.questionsService.findAll();
+  @Roles(ERoles.ADMIN)
+  @Get('by-section/:formSectionId')
+  findAllByFormSectionId(@Param('formSectionId', ParseIntPipe) formSectionId: number) {
+    return this.questionsService.findAllByFormSectionId(formSectionId)
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.questionsService.findOne(+id);
+  @Roles(ERoles.ADMIN)
+  @Put()
+  update(@Body() updateQuestionDto: UpdateQuestionDto) {
+    return this.questionsService.update(updateQuestionDto)
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateQuestionDto: UpdateQuestionDto) {
-    return this.questionsService.update(+id, updateQuestionDto);
+  @Roles(ERoles.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete(':questionId')
+  remove(@Param('questionId', ParseIntPipe) questionId: number) {
+    return this.questionsService.remove(questionId)
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.questionsService.remove(+id);
+  @Roles(ERoles.ADMIN)
+  @Put('reorder')
+  reorder(@Body() reorderQuestionsDto: ReorderQuestionsDto) {
+    return this.questionsService.reorder(reorderQuestionsDto)
   }
 }

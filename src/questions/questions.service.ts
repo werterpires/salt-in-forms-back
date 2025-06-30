@@ -1,26 +1,48 @@
-import { Injectable } from '@nestjs/common';
-import { CreateQuestionDto } from './dto/create-question.dto';
-import { UpdateQuestionDto } from './dto/update-question.dto';
+
+import { Injectable } from '@nestjs/common'
+import { QuestionsRepo } from './questions.repo'
+import { FormSectionsRepo } from '../form-sections/form-sections.repo'
+import { CreateQuestionDto } from './dto/create-question.dto'
+import { UpdateQuestionDto } from './dto/update-question.dto'
+import { ReorderQuestionsDto } from './dto/reorder-questions.dto'
+import { Question } from './types'
+import { QuestionsHelper } from './questions.helper'
 
 @Injectable()
 export class QuestionsService {
-  create(createQuestionDto: CreateQuestionDto) {
-    return 'This action adds a new question';
+  constructor(
+    private readonly questionsRepo: QuestionsRepo,
+    private readonly formSectionsRepo: FormSectionsRepo
+  ) {}
+
+  async findAllByFormSectionId(formSectionId: number): Promise<Question[]> {
+    const questions = await this.questionsRepo.findAllByFormSectionId(formSectionId)
+    return QuestionsHelper.sortQuestionsByOrder(questions)
   }
 
-  findAll() {
-    return `This action returns all questions`;
+  async create(createQuestionDto: CreateQuestionDto): Promise<void> {
+    const createQuestion = await QuestionsHelper.processCreateQuestion(
+      createQuestionDto,
+      this.questionsRepo,
+      this.formSectionsRepo
+    )
+    return this.questionsRepo.createQuestionWithReorder(createQuestion)
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} question`;
+  async update(updateQuestionDto: UpdateQuestionDto): Promise<void> {
+    const updateQuestion = QuestionsHelper.mapUpdateDtoToEntity(updateQuestionDto)
+    return this.questionsRepo.updateQuestion(updateQuestion)
   }
 
-  update(id: number, updateQuestionDto: UpdateQuestionDto) {
-    return `This action updates a #${id} question`;
+  async remove(questionId: number): Promise<void> {
+    return this.questionsRepo.deleteQuestion(questionId)
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} question`;
+  async reorder(reorderQuestionsDto: ReorderQuestionsDto): Promise<void> {
+    await QuestionsHelper.validateReorderData(
+      reorderQuestionsDto.questions,
+      this.questionsRepo
+    )
+    return this.questionsRepo.reorderQuestions(reorderQuestionsDto.questions)
   }
 }
