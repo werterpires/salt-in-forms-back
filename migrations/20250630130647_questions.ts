@@ -29,7 +29,7 @@ export async function up(knex: Knex): Promise<void> {
     table.string(db.Questions.QUESTION_DESCRIPTION, 255).notNullable()
     table.integer(db.Questions.QUESTION_DISPLAY_RULE).notNullable()
     table
-      .integer(db.FormSections.FORM_SECTION_DISPLAY_RULE)
+      .integer(db.Questions.FORM_SECTION_DISPLAY_LINK)
       .unsigned()
       .nullable()
       .references(db.FormSections.FORM_SECTION_ID)
