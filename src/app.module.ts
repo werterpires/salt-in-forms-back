@@ -19,6 +19,7 @@ import { SFormsModule } from './s-forms/s-forms.module'
 import { QuestionsAreasModule } from './questions-areas/questions-areas.module'
 import { MinisterialsModule } from './ministerials/ministerials.module'
 import { FormSectionsModule } from './form-sections/form-sections.module'
+import { QuestionsModule } from './questions/questions.module';
 
 config()
 
@@ -88,7 +89,8 @@ const knex = KnexModule.forRoot(
     SFormsModule,
     QuestionsAreasModule,
     MinisterialsModule,
-    FormSectionsModule
+    FormSectionsModule,
+    QuestionsModule
   ],
   controllers: [],
   providers: [

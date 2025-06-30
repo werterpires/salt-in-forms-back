@@ -7,7 +7,8 @@ export enum Tables {
   S_FORMS = 'sForms',
   QUESTIONS_AREAS = 'questionsAreas',
   MINISTERIALS = 'ministerials',
-  FORM_SECTIONS = 'formSections'
+  FORM_SECTIONS = 'formSections',
+  QUESTIONS = 'questions'
 }
 
 export enum Users {
@@ -80,4 +81,19 @@ export enum FormSections {
   FORM_SECTION_ORDER = 'formSectionOrder',
   FORM_SECTION_DISPLAY_RULE = 'formSectionDisplayRule',
   FORM_SECTION_DISPLAY_LINK = 'formSectionDisplayLink'
+}
+
+export enum Questions {
+  QUESTION_ID = 'questionId',
+  FORM_SECTION_ID = 'formSectionId',
+  QUESTION_AREA_ID = 'questionAreaId',
+  QUESTION_ORDER = 'questionOrder',
+  QUESTION_TYPE = 'questionType',
+  QUESTION_STATEMENT = 'questionStatement',
+  QUESTION_DESCRIPTION = 'questionDescription',
+  QUESTION_DISPLAY_RULE = 'questionDisplayRule',
+  FORM_SECTION_DISPLAY_LINK = 'formSectionDisplayLink',
+  QUESTION_DISPLAY_LINK = 'questionDisplayLink',
+  ANSWER_DISPLEY_RULE = 'answerDisplayRule',
+  ANSWER_DISPLAY_VALUE = 'answerDisplayValue'
 }
