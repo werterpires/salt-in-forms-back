@@ -1,4 +1,3 @@
-
 import { CreateQuestion, Question, UpdateQuestion } from './types'
 import { CreateQuestionDto } from './dto/create-question.dto'
 import { UpdateQuestionDto } from './dto/update-question.dto'
@@ -17,7 +16,9 @@ export class QuestionsHelper {
       formSectionDisplayLink: dto.formSectionDisplayLink,
       questionDisplayLink: dto.questionDisplayLink,
       answerDisplayRule: dto.answerDisplayRule,
-      answerDisplayValue: dto.answerDisplayValue ? dto.answerDisplayValue.join('|') : undefined
+      answerDisplayValue: dto.answerDisplayValue
+        ? dto.answerDisplayValue.join('|')
+        : undefined
     }
   }
 
@@ -29,7 +30,9 @@ export class QuestionsHelper {
       formSectionDisplayLink: dto.formSectionDisplayLink,
       questionDisplayLink: dto.questionDisplayLink,
       answerDisplayRule: dto.answerDisplayRule,
-      answerDisplayValue: dto.answerDisplayValue ? dto.answerDisplayValue.join('|') : undefined
+      answerDisplayValue: dto.answerDisplayValue
+        ? dto.answerDisplayValue.join('|')
+        : undefined
     }
   }
 
@@ -54,14 +57,27 @@ export class QuestionsHelper {
       throw new BadRequestException('#Regra de exibição inválida')
     }
 
-    if ((displayRule as FormSectionDisplayRules) === FormSectionDisplayRules.ALWAYS_SHOW) {
-      if (formSectionDisplayLink || questionDisplayLink || answerDisplayRule || answerDisplayValue) {
+    if (
+      (displayRule as FormSectionDisplayRules) ===
+      FormSectionDisplayRules.ALWAYS_SHOW
+    ) {
+      if (
+        formSectionDisplayLink ||
+        questionDisplayLink ||
+        answerDisplayRule ||
+        answerDisplayValue
+      ) {
         throw new BadRequestException(
           '#Quando a regra é "Sempre aparecer", não deve haver campos de exibição condicional'
         )
       }
     } else {
-      if (!formSectionDisplayLink || !questionDisplayLink || !answerDisplayRule || !answerDisplayValue) {
+      if (
+        !formSectionDisplayLink ||
+        !questionDisplayLink ||
+        !answerDisplayRule ||
+        !answerDisplayValue
+      ) {
         throw new BadRequestException(
           '#Quando a regra não é "Sempre aparecer", são obrigatórios: formSectionDisplayLink, questionDisplayLink, answerDisplayRule e answerDisplayValue'
         )
@@ -81,7 +97,10 @@ export class QuestionsHelper {
     answerDisplayRule?: number
     answerDisplayValue?: string
   } {
-    if ((displayRule as FormSectionDisplayRules) === FormSectionDisplayRules.ALWAYS_SHOW) {
+    if (
+      (displayRule as FormSectionDisplayRules) ===
+      FormSectionDisplayRules.ALWAYS_SHOW
+    ) {
       return {
         formSectionDisplayLink: undefined,
         questionDisplayLink: undefined,
@@ -94,7 +113,9 @@ export class QuestionsHelper {
       formSectionDisplayLink,
       questionDisplayLink,
       answerDisplayRule,
-      answerDisplayValue: answerDisplayValue ? answerDisplayValue.join('|') : undefined
+      answerDisplayValue: answerDisplayValue
+        ? answerDisplayValue.join('|')
+        : undefined
     }
   }
 
@@ -103,24 +124,32 @@ export class QuestionsHelper {
     questionFormSectionId: number,
     formSectionsRepo: FormSectionsRepo
   ): Promise<void> {
-    const linkedSection = await formSectionsRepo.findById(formSectionDisplayLink)
-    
+    const linkedSection = await formSectionsRepo.findById(
+      formSectionDisplayLink
+    )
+
     if (!linkedSection) {
       throw new BadRequestException('#Seção referenciada não encontrada')
     }
 
-    const questionSection = await formSectionsRepo.findById(questionFormSectionId)
-    
+    const questionSection = await formSectionsRepo.findById(
+      questionFormSectionId
+    )
+
     if (!questionSection) {
       throw new BadRequestException('#Seção da pergunta não encontrada')
     }
 
     if (linkedSection.sFormId !== questionSection.sFormId) {
-      throw new BadRequestException('#A seção referenciada deve ser do mesmo formulário')
+      throw new BadRequestException(
+        '#A seção referenciada deve ser do mesmo formulário'
+      )
     }
 
     if (linkedSection.formSectionOrder > questionSection.formSectionOrder) {
-      throw new BadRequestException('#A seção referenciada deve ter ordem igual ou anterior')
+      throw new BadRequestException(
+        '#A seção referenciada deve ter ordem igual ou anterior'
+      )
     }
   }
 
@@ -132,19 +161,23 @@ export class QuestionsHelper {
     questionsRepo: QuestionsRepo
   ): Promise<void> {
     const linkedQuestion = await questionsRepo.findById(questionDisplayLink)
-    
+
     if (!linkedQuestion) {
       throw new BadRequestException('#Pergunta referenciada não encontrada')
     }
 
     if (formSectionDisplayLink === questionFormSectionId) {
       if (linkedQuestion.questionOrder >= questionOrder) {
-        throw new BadRequestException('#A pergunta referenciada deve ter ordem menor')
+        throw new BadRequestException(
+          '#A pergunta referenciada deve ter ordem menor'
+        )
       }
     }
 
     if (linkedQuestion.formSectionId !== formSectionDisplayLink) {
-      throw new BadRequestException('#A pergunta referenciada deve estar na seção especificada')
+      throw new BadRequestException(
+        '#A pergunta referenciada deve estar na seção especificada'
+      )
     }
   }
 
@@ -213,7 +246,8 @@ export class QuestionsHelper {
     }
 
     const formSectionId = firstQuestion.formSectionId
-    const allSectionQuestions = await questionsRepo.findAllByFormSectionId(formSectionId)
+    const allSectionQuestions =
+      await questionsRepo.findAllByFormSectionId(formSectionId)
 
     // Validar se todas as perguntas são da mesma seção
     for (const question of questions) {
@@ -235,9 +269,7 @@ export class QuestionsHelper {
     }
 
     // Validar se todos os IDs da seção estão no array
-    const questionIds = questions
-      .map((q) => q.questionId)
-      .sort((a, b) => a - b)
+    const questionIds = questions.map((q) => q.questionId).sort((a, b) => a - b)
     const sectionQuestionIds = allSectionQuestions
       .map((q) => q.questionId)
       .sort((a, b) => a - b)

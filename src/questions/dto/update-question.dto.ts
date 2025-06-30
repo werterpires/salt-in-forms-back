@@ -1,15 +1,18 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateQuestionDto } from './create-question.dto';
-
-export class UpdateQuestionDto extends PartialType(CreateQuestionDto) {}
-import { IsNumber, IsOptional, Length, IsArray, IsString } from 'class-validator'
+import {
+  IsNumber,
+  IsOptional,
+  Length,
+  IsArray,
+  IsString
+} from 'class-validator'
 
 export class UpdateQuestionDto {
   @IsNumber({}, { message: '#O ID da pergunta deve ser numérico.' })
   questionId: number
 
   @Length(3, 200, {
-    message: '#O nome da pergunta deve ter no mínimo 3 e no máximo 200 caracteres'
+    message:
+      '#O nome da pergunta deve ter no mínimo 3 e no máximo 200 caracteres'
   })
   questionName: string
 
@@ -25,7 +28,10 @@ export class UpdateQuestionDto {
   questionDisplayLink?: number
 
   @IsOptional()
-  @IsNumber({}, { message: '#A regra de exibição da resposta deve ser numérica.' })
+  @IsNumber(
+    {},
+    { message: '#A regra de exibição da resposta deve ser numérica.' }
+  )
   answerDisplayRule?: number
 
   @IsOptional()

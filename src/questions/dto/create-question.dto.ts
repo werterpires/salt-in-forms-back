@@ -1,12 +1,19 @@
-export class CreateQuestionDto {}
-import { IsNumber, IsOptional, Length, Min, IsArray, IsString } from 'class-validator'
+import {
+  IsNumber,
+  IsOptional,
+  Length,
+  Min,
+  IsArray,
+  IsString
+} from 'class-validator'
 
 export class CreateQuestionDto {
   @IsNumber({}, { message: '#O ID da seção deve ser numérico.' })
   formSectionId: number
 
   @Length(3, 200, {
-    message: '#O nome da pergunta deve ter no mínimo 3 e no máximo 200 caracteres'
+    message:
+      '#O nome da pergunta deve ter no mínimo 3 e no máximo 200 caracteres'
   })
   questionName: string
 
@@ -26,7 +33,10 @@ export class CreateQuestionDto {
   questionDisplayLink?: number
 
   @IsOptional()
-  @IsNumber({}, { message: '#A regra de exibição da resposta deve ser numérica.' })
+  @IsNumber(
+    {},
+    { message: '#A regra de exibição da resposta deve ser numérica.' }
+  )
   answerDisplayRule?: number
 
   @IsOptional()
