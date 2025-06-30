@@ -43,7 +43,11 @@ export class FormSectionsRepo {
       // Decrementar a ordem das seções com order maior que a seção deletada
       await trx(db.Tables.FORM_SECTIONS)
         .where(db.FormSections.S_FORM_ID, sectionToDelete.sFormId)
-        .andWhere(db.FormSections.FORM_SECTION_ORDER, '>', sectionToDelete.formSectionOrder)
+        .andWhere(
+          db.FormSections.FORM_SECTION_ORDER,
+          '>',
+          sectionToDelete.formSectionOrder
+        )
         .decrement(db.FormSections.FORM_SECTION_ORDER, 1)
     })
   }

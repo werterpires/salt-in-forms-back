@@ -174,9 +174,35 @@ export class FormSectionsHelper {
     for (let i = 0; i < orders.length; i++) {
       if (orders[i] !== i + 1) {
         throw new BadRequestException(
-          '#A ordenação deve ser sequencial, começando em 1 e sem saltos ou repetições'
+          '#A ordenação deve ser sequencial, começando em 1, sem saltos ou repetições'
         )
       }
     }
+
+    sections.forEach((incomingSection) => {
+      const currentSection = allFormSections.find(
+        (s) => s.formSectionId === incomingSection.formSectionId
+      )
+      if (!currentSection) {
+        throw new BadRequestException('#Seção não encontrada')
+      }
+
+      if (currentSection.formSectionDisplayRule !== 1) {
+        const sectionLinkId = currentSection.formSectionDisplayLink
+
+        const sectionLink = allFormSections.find(
+          (s) => s.formSectionId === sectionLinkId
+        )
+        if (!sectionLink) {
+          throw new BadRequestException('#Seção referenciada não encontrada')
+        }
+
+        if (sectionLink.formSectionOrder >= incomingSection.formSectionOrder) {
+          throw new BadRequestException(
+            `#A seção ${currentSection.formSectionName} depende da seção ${sectionLink.formSectionName}. Por isso a seção ${sectionLink.formSectionName} deve estar antes da seção ${currentSection.formSectionName}`
+          )
+        }
+      }
+    })
   }
 }

@@ -7,7 +7,6 @@ import {
   Delete,
   ParseIntPipe,
   Put,
-  Patch,
   HttpCode,
   HttpStatus
 } from '@nestjs/common'
@@ -49,7 +48,7 @@ export class FormSectionsController {
   }
 
   @Roles(ERoles.ADMIN)
-  @Patch('reorder')
+  @Put('reorder')
   reorder(@Body() reorderFormSectionsDto: ReorderFormSectionsDto) {
     return this.formSectionsService.reorder(reorderFormSectionsDto)
   }
