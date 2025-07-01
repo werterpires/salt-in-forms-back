@@ -1,4 +1,3 @@
-
 import { Injectable } from '@nestjs/common'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
@@ -44,7 +43,11 @@ export class QuestionsRepo {
       // Decrementar a ordem das perguntas com order maior que a pergunta deletada
       await trx(db.Tables.QUESTIONS)
         .where(db.Questions.FORM_SECTION_ID, questionToDelete.formSectionId)
-        .andWhere(db.Questions.QUESTION_ORDER, '>', questionToDelete.questionOrder)
+        .andWhere(
+          db.Questions.QUESTION_ORDER,
+          '>',
+          questionToDelete.questionOrder
+        )
         .decrement(db.Questions.QUESTION_ORDER, 1)
     })
   }
@@ -56,12 +59,18 @@ export class QuestionsRepo {
     return question || null
   }
 
-  async createQuestionWithReorder(createQuestion: CreateQuestion): Promise<void> {
+  async createQuestionWithReorder(
+    createQuestion: CreateQuestion
+  ): Promise<void> {
     return this.knex.transaction(async (trx) => {
       // Incrementa as ordens das perguntas a partir da ordem desejada
       await trx(db.Tables.QUESTIONS)
         .where(db.Questions.FORM_SECTION_ID, createQuestion.formSectionId)
-        .andWhere(db.Questions.QUESTION_ORDER, '>=', createQuestion.questionOrder)
+        .andWhere(
+          db.Questions.QUESTION_ORDER,
+          '>=',
+          createQuestion.questionOrder
+        )
         .increment(db.Questions.QUESTION_ORDER, 1)
 
       // Cria a nova pergunta

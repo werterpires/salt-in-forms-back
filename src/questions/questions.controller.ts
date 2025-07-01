@@ -1,4 +1,3 @@
-
 import {
   Controller,
   Get,
@@ -30,7 +29,9 @@ export class QuestionsController {
 
   @Roles(ERoles.ADMIN)
   @Get('by-section/:formSectionId')
-  findAllByFormSectionId(@Param('formSectionId', ParseIntPipe) formSectionId: number) {
+  findAllByFormSectionId(
+    @Param('formSectionId', ParseIntPipe) formSectionId: number
+  ) {
     return this.questionsService.findAllByFormSectionId(formSectionId)
   }
 
