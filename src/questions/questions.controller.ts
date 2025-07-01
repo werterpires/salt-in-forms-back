@@ -1,56 +1,53 @@
+
 import {
   Controller,
-  Get,
   Post,
   Body,
+  Get,
   Param,
-  Delete,
   ParseIntPipe,
   Put,
-  HttpCode,
-  HttpStatus
+  Delete,
+  Patch
 } from '@nestjs/common'
 import { QuestionsService } from './questions.service'
-import { CreateQuestionDto } from './dto/create-question.dto'
-import { UpdateQuestionDto } from './dto/update-question.dto'
-import { ReorderQuestionsDto } from './dto/reorder-questions.dto'
-import { Roles } from 'src/users/decorators/roles.decorator'
-import { ERoles } from 'src/constants/roles.const'
+import {
+  CreateQuestionDto,
+  UpdateQuestionDto,
+  ReorderQuestionsDto
+} from './dto'
+import { Question } from './types'
 
 @Controller('questions')
 export class QuestionsController {
   constructor(private readonly questionsService: QuestionsService) {}
 
-  @Roles(ERoles.ADMIN)
   @Post()
-  create(@Body() createQuestionDto: CreateQuestionDto) {
+  async create(@Body() createQuestionDto: CreateQuestionDto): Promise<void> {
     return this.questionsService.create(createQuestionDto)
   }
 
-  @Roles(ERoles.ADMIN)
-  @Get('by-section/:formSectionId')
-  findAllByFormSectionId(
+  @Get('section/:formSectionId')
+  async findAllBySectionId(
     @Param('formSectionId', ParseIntPipe) formSectionId: number
-  ) {
-    return this.questionsService.findAllByFormSectionId(formSectionId)
+  ): Promise<Question[]> {
+    return this.questionsService.findAllBySectionId(formSectionId)
   }
 
-  @Roles(ERoles.ADMIN)
   @Put()
-  update(@Body() updateQuestionDto: UpdateQuestionDto) {
+  async update(@Body() updateQuestionDto: UpdateQuestionDto): Promise<void> {
     return this.questionsService.update(updateQuestionDto)
   }
 
-  @Roles(ERoles.ADMIN)
-  @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':questionId')
-  remove(@Param('questionId', ParseIntPipe) questionId: number) {
-    return this.questionsService.remove(questionId)
+  async delete(
+    @Param('questionId', ParseIntPipe) questionId: number
+  ): Promise<void> {
+    return this.questionsService.delete(questionId)
   }
 
-  @Roles(ERoles.ADMIN)
-  @Put('reorder')
-  reorder(@Body() reorderQuestionsDto: ReorderQuestionsDto) {
+  @Patch('reorder')
+  async reorder(@Body() reorderQuestionsDto: ReorderQuestionsDto): Promise<void> {
     return this.questionsService.reorder(reorderQuestionsDto)
   }
 }

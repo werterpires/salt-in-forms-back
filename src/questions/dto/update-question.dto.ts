@@ -1,3 +1,4 @@
+
 import {
   IsNumber,
   IsOptional,
@@ -10,11 +11,23 @@ export class UpdateQuestionDto {
   @IsNumber({}, { message: '#O ID da pergunta deve ser numérico.' })
   questionId: number
 
-  @Length(3, 200, {
+  @IsNumber({}, { message: '#O ID da área da pergunta deve ser numérico.' })
+  questionAreaId: number
+
+  @IsNumber({}, { message: '#O tipo da pergunta deve ser numérico.' })
+  questionType: number
+
+  @Length(3, 255, {
     message:
-      '#O nome da pergunta deve ter no mínimo 3 e no máximo 200 caracteres'
+      '#O enunciado da pergunta deve ter no mínimo 3 e no máximo 255 caracteres'
   })
-  questionName: string
+  questionStatement: string
+
+  @Length(3, 255, {
+    message:
+      '#A descrição da pergunta deve ter no mínimo 3 e no máximo 255 caracteres'
+  })
+  questionDescription: string
 
   @IsNumber({}, { message: '#A regra de exibição deve ser numérica.' })
   questionDisplayRule: number

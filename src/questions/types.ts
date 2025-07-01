@@ -1,8 +1,12 @@
+
 export interface Question {
   questionId: number
   formSectionId: number
-  questionName: string
+  questionAreaId: number
   questionOrder: number
+  questionType: number
+  questionStatement: string
+  questionDescription: string
   questionDisplayRule: number
   formSectionDisplayLink?: number
   questionDisplayLink?: number
@@ -14,8 +18,11 @@ export interface Question {
 
 export interface CreateQuestion {
   formSectionId: number
-  questionName: string
+  questionAreaId: number
   questionOrder: number
+  questionType: number
+  questionStatement: string
+  questionDescription: string
   questionDisplayRule: number
   formSectionDisplayLink?: number
   questionDisplayLink?: number
@@ -25,7 +32,10 @@ export interface CreateQuestion {
 
 export interface UpdateQuestion {
   questionId: number
-  questionName: string
+  questionAreaId: number
+  questionType: number
+  questionStatement: string
+  questionDescription: string
   questionDisplayRule: number
   formSectionDisplayLink?: number
   questionDisplayLink?: number

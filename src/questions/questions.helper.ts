@@ -1,231 +1,200 @@
-import { CreateQuestion, Question, UpdateQuestion } from './types'
-import { CreateQuestionDto } from './dto/create-question.dto'
-import { UpdateQuestionDto } from './dto/update-question.dto'
-import { FormSectionDisplayRules } from '../constants/form-section-display-rules.const'
 import { BadRequestException } from '@nestjs/common'
+import { CreateQuestionDto, UpdateQuestionDto } from './dto'
+import { CreateQuestion, UpdateQuestion } from './types'
+import { FormSectionDisplayRules } from '../constants/form-section-display-rules.const'
 import { QuestionsRepo } from './questions.repo'
-import { FormSectionsRepo } from '../form-sections/form-sections.repo'
 
 export class QuestionsHelper {
-  static mapCreateDtoToEntity(dto: CreateQuestionDto): CreateQuestion {
+  static async transformCreateDto(
+    createQuestionDto: CreateQuestionDto,
+    questionsRepo: QuestionsRepo
+  ): Promise<CreateQuestion> {
+    await this.validateCreateQuestion(createQuestionDto, questionsRepo)
+
+    const answerDisplayValue = createQuestionDto.answerDisplayValue
+      ? createQuestionDto.answerDisplayValue.join('||')
+      : undefined
+
     return {
-      formSectionId: dto.formSectionId,
-      questionName: dto.questionName,
-      questionOrder: dto.questionOrder,
-      questionDisplayRule: dto.questionDisplayRule,
-      formSectionDisplayLink: dto.formSectionDisplayLink,
-      questionDisplayLink: dto.questionDisplayLink,
-      answerDisplayRule: dto.answerDisplayRule,
-      answerDisplayValue: dto.answerDisplayValue
-        ? dto.answerDisplayValue.join('|')
-        : undefined
+      formSectionId: createQuestionDto.formSectionId,
+      questionAreaId: createQuestionDto.questionAreaId,
+      questionOrder: createQuestionDto.questionOrder,
+      questionType: createQuestionDto.questionType,
+      questionStatement: createQuestionDto.questionStatement,
+      questionDescription: createQuestionDto.questionDescription,
+      questionDisplayRule: createQuestionDto.questionDisplayRule,
+      formSectionDisplayLink: createQuestionDto.formSectionDisplayLink,
+      questionDisplayLink: createQuestionDto.questionDisplayLink,
+      answerDisplayRule: createQuestionDto.answerDisplayRule,
+      answerDisplayValue
     }
   }
 
-  static mapUpdateDtoToEntity(dto: UpdateQuestionDto): UpdateQuestion {
+  static async transformUpdateDto(
+    updateQuestionDto: UpdateQuestionDto,
+    questionsRepo: QuestionsRepo
+  ): Promise<UpdateQuestion> {
+    await this.validateUpdateQuestion(updateQuestionDto, questionsRepo)
+
+    const answerDisplayValue = updateQuestionDto.answerDisplayValue
+      ? updateQuestionDto.answerDisplayValue.join('||')
+      : undefined
+
     return {
-      questionId: dto.questionId,
-      questionName: dto.questionName,
-      questionDisplayRule: dto.questionDisplayRule,
-      formSectionDisplayLink: dto.formSectionDisplayLink,
-      questionDisplayLink: dto.questionDisplayLink,
-      answerDisplayRule: dto.answerDisplayRule,
-      answerDisplayValue: dto.answerDisplayValue
-        ? dto.answerDisplayValue.join('|')
-        : undefined
+      questionId: updateQuestionDto.questionId,
+      questionAreaId: updateQuestionDto.questionAreaId,
+      questionType: updateQuestionDto.questionType,
+      questionStatement: updateQuestionDto.questionStatement,
+      questionDescription: updateQuestionDto.questionDescription,
+      questionDisplayRule: updateQuestionDto.questionDisplayRule,
+      formSectionDisplayLink: updateQuestionDto.formSectionDisplayLink,
+      questionDisplayLink: updateQuestionDto.questionDisplayLink,
+      answerDisplayRule: updateQuestionDto.answerDisplayRule,
+      answerDisplayValue
     }
   }
 
-  static sortQuestionsByOrder(questions: Question[]): Question[] {
-    return questions.sort((a, b) => a.questionOrder - b.questionOrder)
-  }
-
-  static validateDisplayRule(displayRule: number): boolean {
-    return Object.values(FormSectionDisplayRules).includes(
-      displayRule as FormSectionDisplayRules
-    )
-  }
-
-  static validateDisplayRuleAndRequiredFields(
-    displayRule: number,
-    formSectionDisplayLink?: number,
-    questionDisplayLink?: number,
-    answerDisplayRule?: number,
-    answerDisplayValue?: string[]
-  ): void {
-    if (!this.validateDisplayRule(displayRule)) {
+  static async validateCreateQuestion(
+    createQuestionDto: CreateQuestionDto,
+    questionsRepo: QuestionsRepo
+  ): Promise<void> {
+    // Validar se a regra de exibição é válida
+    if (!Object.values(FormSectionDisplayRules).includes(createQuestionDto.questionDisplayRule)) {
       throw new BadRequestException('#Regra de exibição inválida')
     }
 
-    if (
-      (displayRule as FormSectionDisplayRules) ===
-      FormSectionDisplayRules.ALWAYS_SHOW
-    ) {
-      if (
-        formSectionDisplayLink ||
-        questionDisplayLink ||
-        answerDisplayRule ||
-        answerDisplayValue
-      ) {
+    // Validar campos obrigatórios baseados na regra de exibição
+    if (createQuestionDto.questionDisplayRule !== FormSectionDisplayRules.ALWAYS_SHOW) {
+      if (!createQuestionDto.formSectionDisplayLink ||
+          !createQuestionDto.questionDisplayLink ||
+          !createQuestionDto.answerDisplayRule ||
+          !createQuestionDto.answerDisplayValue) {
         throw new BadRequestException(
-          '#Quando a regra é "Sempre aparecer", não deve haver campos de exibição condicional'
+          '#Para regras de exibição diferentes de "Sempre aparecer", é obrigatório informar formSectionDisplayLink, questionDisplayLink, answerDisplayRule e answerDisplayValue'
         )
       }
     } else {
-      if (
-        !formSectionDisplayLink ||
-        !questionDisplayLink ||
-        !answerDisplayRule ||
-        !answerDisplayValue
-      ) {
+      // Se for "Sempre aparecer", nenhum desses campos deve existir
+      if (createQuestionDto.formSectionDisplayLink ||
+          createQuestionDto.questionDisplayLink ||
+          createQuestionDto.answerDisplayRule ||
+          createQuestionDto.answerDisplayValue) {
         throw new BadRequestException(
-          '#Quando a regra não é "Sempre aparecer", são obrigatórios: formSectionDisplayLink, questionDisplayLink, answerDisplayRule e answerDisplayValue'
+          '#Para regra "Sempre aparecer", não devem ser informados formSectionDisplayLink, questionDisplayLink, answerDisplayRule nem answerDisplayValue'
         )
       }
     }
-  }
 
-  static processDisplayFields(
-    displayRule: number,
-    formSectionDisplayLink?: number,
-    questionDisplayLink?: number,
-    answerDisplayRule?: number,
-    answerDisplayValue?: string[]
-  ): {
-    formSectionDisplayLink?: number
-    questionDisplayLink?: number
-    answerDisplayRule?: number
-    answerDisplayValue?: string
-  } {
-    if (
-      (displayRule as FormSectionDisplayRules) ===
-      FormSectionDisplayRules.ALWAYS_SHOW
-    ) {
-      return {
-        formSectionDisplayLink: undefined,
-        questionDisplayLink: undefined,
-        answerDisplayRule: undefined,
-        answerDisplayValue: undefined
+    // Validar se a seção existe
+    const section = await questionsRepo.findSectionById(createQuestionDto.formSectionId)
+    if (!section) {
+      throw new BadRequestException('#Seção não encontrada')
+    }
+
+    // Validar se formSectionDisplayLink é válido (se fornecido)
+    if (createQuestionDto.formSectionDisplayLink) {
+      const linkedSection = await questionsRepo.findSectionById(createQuestionDto.formSectionDisplayLink)
+      if (!linkedSection) {
+        throw new BadRequestException('#Seção vinculada não encontrada')
+      }
+
+      // Verificar se ambas as seções são do mesmo formulário
+      if (section.sFormId !== linkedSection.sFormId) {
+        throw new BadRequestException('#A seção vinculada deve ser do mesmo formulário')
+      }
+
+      // Verificar se a seção vinculada tem ordem igual ou anterior
+      if (linkedSection.formSectionOrder > section.formSectionOrder) {
+        throw new BadRequestException('#A seção vinculada deve ter ordem igual ou anterior à seção da pergunta')
+      }
+
+      // Se for a mesma seção, validar a pergunta vinculada
+      if (createQuestionDto.formSectionDisplayLink === createQuestionDto.formSectionId && 
+          createQuestionDto.questionDisplayLink) {
+        const linkedQuestion = await questionsRepo.findById(createQuestionDto.questionDisplayLink)
+        if (!linkedQuestion) {
+          throw new BadRequestException('#Pergunta vinculada não encontrada')
+        }
+
+        if (linkedQuestion.questionOrder >= createQuestionDto.questionOrder) {
+          throw new BadRequestException('#A pergunta vinculada deve ter ordem menor que a pergunta sendo criada')
+        }
       }
     }
-
-    return {
-      formSectionDisplayLink,
-      questionDisplayLink,
-      answerDisplayRule,
-      answerDisplayValue: answerDisplayValue
-        ? answerDisplayValue.join('|')
-        : undefined
-    }
   }
 
-  static async validateFormSectionDisplayLink(
-    formSectionDisplayLink: number,
-    questionFormSectionId: number,
-    formSectionsRepo: FormSectionsRepo
-  ): Promise<void> {
-    const linkedSection = await formSectionsRepo.findById(
-      formSectionDisplayLink
-    )
-
-    if (!linkedSection) {
-      throw new BadRequestException('#Seção referenciada não encontrada')
-    }
-
-    const questionSection = await formSectionsRepo.findById(
-      questionFormSectionId
-    )
-
-    if (!questionSection) {
-      throw new BadRequestException('#Seção da pergunta não encontrada')
-    }
-
-    if (linkedSection.sFormId !== questionSection.sFormId) {
-      throw new BadRequestException(
-        '#A seção referenciada deve ser do mesmo formulário'
-      )
-    }
-
-    if (linkedSection.formSectionOrder > questionSection.formSectionOrder) {
-      throw new BadRequestException(
-        '#A seção referenciada deve ter ordem igual ou anterior'
-      )
-    }
-  }
-
-  static async validateQuestionDisplayLink(
-    questionDisplayLink: number,
-    formSectionDisplayLink: number,
-    questionFormSectionId: number,
-    questionOrder: number,
+  static async validateUpdateQuestion(
+    updateQuestionDto: UpdateQuestionDto,
     questionsRepo: QuestionsRepo
   ): Promise<void> {
-    const linkedQuestion = await questionsRepo.findById(questionDisplayLink)
-
-    if (!linkedQuestion) {
-      throw new BadRequestException('#Pergunta referenciada não encontrada')
+    // Buscar a pergunta existente
+    const existingQuestion = await questionsRepo.findById(updateQuestionDto.questionId)
+    if (!existingQuestion) {
+      throw new BadRequestException('#Pergunta não encontrada')
     }
 
-    if (formSectionDisplayLink === questionFormSectionId) {
-      if (linkedQuestion.questionOrder >= questionOrder) {
+    // Validar se a regra de exibição é válida
+    if (!Object.values(FormSectionDisplayRules).includes(updateQuestionDto.questionDisplayRule)) {
+      throw new BadRequestException('#Regra de exibição inválida')
+    }
+
+    // Validar campos obrigatórios baseados na regra de exibição
+    if (updateQuestionDto.questionDisplayRule !== FormSectionDisplayRules.ALWAYS_SHOW) {
+      if (!updateQuestionDto.formSectionDisplayLink ||
+          !updateQuestionDto.questionDisplayLink ||
+          !updateQuestionDto.answerDisplayRule ||
+          !updateQuestionDto.answerDisplayValue) {
         throw new BadRequestException(
-          '#A pergunta referenciada deve ter ordem menor'
+          '#Para regras de exibição diferentes de "Sempre aparecer", é obrigatório informar formSectionDisplayLink, questionDisplayLink, answerDisplayRule e answerDisplayValue'
+        )
+      }
+    } else {
+      // Se for "Sempre aparecer", nenhum desses campos deve existir
+      if (updateQuestionDto.formSectionDisplayLink ||
+          updateQuestionDto.questionDisplayLink ||
+          updateQuestionDto.answerDisplayRule ||
+          updateQuestionDto.answerDisplayValue) {
+        throw new BadRequestException(
+          '#Para regra "Sempre aparecer", não devem ser informados formSectionDisplayLink, questionDisplayLink, answerDisplayRule nem answerDisplayValue'
         )
       }
     }
 
-    if (linkedQuestion.formSectionId !== formSectionDisplayLink) {
-      throw new BadRequestException(
-        '#A pergunta referenciada deve estar na seção especificada'
-      )
+    // Buscar a seção da pergunta
+    const section = await questionsRepo.findSectionById(existingQuestion.formSectionId)
+    if (!section) {
+      throw new BadRequestException('#Seção não encontrada')
     }
-  }
 
-  static async processCreateQuestion(
-    createQuestionDto: CreateQuestionDto,
-    questionsRepo: QuestionsRepo,
-    formSectionsRepo: FormSectionsRepo
-  ): Promise<CreateQuestion> {
-    // 1. Validar regra de exibição e campos obrigatórios
-    this.validateDisplayRuleAndRequiredFields(
-      createQuestionDto.questionDisplayRule,
-      createQuestionDto.formSectionDisplayLink,
-      createQuestionDto.questionDisplayLink,
-      createQuestionDto.answerDisplayRule,
-      createQuestionDto.answerDisplayValue
-    )
-
-    // 2. Se há campos de exibição condicional, validar
-    if (createQuestionDto.formSectionDisplayLink) {
-      await this.validateFormSectionDisplayLink(
-        createQuestionDto.formSectionDisplayLink,
-        createQuestionDto.formSectionId,
-        formSectionsRepo
-      )
-
-      if (createQuestionDto.questionDisplayLink) {
-        await this.validateQuestionDisplayLink(
-          createQuestionDto.questionDisplayLink,
-          createQuestionDto.formSectionDisplayLink,
-          createQuestionDto.formSectionId,
-          createQuestionDto.questionOrder,
-          questionsRepo
-        )
+    // Validar se formSectionDisplayLink é válido (se fornecido)
+    if (updateQuestionDto.formSectionDisplayLink) {
+      const linkedSection = await questionsRepo.findSectionById(updateQuestionDto.formSectionDisplayLink)
+      if (!linkedSection) {
+        throw new BadRequestException('#Seção vinculada não encontrada')
       }
-    }
 
-    // 3. Processar campos de exibição
-    const processedFields = this.processDisplayFields(
-      createQuestionDto.questionDisplayRule,
-      createQuestionDto.formSectionDisplayLink,
-      createQuestionDto.questionDisplayLink,
-      createQuestionDto.answerDisplayRule,
-      createQuestionDto.answerDisplayValue
-    )
+      // Verificar se ambas as seções são do mesmo formulário
+      if (section.sFormId !== linkedSection.sFormId) {
+        throw new BadRequestException('#A seção vinculada deve ser do mesmo formulário')
+      }
 
-    return {
-      ...this.mapCreateDtoToEntity(createQuestionDto),
-      ...processedFields
+      // Verificar se a seção vinculada tem ordem igual ou anterior
+      if (linkedSection.formSectionOrder > section.formSectionOrder) {
+        throw new BadRequestException('#A seção vinculada deve ter ordem igual ou anterior à seção da pergunta')
+      }
+
+      // Se for a mesma seção, validar a pergunta vinculada
+      if (updateQuestionDto.formSectionDisplayLink === existingQuestion.formSectionId && 
+          updateQuestionDto.questionDisplayLink) {
+        const linkedQuestion = await questionsRepo.findById(updateQuestionDto.questionDisplayLink)
+        if (!linkedQuestion) {
+          throw new BadRequestException('#Pergunta vinculada não encontrada')
+        }
+
+        if (linkedQuestion.questionOrder >= existingQuestion.questionOrder) {
+          throw new BadRequestException('#A pergunta vinculada deve ter ordem menor que a pergunta sendo editada')
+        }
+      }
     }
   }
 
@@ -233,48 +202,46 @@ export class QuestionsHelper {
     questions: { questionId: number; questionOrder: number }[],
     questionsRepo: QuestionsRepo
   ): Promise<void> {
-    if (questions.length === 0) {
+    if (!questions || questions.length === 0) {
       throw new BadRequestException('#Array de perguntas não pode estar vazio')
     }
 
-    // Buscar todas as perguntas para validação
-    const firstQuestionId = questions[0].questionId
-    const firstQuestion = await questionsRepo.findById(firstQuestionId)
+    // Buscar todas as perguntas do array para validação
+    const questionIds = questions.map((q) => q.questionId)
+    const allQuestions = await questionsRepo.findByIds(questionIds)
 
-    if (!firstQuestion) {
-      throw new BadRequestException('#Pergunta não encontrada')
+    if (allQuestions.length !== questions.length) {
+      throw new BadRequestException('#Uma ou mais perguntas não foram encontradas')
     }
 
-    const formSectionId = firstQuestion.formSectionId
-    const allSectionQuestions =
-      await questionsRepo.findAllByFormSectionId(formSectionId)
+    // Verificar se todas as perguntas são da mesma seção
+    const firstSectionId = allQuestions[0].formSectionId
+    const allSameSection = allQuestions.every(
+      (q) => q.formSectionId === firstSectionId
+    )
 
-    // Validar se todas as perguntas são da mesma seção
-    for (const question of questions) {
-      const foundQuestion = allSectionQuestions.find(
-        (q) => q.questionId === question.questionId
+    if (!allSameSection) {
+      throw new BadRequestException(
+        '#Todas as perguntas devem ser da mesma seção'
       )
-      if (!foundQuestion) {
-        throw new BadRequestException(
-          '#Todas as perguntas devem pertencer à mesma seção'
-        )
-      }
     }
 
-    // Validar se todas as perguntas da seção estão no array
-    if (questions.length !== allSectionQuestions.length) {
+    // Buscar todas as perguntas da seção
+    const allSectionQuestions = await questionsRepo.findAllBySectionId(firstSectionId)
+
+    if (allSectionQuestions.length !== questions.length) {
       throw new BadRequestException(
         '#Todas as perguntas da seção devem estar presentes no array'
       )
     }
 
     // Validar se todos os IDs da seção estão no array
-    const questionIds = questions.map((q) => q.questionId).sort((a, b) => a - b)
+    const questionIds2 = questions.map((q) => q.questionId).sort((a, b) => a - b)
     const sectionQuestionIds = allSectionQuestions
       .map((q) => q.questionId)
       .sort((a, b) => a - b)
 
-    if (JSON.stringify(questionIds) !== JSON.stringify(sectionQuestionIds)) {
+    if (JSON.stringify(questionIds2) !== JSON.stringify(sectionQuestionIds)) {
       throw new BadRequestException(
         '#Todas as perguntas da seção devem estar presentes no array'
       )
@@ -286,7 +253,7 @@ export class QuestionsHelper {
     for (let i = 0; i < orders.length; i++) {
       if (orders[i] !== i + 1) {
         throw new BadRequestException(
-          '#A ordenação deve ser sequencial, começando em 1, sem saltos ou repetições'
+          '#A ordenação deve ser sequencial, começando em 1 e sem saltos'
         )
       }
     }

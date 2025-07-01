@@ -1,40 +1,39 @@
 
 import { Injectable } from '@nestjs/common'
+import {
+  CreateQuestionDto,
+  UpdateQuestionDto,
+  ReorderQuestionsDto
+} from './dto'
 import { QuestionsRepo } from './questions.repo'
-import { FormSectionsRepo } from '../form-sections/form-sections.repo'
-import { CreateQuestionDto } from './dto/create-question.dto'
-import { UpdateQuestionDto } from './dto/update-question.dto'
-import { ReorderQuestionsDto } from './dto/reorder-questions.dto'
-import { Question } from './types'
 import { QuestionsHelper } from './questions.helper'
+import { Question } from './types'
 
 @Injectable()
 export class QuestionsService {
-  constructor(
-    private readonly questionsRepo: QuestionsRepo,
-    private readonly formSectionsRepo: FormSectionsRepo
-  ) {}
-
-  async findAllByFormSectionId(formSectionId: number): Promise<Question[]> {
-    const questions = await this.questionsRepo.findAllByFormSectionId(formSectionId)
-    return QuestionsHelper.sortQuestionsByOrder(questions)
-  }
+  constructor(private readonly questionsRepo: QuestionsRepo) {}
 
   async create(createQuestionDto: CreateQuestionDto): Promise<void> {
-    const createQuestion = await QuestionsHelper.processCreateQuestion(
+    const createQuestionData = await QuestionsHelper.transformCreateDto(
       createQuestionDto,
-      this.questionsRepo,
-      this.formSectionsRepo
+      this.questionsRepo
     )
-    return this.questionsRepo.createQuestionWithReorder(createQuestion)
+    return this.questionsRepo.createQuestion(createQuestionData)
+  }
+
+  async findAllBySectionId(formSectionId: number): Promise<Question[]> {
+    return this.questionsRepo.findAllBySectionId(formSectionId)
   }
 
   async update(updateQuestionDto: UpdateQuestionDto): Promise<void> {
-    const updateQuestion = QuestionsHelper.mapUpdateDtoToEntity(updateQuestionDto)
-    return this.questionsRepo.updateQuestion(updateQuestion)
+    const updateQuestionData = await QuestionsHelper.transformUpdateDto(
+      updateQuestionDto,
+      this.questionsRepo
+    )
+    return this.questionsRepo.updateQuestion(updateQuestionData)
   }
 
-  async remove(questionId: number): Promise<void> {
+  async delete(questionId: number): Promise<void> {
     return this.questionsRepo.deleteQuestion(questionId)
   }
 
