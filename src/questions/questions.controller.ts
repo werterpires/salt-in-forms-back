@@ -1,4 +1,3 @@
-
 import {
   Controller,
   Post,
@@ -11,12 +10,11 @@ import {
   Patch
 } from '@nestjs/common'
 import { QuestionsService } from './questions.service'
-import {
-  CreateQuestionDto,
-  UpdateQuestionDto,
-  ReorderQuestionsDto
-} from './dto'
+
 import { Question } from './types'
+import { CreateQuestionDto } from './dto/create-question.dto'
+import { UpdateQuestionDto } from './dto/update-question.dto'
+import { ReorderQuestionsDto } from './dto/reorder-questions.dto'
 
 @Controller('questions')
 export class QuestionsController {
@@ -47,7 +45,9 @@ export class QuestionsController {
   }
 
   @Patch('reorder')
-  async reorder(@Body() reorderQuestionsDto: ReorderQuestionsDto): Promise<void> {
+  async reorder(
+    @Body() reorderQuestionsDto: ReorderQuestionsDto
+  ): Promise<void> {
     return this.questionsService.reorder(reorderQuestionsDto)
   }
 }

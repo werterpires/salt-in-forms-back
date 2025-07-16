@@ -59,6 +59,12 @@ export class SFormsController {
   }
 
   @Roles(ERoles.ADMIN)
+  @Get('form/:sFormId')
+  async findOne(@Param('sFormId', ParseIntPipe) sFormId: number) {
+    return await this.sFormsService.findSFormById(sFormId)
+  }
+
+  @Roles(ERoles.ADMIN)
   @Put()
   async update(@Body() updateSFormDto: UpdateSFormDto) {
     return await this.sFormsService.updateSForm(updateSFormDto)

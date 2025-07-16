@@ -89,4 +89,18 @@ export class SFormsRepo {
         [db.SForms.S_FORM_ID]: sFormId
       })
   }
+
+  async findFormByFormId(sFormId: number) {
+    const formConsult = (await this.knex(db.Tables.S_FORMS)
+      .select(
+        db.SForms.S_FORM_ID,
+        db.SForms.S_FORM_NAME,
+        db.SForms.S_FORM_TYPE,
+        db.SForms.PROCESS_ID
+      )
+      .where(db.SForms.S_FORM_ID, sFormId)
+      .first()) as SForm
+
+    return formConsult
+  }
 }

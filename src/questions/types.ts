@@ -1,4 +1,3 @@
-
 export interface Question {
   questionId: number
   formSectionId: number

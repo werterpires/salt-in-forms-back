@@ -1,13 +1,10 @@
-
 import { Injectable } from '@nestjs/common'
-import {
-  CreateQuestionDto,
-  UpdateQuestionDto,
-  ReorderQuestionsDto
-} from './dto'
 import { QuestionsRepo } from './questions.repo'
 import { QuestionsHelper } from './questions.helper'
 import { Question } from './types'
+import { CreateQuestionDto } from './dto/create-question.dto'
+import { UpdateQuestionDto } from './dto/update-question.dto'
+import { ReorderQuestionsDto } from './dto/reorder-questions.dto'
 
 @Injectable()
 export class QuestionsService {

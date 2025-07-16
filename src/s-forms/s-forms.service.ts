@@ -56,6 +56,10 @@ export class SFormsService {
     return response
   }
 
+  async findSFormById(sFormId: number) {
+    return await this.sFormsRepo.findFormByFormId(sFormId)
+  }
+
   async updateSForm(updateSFormDto: UpdateSFormDto) {
     const sForms = await this.sFormsRepo.findAllFormTypesByProcessId(
       updateSFormDto.sFormId

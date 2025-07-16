@@ -1,8 +1,9 @@
 import { BadRequestException } from '@nestjs/common'
-import { CreateQuestionDto, UpdateQuestionDto } from './dto'
 import { CreateQuestion, UpdateQuestion } from './types'
 import { FormSectionDisplayRules } from '../constants/form-section-display-rules.const'
 import { QuestionsRepo } from './questions.repo'
+import { CreateQuestionDto } from './dto/create-question.dto'
+import { UpdateQuestionDto } from './dto/update-question.dto'
 
 export class QuestionsHelper {
   static async transformCreateDto(
@@ -59,26 +60,37 @@ export class QuestionsHelper {
     questionsRepo: QuestionsRepo
   ): Promise<void> {
     // Validar se a regra de exibição é válida
-    if (!Object.values(FormSectionDisplayRules).includes(createQuestionDto.questionDisplayRule)) {
+    if (
+      !Object.values(FormSectionDisplayRules).includes(
+        createQuestionDto.questionDisplayRule
+      )
+    ) {
       throw new BadRequestException('#Regra de exibição inválida')
     }
 
     // Validar campos obrigatórios baseados na regra de exibição
-    if (createQuestionDto.questionDisplayRule !== FormSectionDisplayRules.ALWAYS_SHOW) {
-      if (!createQuestionDto.formSectionDisplayLink ||
-          !createQuestionDto.questionDisplayLink ||
-          !createQuestionDto.answerDisplayRule ||
-          !createQuestionDto.answerDisplayValue) {
+    if (
+      (createQuestionDto.questionDisplayRule as FormSectionDisplayRules) !==
+      FormSectionDisplayRules.ALWAYS_SHOW
+    ) {
+      if (
+        !createQuestionDto.formSectionDisplayLink ||
+        !createQuestionDto.questionDisplayLink ||
+        !createQuestionDto.answerDisplayRule ||
+        !createQuestionDto.answerDisplayValue
+      ) {
         throw new BadRequestException(
           '#Para regras de exibição diferentes de "Sempre aparecer", é obrigatório informar formSectionDisplayLink, questionDisplayLink, answerDisplayRule e answerDisplayValue'
         )
       }
     } else {
       // Se for "Sempre aparecer", nenhum desses campos deve existir
-      if (createQuestionDto.formSectionDisplayLink ||
-          createQuestionDto.questionDisplayLink ||
-          createQuestionDto.answerDisplayRule ||
-          createQuestionDto.answerDisplayValue) {
+      if (
+        createQuestionDto.formSectionDisplayLink ||
+        createQuestionDto.questionDisplayLink ||
+        createQuestionDto.answerDisplayRule ||
+        createQuestionDto.answerDisplayValue
+      ) {
         throw new BadRequestException(
           '#Para regra "Sempre aparecer", não devem ser informados formSectionDisplayLink, questionDisplayLink, answerDisplayRule nem answerDisplayValue'
         )
@@ -86,38 +98,53 @@ export class QuestionsHelper {
     }
 
     // Validar se a seção existe
-    const section = await questionsRepo.findSectionById(createQuestionDto.formSectionId)
+    const section = await questionsRepo.findSectionById(
+      createQuestionDto.formSectionId
+    )
     if (!section) {
       throw new BadRequestException('#Seção não encontrada')
     }
 
     // Validar se formSectionDisplayLink é válido (se fornecido)
     if (createQuestionDto.formSectionDisplayLink) {
-      const linkedSection = await questionsRepo.findSectionById(createQuestionDto.formSectionDisplayLink)
+      const linkedSection = await questionsRepo.findSectionById(
+        createQuestionDto.formSectionDisplayLink
+      )
       if (!linkedSection) {
         throw new BadRequestException('#Seção vinculada não encontrada')
       }
 
       // Verificar se ambas as seções são do mesmo formulário
       if (section.sFormId !== linkedSection.sFormId) {
-        throw new BadRequestException('#A seção vinculada deve ser do mesmo formulário')
+        throw new BadRequestException(
+          '#A seção vinculada deve ser do mesmo formulário'
+        )
       }
 
       // Verificar se a seção vinculada tem ordem igual ou anterior
       if (linkedSection.formSectionOrder > section.formSectionOrder) {
-        throw new BadRequestException('#A seção vinculada deve ter ordem igual ou anterior à seção da pergunta')
+        throw new BadRequestException(
+          '#A seção vinculada deve ter ordem igual ou anterior à seção da pergunta'
+        )
       }
 
       // Se for a mesma seção, validar a pergunta vinculada
-      if (createQuestionDto.formSectionDisplayLink === createQuestionDto.formSectionId && 
-          createQuestionDto.questionDisplayLink) {
-        const linkedQuestion = await questionsRepo.findById(createQuestionDto.questionDisplayLink)
+      if (
+        createQuestionDto.formSectionDisplayLink ===
+          createQuestionDto.formSectionId &&
+        createQuestionDto.questionDisplayLink
+      ) {
+        const linkedQuestion = await questionsRepo.findById(
+          createQuestionDto.questionDisplayLink
+        )
         if (!linkedQuestion) {
           throw new BadRequestException('#Pergunta vinculada não encontrada')
         }
 
         if (linkedQuestion.questionOrder >= createQuestionDto.questionOrder) {
-          throw new BadRequestException('#A pergunta vinculada deve ter ordem menor que a pergunta sendo criada')
+          throw new BadRequestException(
+            '#A pergunta vinculada deve ter ordem menor que a pergunta sendo criada'
+          )
         }
       }
     }
@@ -128,32 +155,45 @@ export class QuestionsHelper {
     questionsRepo: QuestionsRepo
   ): Promise<void> {
     // Buscar a pergunta existente
-    const existingQuestion = await questionsRepo.findById(updateQuestionDto.questionId)
+    const existingQuestion = await questionsRepo.findById(
+      updateQuestionDto.questionId
+    )
     if (!existingQuestion) {
       throw new BadRequestException('#Pergunta não encontrada')
     }
 
     // Validar se a regra de exibição é válida
-    if (!Object.values(FormSectionDisplayRules).includes(updateQuestionDto.questionDisplayRule)) {
+    if (
+      !Object.values(FormSectionDisplayRules).includes(
+        updateQuestionDto.questionDisplayRule
+      )
+    ) {
       throw new BadRequestException('#Regra de exibição inválida')
     }
 
     // Validar campos obrigatórios baseados na regra de exibição
-    if (updateQuestionDto.questionDisplayRule !== FormSectionDisplayRules.ALWAYS_SHOW) {
-      if (!updateQuestionDto.formSectionDisplayLink ||
-          !updateQuestionDto.questionDisplayLink ||
-          !updateQuestionDto.answerDisplayRule ||
-          !updateQuestionDto.answerDisplayValue) {
+    if (
+      (updateQuestionDto.questionDisplayRule as FormSectionDisplayRules) !==
+      FormSectionDisplayRules.ALWAYS_SHOW
+    ) {
+      if (
+        !updateQuestionDto.formSectionDisplayLink ||
+        !updateQuestionDto.questionDisplayLink ||
+        !updateQuestionDto.answerDisplayRule ||
+        !updateQuestionDto.answerDisplayValue
+      ) {
         throw new BadRequestException(
           '#Para regras de exibição diferentes de "Sempre aparecer", é obrigatório informar formSectionDisplayLink, questionDisplayLink, answerDisplayRule e answerDisplayValue'
         )
       }
     } else {
       // Se for "Sempre aparecer", nenhum desses campos deve existir
-      if (updateQuestionDto.formSectionDisplayLink ||
-          updateQuestionDto.questionDisplayLink ||
-          updateQuestionDto.answerDisplayRule ||
-          updateQuestionDto.answerDisplayValue) {
+      if (
+        updateQuestionDto.formSectionDisplayLink ||
+        updateQuestionDto.questionDisplayLink ||
+        updateQuestionDto.answerDisplayRule ||
+        updateQuestionDto.answerDisplayValue
+      ) {
         throw new BadRequestException(
           '#Para regra "Sempre aparecer", não devem ser informados formSectionDisplayLink, questionDisplayLink, answerDisplayRule nem answerDisplayValue'
         )
@@ -161,38 +201,53 @@ export class QuestionsHelper {
     }
 
     // Buscar a seção da pergunta
-    const section = await questionsRepo.findSectionById(existingQuestion.formSectionId)
+    const section = await questionsRepo.findSectionById(
+      existingQuestion.formSectionId
+    )
     if (!section) {
       throw new BadRequestException('#Seção não encontrada')
     }
 
     // Validar se formSectionDisplayLink é válido (se fornecido)
     if (updateQuestionDto.formSectionDisplayLink) {
-      const linkedSection = await questionsRepo.findSectionById(updateQuestionDto.formSectionDisplayLink)
+      const linkedSection = await questionsRepo.findSectionById(
+        updateQuestionDto.formSectionDisplayLink
+      )
       if (!linkedSection) {
         throw new BadRequestException('#Seção vinculada não encontrada')
       }
 
       // Verificar se ambas as seções são do mesmo formulário
       if (section.sFormId !== linkedSection.sFormId) {
-        throw new BadRequestException('#A seção vinculada deve ser do mesmo formulário')
+        throw new BadRequestException(
+          '#A seção vinculada deve ser do mesmo formulário'
+        )
       }
 
       // Verificar se a seção vinculada tem ordem igual ou anterior
       if (linkedSection.formSectionOrder > section.formSectionOrder) {
-        throw new BadRequestException('#A seção vinculada deve ter ordem igual ou anterior à seção da pergunta')
+        throw new BadRequestException(
+          '#A seção vinculada deve ter ordem igual ou anterior à seção da pergunta'
+        )
       }
 
       // Se for a mesma seção, validar a pergunta vinculada
-      if (updateQuestionDto.formSectionDisplayLink === existingQuestion.formSectionId && 
-          updateQuestionDto.questionDisplayLink) {
-        const linkedQuestion = await questionsRepo.findById(updateQuestionDto.questionDisplayLink)
+      if (
+        updateQuestionDto.formSectionDisplayLink ===
+          existingQuestion.formSectionId &&
+        updateQuestionDto.questionDisplayLink
+      ) {
+        const linkedQuestion = await questionsRepo.findById(
+          updateQuestionDto.questionDisplayLink
+        )
         if (!linkedQuestion) {
           throw new BadRequestException('#Pergunta vinculada não encontrada')
         }
 
         if (linkedQuestion.questionOrder >= existingQuestion.questionOrder) {
-          throw new BadRequestException('#A pergunta vinculada deve ter ordem menor que a pergunta sendo editada')
+          throw new BadRequestException(
+            '#A pergunta vinculada deve ter ordem menor que a pergunta sendo editada'
+          )
         }
       }
     }
@@ -211,7 +266,9 @@ export class QuestionsHelper {
     const allQuestions = await questionsRepo.findByIds(questionIds)
 
     if (allQuestions.length !== questions.length) {
-      throw new BadRequestException('#Uma ou mais perguntas não foram encontradas')
+      throw new BadRequestException(
+        '#Uma ou mais perguntas não foram encontradas'
+      )
     }
 
     // Verificar se todas as perguntas são da mesma seção
@@ -227,7 +284,8 @@ export class QuestionsHelper {
     }
 
     // Buscar todas as perguntas da seção
-    const allSectionQuestions = await questionsRepo.findAllBySectionId(firstSectionId)
+    const allSectionQuestions =
+      await questionsRepo.findAllBySectionId(firstSectionId)
 
     if (allSectionQuestions.length !== questions.length) {
       throw new BadRequestException(
@@ -236,7 +294,9 @@ export class QuestionsHelper {
     }
 
     // Validar se todos os IDs da seção estão no array
-    const questionIds2 = questions.map((q) => q.questionId).sort((a, b) => a - b)
+    const questionIds2 = questions
+      .map((q) => q.questionId)
+      .sort((a, b) => a - b)
     const sectionQuestionIds = allSectionQuestions
       .map((q) => q.questionId)
       .sort((a, b) => a - b)
