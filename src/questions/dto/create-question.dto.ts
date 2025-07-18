@@ -27,9 +27,8 @@ export class CreateQuestionDto {
   })
   questionStatement: string
 
-  @Length(3, 255, {
-    message:
-      '#A descrição da pergunta deve ter no mínimo 3 e no máximo 255 caracteres'
+  @Length(0, 255, {
+    message: '#A descrição da pergunta deve ter no máximo 255 caracteres'
   })
   questionDescription: string
 

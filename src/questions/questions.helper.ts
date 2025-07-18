@@ -4,6 +4,7 @@ import { FormSectionDisplayRules } from '../constants/form-section-display-rules
 import { QuestionsRepo } from './questions.repo'
 import { CreateQuestionDto } from './dto/create-question.dto'
 import { UpdateQuestionDto } from './dto/update-question.dto'
+import { AnswersDisplayRules } from 'src/constants/answer_display_rule'
 
 export class QuestionsHelper {
   static async transformCreateDto(
@@ -11,10 +12,12 @@ export class QuestionsHelper {
     questionsRepo: QuestionsRepo
   ): Promise<CreateQuestion> {
     await this.validateCreateQuestion(createQuestionDto, questionsRepo)
-
+    console.log('createDtoNoHelper 1: ', createQuestionDto)
     const answerDisplayValue = createQuestionDto.answerDisplayValue
       ? createQuestionDto.answerDisplayValue.join('||')
       : undefined
+
+    console.log('createDtoNoHelper 2: ', createQuestionDto)
 
     return {
       formSectionId: createQuestionDto.formSectionId,
@@ -80,7 +83,7 @@ export class QuestionsHelper {
         !createQuestionDto.answerDisplayValue
       ) {
         throw new BadRequestException(
-          '#Para regras de exibição diferentes de "Sempre aparecer", é obrigatório informar formSectionDisplayLink, questionDisplayLink, answerDisplayRule e answerDisplayValue'
+          '#Para regras de exibição diferentes de "Sempre aparecer", é obrigatório informar uma seção, uma questão, uma regra de checagem e os valores de reposta'
         )
       }
     } else {
@@ -92,7 +95,7 @@ export class QuestionsHelper {
         createQuestionDto.answerDisplayValue
       ) {
         throw new BadRequestException(
-          '#Para regra "Sempre aparecer", não devem ser informados formSectionDisplayLink, questionDisplayLink, answerDisplayRule nem answerDisplayValue'
+          '#Para regra "Sempre aparecer", não devem ser informados uma seção, uma questão, uma regra de checagem ou os valores de reposta'
         )
       }
     }
@@ -111,7 +114,9 @@ export class QuestionsHelper {
         createQuestionDto.formSectionDisplayLink
       )
       if (!linkedSection) {
-        throw new BadRequestException('#Seção vinculada não encontrada')
+        throw new BadRequestException(
+          '#Seção vinculada à regra de exibição não encontrada'
+        )
       }
 
       // Verificar se ambas as seções são do mesmo formulário
@@ -129,11 +134,7 @@ export class QuestionsHelper {
       }
 
       // Se for a mesma seção, validar a pergunta vinculada
-      if (
-        createQuestionDto.formSectionDisplayLink ===
-          createQuestionDto.formSectionId &&
-        createQuestionDto.questionDisplayLink
-      ) {
+      if (createQuestionDto.questionDisplayLink) {
         const linkedQuestion = await questionsRepo.findById(
           createQuestionDto.questionDisplayLink
         )
@@ -143,7 +144,19 @@ export class QuestionsHelper {
 
         if (linkedQuestion.questionOrder >= createQuestionDto.questionOrder) {
           throw new BadRequestException(
-            '#A pergunta vinculada deve ter ordem menor que a pergunta sendo criada'
+            '#A pergunta vinculada na regra de exibição deve ter ordem menor que a pergunta que está sendo criada'
+          )
+        }
+      }
+
+      if (createQuestionDto.answerDisplayRule) {
+        if (
+          !Object.values(AnswersDisplayRules).includes(
+            createQuestionDto.answerDisplayRule as AnswersDisplayRules
+          )
+        ) {
+          throw new BadRequestException(
+            '#Regra de exibição de resposta inválida'
           )
         }
       }

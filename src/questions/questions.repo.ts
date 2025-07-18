@@ -9,10 +9,24 @@ export class QuestionsRepo {
   constructor(@InjectConnection('knexx') private readonly knex: Knex) {}
 
   async createQuestion(createQuestionData: CreateQuestion): Promise<void> {
+    console.log('createDataChegando: ', createQuestionData)
     return this.knex.transaction(async (trx) => {
+      // obter id do formulário da seção
+      const { sFormId } = await trx(db.Tables.FORM_SECTIONS)
+        .where(
+          db.FormSections.FORM_SECTION_ID,
+          createQuestionData.formSectionId
+        )
+        .first(db.FormSections.S_FORM_ID)
+
       // Incrementar a ordem das perguntas com ordem maior ou igual
       await trx(db.Tables.QUESTIONS)
-        .where(db.Questions.FORM_SECTION_ID, createQuestionData.formSectionId)
+        .join(
+          db.Tables.FORM_SECTIONS,
+          db.Tables.FORM_SECTIONS + '.' + db.FormSections.FORM_SECTION_ID,
+          db.Tables.QUESTIONS + '.' + db.Questions.FORM_SECTION_ID
+        )
+        .where(db.FormSections.S_FORM_ID, sFormId)
         .andWhere(
           db.Questions.QUESTION_ORDER,
           '>=',
@@ -136,5 +150,30 @@ export class QuestionsRepo {
     return this.knex(db.Tables.FORM_SECTIONS)
       .where(db.FormSections.FORM_SECTION_ID, formSectionId)
       .first()
+  }
+
+  async getNumberOfQuestionsFromPreviousSections(
+    sectionFormId: number
+  ): Promise<number> {
+    console.log(sectionFormId)
+    const { sFormId } = await this.knex(db.Tables.FORM_SECTIONS)
+      .where(db.FormSections.FORM_SECTION_ID, sectionFormId)
+      .first(db.FormSections.S_FORM_ID)
+
+    const { formSectionOrder } = await this.knex(db.Tables.FORM_SECTIONS)
+      .where(db.FormSections.FORM_SECTION_ID, sectionFormId)
+      .first(db.FormSections.FORM_SECTION_ORDER)
+
+    const numberOfQuestions: number = await this.knex(db.Tables.QUESTIONS)
+      .join(
+        db.Tables.FORM_SECTIONS,
+        db.Tables.FORM_SECTIONS + '.' + db.FormSections.FORM_SECTION_ID,
+        db.Tables.QUESTIONS + '.' + db.Questions.FORM_SECTION_ID
+      )
+      .where(db.FormSections.S_FORM_ID, sFormId)
+      .andWhere(db.FormSections.FORM_SECTION_ORDER, '<', formSectionOrder)
+      .countDistinct({ count: db.Questions.QUESTION_ID })
+
+    return parseInt(numberOfQuestions[0].count, 10) || 0
   }
 }

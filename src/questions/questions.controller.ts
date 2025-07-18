@@ -32,6 +32,15 @@ export class QuestionsController {
     return this.questionsService.findAllBySectionId(formSectionId)
   }
 
+  @Get('quantity/:sectionId')
+  async getNumberOfQuestionsFromPreviousSections(
+    @Param('sectionId', ParseIntPipe) sectionId: number
+  ): Promise<number> {
+    return this.questionsService.getNumberOfQuestionsFromPreviousSections(
+      sectionId
+    )
+  }
+
   @Put()
   async update(@Body() updateQuestionDto: UpdateQuestionDto): Promise<void> {
     return this.questionsService.update(updateQuestionDto)

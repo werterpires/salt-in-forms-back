@@ -17,3 +17,10 @@ export const AnswersDisplayRulesDescriptions = {
   [AnswersDisplayRules.INCLUDES]: 'Inclui algum',
   [AnswersDisplayRules.EXCLUDES]: 'Não inclui nenhum'
 }
+
+export const AnswersDisplayRulesOptions = Object.entries(
+  AnswersDisplayRulesDescriptions
+).map(([value, label]) => ({
+  value: parseInt(value, 10),
+  label
+}))

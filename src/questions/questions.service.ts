@@ -41,4 +41,12 @@ export class QuestionsService {
     )
     return this.questionsRepo.reorderQuestions(reorderQuestionsDto.questions)
   }
+
+  async getNumberOfQuestionsFromPreviousSections(
+    formSectionId: number
+  ): Promise<number> {
+    return this.questionsRepo.getNumberOfQuestionsFromPreviousSections(
+      formSectionId
+    )
+  }
 }
