@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
-import { CreateQuestion, UpdateQuestion, Question } from './types'
+import { Question, CreateQuestion, UpdateQuestion, QuestionOption } from './types'
 import * as db from '../constants/db-schema.enum'
 
 @Injectable()

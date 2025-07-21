@@ -4,8 +4,20 @@ import {
   Length,
   Min,
   IsArray,
-  IsString
+  IsString,
+  ValidateNested
 } from 'class-validator'
+import { Type } from 'class-transformer'
+
+export class QuestionOptionDto {
+  @IsNumber({}, { message: '#O tipo da opção deve ser numérico.' })
+  questionOptionType: number
+
+  @Length(1, 255, {
+    message: '#O valor da opção deve ter no mínimo 1 e no máximo 255 caracteres'
+  })
+  questionOptionValue: string
+}
 
 export class CreateQuestionDto {
   @IsNumber({}, { message: '#O ID da seção deve ser numérico.' })
@@ -54,4 +66,10 @@ export class CreateQuestionDto {
   @IsArray({ message: '#O valor de exibição da resposta deve ser um array.' })
   @IsString({ each: true, message: '#Cada valor deve ser uma string.' })
   answerDisplayValue?: string[]
+
+  @IsOptional()
+  @IsArray({ message: '#As opções da pergunta devem ser um array.' })
+  @ValidateNested({ each: true })
+  @Type(() => QuestionOptionDto)
+  questionOptions?: QuestionOptionDto[]
 }

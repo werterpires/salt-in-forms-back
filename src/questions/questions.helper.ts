@@ -5,6 +5,8 @@ import { QuestionsRepo } from './questions.repo'
 import { CreateQuestionDto } from './dto/create-question.dto'
 import { UpdateQuestionDto } from './dto/update-question.dto'
 import { AnswersDisplayRules } from 'src/constants/answer_display_rule'
+import { EQuestionsTypes } from '../constants/questions-types.enum'
+import { EQuestionOptionsTypes } from '../constants/questions-options-types.enum'
 
 export class QuestionsHelper {
   static async transformCreateDto(
@@ -60,6 +62,8 @@ export class QuestionsHelper {
     createQuestionDto: CreateQuestionDto,
     questionsRepo: QuestionsRepo
   ): Promise<void> {
+    // Validar opções da pergunta
+    this.validateQuestionOptions(createQuestionDto.questionType, createQuestionDto.questionOptions)
     // Validar se a regra de exibição é válida
     if (
       !Object.values(FormSectionDisplayRules).includes(
@@ -166,6 +170,8 @@ export class QuestionsHelper {
     updateQuestionDto: UpdateQuestionDto,
     questionsRepo: QuestionsRepo
   ): Promise<void> {
+    // Validar opções da pergunta
+    this.validateQuestionOptions(updateQuestionDto.questionType, updateQuestionDto.questionOptions)
     // Buscar a pergunta existente
     const existingQuestion = await questionsRepo.findById(
       updateQuestionDto.questionId
@@ -336,6 +342,121 @@ export class QuestionsHelper {
         throw new BadRequestException(
           '#A ordenação deve ser sequencial, começando em 1 e sem saltos'
         )
+      }
+    }
+  }
+
+  static validateQuestionOptions(
+    questionType: number,
+    questionOptions?: { questionOptionType: number; questionOptionValue: string }[]
+  ): void {
+    // a) se a pergunta for do tipo "Resposta Aberta", "Data" ou "Hora", as questionOptions devem não existir
+    if (
+      questionType === EQuestionsTypes.OPEN_ANSWER ||
+      questionType === EQuestionsTypes.DATE ||
+      questionType === EQuestionsTypes.TIME
+    ) {
+      if (questionOptions && questionOptions.length > 0) {
+        throw new BadRequestException(
+          '#Perguntas do tipo Resposta Aberta, Data ou Hora não devem ter opções'
+        )
+      }
+      return
+    }
+
+    // b) se for "Escolha Múltipla", "Escolha única", deve ter pelo menos 2 options do questionOptionsType 1 e 0 dos outros tipos
+    if (
+      questionType === EQuestionsTypes.MULTIPLE_CHOICE ||
+      questionType === EQuestionsTypes.SINGLE_CHOICE ||
+      questionType === EQuestionsTypes.LIKERT_SCALE ||
+      questionType === EQuestionsTypes.MULTIPLE_RESPONSES
+    ) {
+      if (!questionOptions || questionOptions.length < 2) {
+        throw new BadRequestException(
+          '#Este tipo de pergunta deve ter pelo menos 2 opções'
+        )
+      }
+
+      const type1Options = questionOptions.filter(
+        (opt) => opt.questionOptionType === EQuestionOptionsTypes.TYPE_ONE
+      )
+      const type2Options = questionOptions.filter(
+        (opt) => opt.questionOptionType === EQuestionOptionsTypes.TYPE_TWO
+      )
+      const type3Options = questionOptions.filter(
+        (opt) => opt.questionOptionType === EQuestionOptionsTypes.TYPE_THREE
+      )
+
+      if (type1Options.length < 2) {
+        throw new BadRequestException(
+          '#Este tipo de pergunta deve ter pelo menos 2 opções do tipo 1'
+        )
+      }
+
+      if (type2Options.length > 0 || type3Options.length > 0) {
+        throw new BadRequestException(
+          '#Este tipo de pergunta deve ter apenas opções do tipo 1'
+        )
+      }
+    }
+
+    // c) se for "Matriz de escolha única" ou "matriz de escolha múltipla", deve ter pelo menos 2 options do questionOptionsType 1, ao menos 2 options do questionOptionsType 2, e 0 do questionOptionsType 3
+    if (
+      questionType === EQuestionsTypes.SINGLE_CHOICE_MATRIX ||
+      questionType === EQuestionsTypes.MULTIPLE_CHOICE_MATRIX
+    ) {
+      if (!questionOptions || questionOptions.length < 4) {
+        throw new BadRequestException(
+          '#Este tipo de pergunta deve ter pelo menos 4 opções (2 do tipo 1 e 2 do tipo 2)'
+        )
+      }
+
+      const type1Options = questionOptions.filter(
+        (opt) => opt.questionOptionType === EQuestionOptionsTypes.TYPE_ONE
+      )
+      const type2Options = questionOptions.filter(
+        (opt) => opt.questionOptionType === EQuestionOptionsTypes.TYPE_TWO
+      )
+      const type3Options = questionOptions.filter(
+        (opt) => opt.questionOptionType === EQuestionOptionsTypes.TYPE_THREE
+      )
+
+      if (type1Options.length < 2) {
+        throw new BadRequestException(
+          '#Este tipo de pergunta deve ter pelo menos 2 opções do tipo 1'
+        )
+      }
+
+      if (type2Options.length < 2) {
+        throw new BadRequestException(
+          '#Este tipo de pergunta deve ter pelo menos 2 opções do tipo 2'
+        )
+      }
+
+      if (type3Options.length > 0) {
+        throw new BadRequestException(
+          '#Este tipo de pergunta não deve ter opções do tipo 3'
+        )
+      }
+    }
+
+    // d) duas options, da mesma question, do mesmo optionType, não podem ter o mesmo valor
+    if (questionOptions) {
+      const groupedByType = questionOptions.reduce((acc, option) => {
+        if (!acc[option.questionOptionType]) {
+          acc[option.questionOptionType] = []
+        }
+        acc[option.questionOptionType].push(option.questionOptionValue)
+        return acc
+      }, {} as Record<number, string[]>)
+
+      for (const [type, values] of Object.entries(groupedByType)) {
+        const uniqueValues = new Set(values)
+        if (uniqueValues.size !== values.length) {
+          throw new BadRequestException(
+            `#Não podem existir valores duplicados nas opções do tipo ${type}`
+          )
+        }
       }
     }
   }

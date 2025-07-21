@@ -41,3 +41,12 @@ export interface UpdateQuestion {
   answerDisplayRule?: number
   answerDisplayValue?: string
 }
+
+
+
+export interface QuestionOption {
+  questionOptionId?: number
+  questionId: number
+  questionOptionType: number
+  questionOptionValue: string
+}

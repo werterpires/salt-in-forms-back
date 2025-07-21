@@ -15,7 +15,17 @@ export class QuestionsService {
       createQuestionDto,
       this.questionsRepo
     )
-    return this.questionsRepo.createQuestion(createQuestionData)
+
+    const questionId = await this.questionsRepo.create(createQuestionData)
+
+    if (createQuestionDto.questionOptions && createQuestionDto.questionOptions.length > 0) {
+      const questionOptions = createQuestionDto.questionOptions.map(option => ({
+        questionId,
+        questionOptionType: option.questionOptionType,
+        questionOptionValue: option.questionOptionValue
+      }))
+      await this.questionsRepo.createQuestionOptions(questionOptions)
+    }
   }
 
   async findAllBySectionId(formSectionId: number): Promise<Question[]> {
@@ -27,11 +37,26 @@ export class QuestionsService {
       updateQuestionDto,
       this.questionsRepo
     )
-    return this.questionsRepo.updateQuestion(updateQuestionData)
+
+    // e) ao editar, rodar uma query que apaga todas as options daquela question
+    await this.questionsRepo.deleteQuestionOptions(updateQuestionDto.questionId)
+
+    await this.questionsRepo.updateQuestion(updateQuestionData)
+
+    if (updateQuestionDto.questionOptions && updateQuestionDto.questionOptions.length > 0) {
+      const questionOptions = updateQuestionDto.questionOptions.map(option => ({
+        questionId: updateQuestionDto.questionId,
+        questionOptionType: option.questionOptionType,
+        questionOptionValue: option.questionOptionValue
+      }))
+      await this.questionsRepo.createQuestionOptions(questionOptions)
+    }
   }
 
   async delete(questionId: number): Promise<void> {
-    return this.questionsRepo.deleteQuestion(questionId)
+    // f) ao deletar uma question, deletar suas options junto
+    await this.questionsRepo.deleteQuestionOptions(questionId)
+    await this.questionsRepo.deleteQuestion(questionId)
   }
 
   async reorder(reorderQuestionsDto: ReorderQuestionsDto): Promise<void> {
