@@ -8,7 +8,8 @@ export enum Tables {
   QUESTIONS_AREAS = 'questionsAreas',
   MINISTERIALS = 'ministerials',
   FORM_SECTIONS = 'formSections',
-  QUESTIONS = 'questions'
+  QUESTIONS = 'questions',
+  QUESTION_OPTIONS = 'questionOptions'
 }
 
 export enum Users {
@@ -96,4 +97,11 @@ export enum Questions {
   QUESTION_DISPLAY_LINK = 'questionDisplayLink',
   ANSWER_DISPLEY_RULE = 'answerDisplayRule',
   ANSWER_DISPLAY_VALUE = 'answerDisplayValue'
+}
+
+export enum QuestionOptions {
+  QUESTION_OPTION_ID = 'questionOptionId',
+  QUESTION_ID = 'questionId',
+  QUESTION_OPTION_TYPE = 'questionOptionType',
+  QUESTION_OPTION_VALUE = 'questionOptionValue'
 }
