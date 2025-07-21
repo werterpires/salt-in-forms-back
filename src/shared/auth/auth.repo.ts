@@ -143,8 +143,6 @@ export class AuthRepo {
         !signatures.find((signature) => signature.termId === term.termId)
     )
 
-    console.log('thermsFiltered', thermsFiltered)
-
     return thermsFiltered
   }
 

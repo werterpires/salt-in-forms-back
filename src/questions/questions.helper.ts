@@ -12,12 +12,10 @@ export class QuestionsHelper {
     questionsRepo: QuestionsRepo
   ): Promise<CreateQuestion> {
     await this.validateCreateQuestion(createQuestionDto, questionsRepo)
-    console.log('createDtoNoHelper 1: ', createQuestionDto)
+
     const answerDisplayValue = createQuestionDto.answerDisplayValue
       ? createQuestionDto.answerDisplayValue.join('||')
       : undefined
-
-    console.log('createDtoNoHelper 2: ', createQuestionDto)
 
     return {
       formSectionId: createQuestionDto.formSectionId,
@@ -149,6 +147,7 @@ export class QuestionsHelper {
         }
       }
 
+      // Validar se a regra de exibição da resposta é válida
       if (createQuestionDto.answerDisplayRule) {
         if (
           !Object.values(AnswersDisplayRules).includes(
@@ -245,11 +244,7 @@ export class QuestionsHelper {
       }
 
       // Se for a mesma seção, validar a pergunta vinculada
-      if (
-        updateQuestionDto.formSectionDisplayLink ===
-          existingQuestion.formSectionId &&
-        updateQuestionDto.questionDisplayLink
-      ) {
+      if (updateQuestionDto.questionDisplayLink) {
         const linkedQuestion = await questionsRepo.findById(
           updateQuestionDto.questionDisplayLink
         )
@@ -259,7 +254,20 @@ export class QuestionsHelper {
 
         if (linkedQuestion.questionOrder >= existingQuestion.questionOrder) {
           throw new BadRequestException(
-            '#A pergunta vinculada deve ter ordem menor que a pergunta sendo editada'
+            '#A pergunta vinculada na regra de exibição deve ter ordem menor que a pergunta sendo editada'
+          )
+        }
+      }
+
+      // Validar se a regra de exibição da resposta é válida
+      if (updateQuestionDto.answerDisplayRule) {
+        if (
+          !Object.values(AnswersDisplayRules).includes(
+            updateQuestionDto.answerDisplayRule as AnswersDisplayRules
+          )
+        ) {
+          throw new BadRequestException(
+            '#Regra de exibição de resposta inválida'
           )
         }
       }
