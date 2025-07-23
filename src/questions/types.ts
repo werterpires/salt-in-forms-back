@@ -13,6 +13,7 @@ export interface Question {
   answerDisplayValue?: string
   createdAt: Date
   updatedAt: Date
+  questionOptions?: QuestionOption[]
 }
 
 export interface CreateQuestion {

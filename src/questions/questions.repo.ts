@@ -252,4 +252,11 @@ export class QuestionsRepo {
       .where(db.QuestionOptions.QUESTION_ID, questionId)
       .del()
   }
+
+  async findQuestionOptionsByQuestionId(questionId: number): Promise<QuestionOption[]> {
+    const options = await this.knex(db.Tables.QUESTION_OPTIONS)
+      .where(db.QuestionOptions.QUESTION_ID, questionId)
+
+    return options
+  }
 }
