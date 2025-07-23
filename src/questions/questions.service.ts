@@ -18,12 +18,17 @@ export class QuestionsService {
 
     const questionId = await this.questionsRepo.create(createQuestionData)
 
-    if (createQuestionDto.questionOptions && createQuestionDto.questionOptions.length > 0) {
-      const questionOptions = createQuestionDto.questionOptions.map(option => ({
-        questionId,
-        questionOptionType: option.questionOptionType,
-        questionOptionValue: option.questionOptionValue
-      }))
+    if (
+      createQuestionDto.questionOptions &&
+      createQuestionDto.questionOptions.length > 0
+    ) {
+      const questionOptions = createQuestionDto.questionOptions.map(
+        (option) => ({
+          questionId,
+          questionOptionType: option.questionOptionType,
+          questionOptionValue: option.questionOptionValue
+        })
+      )
       await this.questionsRepo.createQuestionOptions(questionOptions)
     }
   }
@@ -43,12 +48,17 @@ export class QuestionsService {
 
     await this.questionsRepo.updateQuestion(updateQuestionData)
 
-    if (updateQuestionDto.questionOptions && updateQuestionDto.questionOptions.length > 0) {
-      const questionOptions = updateQuestionDto.questionOptions.map(option => ({
-        questionId: updateQuestionDto.questionId,
-        questionOptionType: option.questionOptionType,
-        questionOptionValue: option.questionOptionValue
-      }))
+    if (
+      updateQuestionDto.questionOptions &&
+      updateQuestionDto.questionOptions.length > 0
+    ) {
+      const questionOptions = updateQuestionDto.questionOptions.map(
+        (option) => ({
+          questionId: updateQuestionDto.questionId,
+          questionOptionType: option.questionOptionType,
+          questionOptionValue: option.questionOptionValue
+        })
+      )
       await this.questionsRepo.createQuestionOptions(questionOptions)
     }
   }
