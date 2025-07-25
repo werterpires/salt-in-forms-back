@@ -81,7 +81,10 @@ export enum FormSections {
   FORM_SECTION_NAME = 'formSectionName',
   FORM_SECTION_ORDER = 'formSectionOrder',
   FORM_SECTION_DISPLAY_RULE = 'formSectionDisplayRule',
-  FORM_SECTION_DISPLAY_LINK = 'formSectionDisplayLink'
+  FORM_SECTION_DISPLAY_LINK = 'formSectionDisplayLink',
+  QUESTION_DISPLAY_LINK = 'questionDisplayLink',
+  ANSWER_DISPLEY_RULE = 'answerDisplayRule',
+  ANSWER_DISPLAY_VALUE = 'answerDisplayValue'
 }
 
 export enum Questions {

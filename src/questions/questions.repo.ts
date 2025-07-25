@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
-import { Question, CreateQuestion, UpdateQuestion, QuestionOption } from './types'
+import {
+  Question,
+  CreateQuestion,
+  UpdateQuestion,
+  QuestionOption
+} from './types'
 import * as db from '../constants/db-schema.enum'
 
 @Injectable()
@@ -235,15 +240,17 @@ export class QuestionsRepo {
     return parseInt(numberOfQuestions[0].count, 10) || 0
   }
 
-  async createQuestionOptions(questionOptions: QuestionOption[]): Promise<void> {
+  async createQuestionOptions(
+    questionOptions: QuestionOption[]
+  ): Promise<void> {
     if (questionOptions.length === 0) return
-    
-    const optionsData = questionOptions.map(option => ({
+
+    const optionsData = questionOptions.map((option) => ({
       [db.QuestionOptions.QUESTION_ID]: option.questionId,
       [db.QuestionOptions.QUESTION_OPTION_TYPE]: option.questionOptionType,
       [db.QuestionOptions.QUESTION_OPTION_VALUE]: option.questionOptionValue
     }))
-    
+
     await this.knex(db.Tables.QUESTION_OPTIONS).insert(optionsData)
   }
 
@@ -253,8 +260,14 @@ export class QuestionsRepo {
       .del()
   }
 
-  async findQuestionOptionsByQuestionId(questionId: number): Promise<QuestionOption[]> {
+  async findQuestionOptionsByQuestionId(
+    questionId: number
+  ): Promise<QuestionOption[]> {
     const options = await this.knex(db.Tables.QUESTION_OPTIONS)
+      .select(
+        db.QuestionOptions.QUESTION_OPTION_TYPE,
+        db.QuestionOptions.QUESTION_OPTION_VALUE
+      )
       .where(db.QuestionOptions.QUESTION_ID, questionId)
 
     return options

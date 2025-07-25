@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, Length } from 'class-validator'
+import { IsNumber, IsOptional, IsString, Length } from 'class-validator'
 
 export class UpdateFormSectionDto {
   @IsNumber({}, { message: '#O ID da seção deve ser numérico.' })
@@ -13,6 +13,26 @@ export class UpdateFormSectionDto {
   formSectionDisplayRule: number
 
   @IsOptional()
-  @IsNumber()
+  @IsNumber(
+    {},
+    { message: '#O link de seção da regra de exibição deve ser numérico.' }
+  )
   formSectionDisplayLink?: number
+
+  @IsOptional()
+  @IsNumber({}, { message: '#O link da seção deve ser numérico.' })
+  questionDisplayLink?: number
+
+  @IsOptional()
+  @IsNumber(
+    {},
+    { message: '#A regra de exibição da resposta deve ser numérica.' }
+  )
+  answerDisplayRule?: number
+
+  @IsOptional()
+  @IsString({
+    message: '#O valor de exibição da resposta deve ser uma string.'
+  })
+  answerDisplayValue?: string
 }
