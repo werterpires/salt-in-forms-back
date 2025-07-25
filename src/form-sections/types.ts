@@ -5,6 +5,9 @@ export interface FormSection {
   formSectionOrder: number
   formSectionDisplayRule: number
   formSectionDisplayLink?: number
+  questionDisplayLink?: number
+  answerDisplayRule?: number
+  answerDisplayValue?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -15,6 +18,9 @@ export interface CreateFormSection {
   formSectionOrder: number
   formSectionDisplayRule: number
   formSectionDisplayLink?: number
+  questionDisplayLink?: number
+  answerDisplayRule?: number
+  answerDisplayValue?: string
 }
 
 export interface UpdateFormSection {
@@ -22,4 +28,7 @@ export interface UpdateFormSection {
   formSectionName: string
   formSectionDisplayRule: number
   formSectionDisplayLink?: number
+  questionDisplayLink?: number
+  answerDisplayRule?: number
+  answerDisplayValue?: string
 }

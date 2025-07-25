@@ -2,6 +2,7 @@ import { CreateFormSection, FormSection, UpdateFormSection } from './types'
 import { CreateFormSectionDto } from './dto/create-form-section.dto'
 import { UpdateFormSectionDto } from './dto/update-form-section.dto'
 import { FormSectionDisplayRules } from '../constants/form-section-display-rules.const'
+import { AnswersDisplayRules } from '../constants/answer_display_rule'
 import { BadRequestException } from '@nestjs/common'
 import { FormSectionsRepo } from './form-sections.repo'
 
@@ -12,7 +13,10 @@ export class FormSectionsHelper {
       formSectionName: dto.formSectionName,
       formSectionOrder: dto.formSectionOrder,
       formSectionDisplayRule: dto.formSectionDisplayRule,
-      formSectionDisplayLink: dto.formSectionDisplayLink
+      formSectionDisplayLink: dto.formSectionDisplayLink,
+      questionDisplayLink: dto.questionDisplayLink,
+      answerDisplayRule: dto.answerDisplayRule,
+      answerDisplayValue: dto.answerDisplayValue ? dto.answerDisplayValue.join('||') : undefined
     }
   }
 
@@ -21,7 +25,10 @@ export class FormSectionsHelper {
       formSectionId: dto.formSectionId,
       formSectionName: dto.formSectionName,
       formSectionDisplayRule: dto.formSectionDisplayRule,
-      formSectionDisplayLink: dto.formSectionDisplayLink
+      formSectionDisplayLink: dto.formSectionDisplayLink,
+      questionDisplayLink: dto.questionDisplayLink,
+      answerDisplayRule: dto.answerDisplayRule,
+      answerDisplayValue: dto.answerDisplayValue ? dto.answerDisplayValue.join('||') : undefined
     }
   }
 
@@ -29,10 +36,118 @@ export class FormSectionsHelper {
     return formSections.sort((a, b) => a.formSectionOrder - b.formSectionOrder)
   }
 
+  static async processUpdateFormSection(
+    updateFormSectionDto: UpdateFormSectionDto,
+    formSectionsRepo: FormSectionsRepo
+  ): Promise<UpdateFormSection> {
+    // 1. Buscar a seção existente para validações
+    const existingSection = await formSectionsRepo.findById(updateFormSectionDto.formSectionId)
+    if (!existingSection) {
+      throw new BadRequestException('#Seção não encontrada')
+    }
+
+    // 2. Validar regras de exibição completas
+    this.validateCompleteDisplayRules(
+      updateFormSectionDto.formSectionDisplayRule,
+      updateFormSectionDto.formSectionDisplayLink,
+      updateFormSectionDto.questionDisplayLink,
+      updateFormSectionDto.answerDisplayRule,
+      updateFormSectionDto.answerDisplayValue
+    )
+
+    // 3. Se há um displayLink, validar se a seção referenciada existe
+    if (updateFormSectionDto.formSectionDisplayLink) {
+      const linkedSection = await formSectionsRepo.findByIdAndSFormId(
+        updateFormSectionDto.formSectionDisplayLink,
+        existingSection.sFormId
+      )
+
+      if (!linkedSection) {
+        throw new BadRequestException(
+          '#Seção referenciada no link de exibição não encontrada'
+        )
+      }
+
+      this.validateDisplayLinkOrder(linkedSection, existingSection.formSectionOrder)
+
+      // 4. Validar se a questão pertence à seção referenciada
+      if (updateFormSectionDto.questionDisplayLink) {
+        const linkedQuestion = await formSectionsRepo.findQuestionById(
+          updateFormSectionDto.questionDisplayLink
+        )
+
+        if (!linkedQuestion) {
+          throw new BadRequestException('#Questão referenciada não encontrada')
+        }
+
+        if (linkedQuestion.formSectionId !== updateFormSectionDto.formSectionDisplayLink) {
+          throw new BadRequestException(
+            '#A questão deve pertencer à seção referenciada no link de exibição'
+          )
+        }
+      }
+    }
+
+    return this.mapUpdateDtoToEntity(updateFormSectionDto)
+  }
+
   static validateDisplayRule(displayRule: number): boolean {
     return Object.values(FormSectionDisplayRules).includes(
       displayRule as FormSectionDisplayRules
     )
+  }
+
+  static validateAnswerDisplayRule(answerDisplayRule: number): boolean {
+    return Object.values(AnswersDisplayRules).includes(
+      answerDisplayRule as AnswersDisplayRules
+    )
+  }
+
+  static validateAnswerDisplayValue(answerDisplayRule: number, answerDisplayValue: string[]): void {
+    // Regras 1, 2, 3, 4, 5 só podem ter um valor
+    if ([1, 2, 3, 4, 5].includes(answerDisplayRule) && answerDisplayValue.length !== 1) {
+      throw new BadRequestException('#Para esta regra de exibição, apenas um valor é permitido')
+    }
+
+    // Regras 2, 3, 4, 5 devem ter valores numéricos
+    if ([2, 3, 4, 5].includes(answerDisplayRule)) {
+      const value = answerDisplayValue[0]
+      if (isNaN(Number(value))) {
+        throw new BadRequestException('#Para esta regra de exibição, o valor deve ser numérico')
+      }
+    }
+  }
+
+  static validateCompleteDisplayRules(
+    formSectionDisplayRule: number,
+    formSectionDisplayLink?: number,
+    questionDisplayLink?: number,
+    answerDisplayRule?: number,
+    answerDisplayValue?: string[]
+  ): void {
+    if (formSectionDisplayRule === FormSectionDisplayRules.ALWAYS_SHOW) {
+      // Se "sempre aparecer", as outras propriedades são proibidas
+      if (formSectionDisplayLink || questionDisplayLink || answerDisplayRule || answerDisplayValue) {
+        throw new BadRequestException(
+          '#Quando a regra é "Sempre aparecer", não deve haver link de seção, link de questão, regra de resposta ou valor de resposta'
+        )
+      }
+    } else {
+      // Se não é "sempre aparecer", todas as propriedades são obrigatórias
+      if (!formSectionDisplayLink || !questionDisplayLink || !answerDisplayRule || !answerDisplayValue || answerDisplayValue.length === 0) {
+        throw new BadRequestException(
+          '#Quando a regra não é "Sempre aparecer", link de seção, link de questão, regra de resposta e valor de resposta são obrigatórios'
+        )
+      }
+
+      // Validar se a regra de resposta é válida
+      if (!this.validateAnswerDisplayRule(answerDisplayRule)) {
+        throw new BadRequestException('#Regra de exibição de resposta inválida')
+      }
+
+      // Validar os valores de resposta
+      this.validateAnswerDisplayValue(answerDisplayRule, answerDisplayValue)
+    }
   }
 
   static validateDisplayRuleAndLink(
@@ -79,10 +194,13 @@ export class FormSectionsHelper {
     createFormSectionDto: CreateFormSectionDto,
     formSectionsRepo: FormSectionsRepo
   ): Promise<CreateFormSection> {
-    // 1. Validar se a regra de exibição é válida
-    this.validateDisplayRuleAndLink(
+    // 1. Validar regras de exibição completas
+    this.validateCompleteDisplayRules(
       createFormSectionDto.formSectionDisplayRule,
-      createFormSectionDto.formSectionDisplayLink
+      createFormSectionDto.formSectionDisplayLink,
+      createFormSectionDto.questionDisplayLink,
+      createFormSectionDto.answerDisplayRule,
+      createFormSectionDto.answerDisplayValue
     )
 
     // 2. Se há um displayLink, validar se a seção referenciada existe e tem ordem menor
@@ -102,9 +220,26 @@ export class FormSectionsHelper {
         linkedSection,
         createFormSectionDto.formSectionOrder
       )
+
+      // 3. Validar se a questão pertence à seção referenciada
+      if (createFormSectionDto.questionDisplayLink) {
+        const linkedQuestion = await formSectionsRepo.findQuestionById(
+          createFormSectionDto.questionDisplayLink
+        )
+
+        if (!linkedQuestion) {
+          throw new BadRequestException('#Questão referenciada não encontrada')
+        }
+
+        if (linkedQuestion.formSectionId !== createFormSectionDto.formSectionDisplayLink) {
+          throw new BadRequestException(
+            '#A questão deve pertencer à seção referenciada no link de exibição'
+          )
+        }
+      }
     }
 
-    // 3. Processar o displayLink conforme a regra
+    // 4. Processar o displayLink conforme a regra
     const processedDisplayLink = this.processDisplayLink(
       createFormSectionDto.formSectionDisplayRule,
       createFormSectionDto.formSectionDisplayLink

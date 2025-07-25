@@ -24,8 +24,10 @@ export class FormSectionsService {
   }
 
   async update(updateFormSectionDto: UpdateFormSectionDto): Promise<void> {
-    const updateFormSection =
-      FormSectionsHelper.mapUpdateDtoToEntity(updateFormSectionDto)
+    const updateFormSection = await FormSectionsHelper.processUpdateFormSection(
+      updateFormSectionDto,
+      this.formSectionsRepo
+    )
     return this.formSectionsRepo.updateFormSection(updateFormSection)
   }
 

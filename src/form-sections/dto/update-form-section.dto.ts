@@ -31,8 +31,6 @@ export class UpdateFormSectionDto {
   answerDisplayRule?: number
 
   @IsOptional()
-  @IsString({
-    message: '#O valor de exibição da resposta deve ser uma string.'
-  })
-  answerDisplayValue?: string
+  @IsString({ each: true, message: '#Cada valor de exibição da resposta deve ser uma string.' })
+  answerDisplayValue?: string[]
 }
