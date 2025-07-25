@@ -7,7 +7,7 @@ export async function up(knex: Knex): Promise<void> {
       .integer(db.FormSections.QUESTION_DISPLAY_LINK)
       .unsigned()
       .references(db.Questions.QUESTION_ID)
-      .inTable(db.Tables.FORM_SECTIONS)
+      .inTable(db.Tables.QUESTIONS)
       .onDelete('CASCADE')
       .onUpdate('CASCADE')
 
