@@ -129,7 +129,6 @@ export class QuestionsRepo {
       }
     })
 
-    console.log('QuestionsRepo.findAllBySectionId', questions)
     return questions
   }
 
@@ -286,7 +285,6 @@ export class QuestionsRepo {
       )
       .where(db.QuestionOptions.QUESTION_ID, questionId)
 
-    console.log(options)
     return options
   }
 }
