@@ -10,7 +10,7 @@ export interface Question {
   formSectionDisplayLink?: number
   questionDisplayLink?: number
   answerDisplayRule?: number
-  answerDisplayValue?: string
+  answerDisplayValue?: string | number[]
   createdAt: Date
   updatedAt: Date
   questionOptions?: QuestionOption[]
@@ -42,8 +42,6 @@ export interface UpdateQuestion {
   answerDisplayRule?: number
   answerDisplayValue?: string
 }
-
-
 
 export interface QuestionOption {
   questionOptionId?: number

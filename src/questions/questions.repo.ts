@@ -112,10 +112,24 @@ export class QuestionsRepo {
   }
 
   async findAllBySectionId(formSectionId: number): Promise<Question[]> {
-    const questions = await this.knex(db.Tables.QUESTIONS)
+    const questions: Question[] = await this.knex(db.Tables.QUESTIONS)
       .where(db.Questions.FORM_SECTION_ID, formSectionId)
       .orderBy(db.Questions.QUESTION_ORDER, 'asc')
 
+    questions.forEach((question) => {
+      if (
+        question.answerDisplayValue &&
+        typeof question.answerDisplayValue === 'string'
+      ) {
+        question.answerDisplayValue = question.answerDisplayValue
+          .split('||')
+          .map((value) => {
+            return Number(value)
+          })
+      }
+    })
+
+    console.log('QuestionsRepo.findAllBySectionId', questions)
     return questions
   }
 
@@ -266,10 +280,13 @@ export class QuestionsRepo {
     const options = await this.knex(db.Tables.QUESTION_OPTIONS)
       .select(
         db.QuestionOptions.QUESTION_OPTION_TYPE,
-        db.QuestionOptions.QUESTION_OPTION_VALUE
+        db.QuestionOptions.QUESTION_OPTION_VALUE,
+        db.QuestionOptions.QUESTION_OPTION_ID,
+        db.QuestionOptions.QUESTION_ID
       )
       .where(db.QuestionOptions.QUESTION_ID, questionId)
 
+    console.log(options)
     return options
   }
 }

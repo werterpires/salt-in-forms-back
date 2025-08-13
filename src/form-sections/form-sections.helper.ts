@@ -5,6 +5,7 @@ import { FormSectionDisplayRules } from '../constants/form-section-display-rules
 import { AnswersDisplayRules } from '../constants/answer_display_rule'
 import { BadRequestException } from '@nestjs/common'
 import { FormSectionsRepo } from './form-sections.repo'
+import { EQuestionsTypes } from 'src/constants/questions-types.enum'
 
 export class FormSectionsHelper {
   static mapCreateDtoToEntity(dto: CreateFormSectionDto): CreateFormSection {
@@ -16,7 +17,9 @@ export class FormSectionsHelper {
       formSectionDisplayLink: dto.formSectionDisplayLink,
       questionDisplayLink: dto.questionDisplayLink,
       answerDisplayRule: dto.answerDisplayRule,
-      answerDisplayValue: dto.answerDisplayValue ? dto.answerDisplayValue.join('||') : undefined
+      answerDisplayValue: dto.answerDisplayValue
+        ? dto.answerDisplayValue.join('||')
+        : undefined
     }
   }
 
@@ -28,7 +31,9 @@ export class FormSectionsHelper {
       formSectionDisplayLink: dto.formSectionDisplayLink,
       questionDisplayLink: dto.questionDisplayLink,
       answerDisplayRule: dto.answerDisplayRule,
-      answerDisplayValue: dto.answerDisplayValue ? dto.answerDisplayValue.join('||') : undefined
+      answerDisplayValue: dto.answerDisplayValue
+        ? dto.answerDisplayValue.join('||')
+        : undefined
     }
   }
 
@@ -41,7 +46,9 @@ export class FormSectionsHelper {
     formSectionsRepo: FormSectionsRepo
   ): Promise<UpdateFormSection> {
     // 1. Buscar a seção existente para validações
-    const existingSection = await formSectionsRepo.findById(updateFormSectionDto.formSectionId)
+    const existingSection = await formSectionsRepo.findById(
+      updateFormSectionDto.formSectionId
+    )
     if (!existingSection) {
       throw new BadRequestException('#Seção não encontrada')
     }
@@ -68,7 +75,10 @@ export class FormSectionsHelper {
         )
       }
 
-      this.validateDisplayLinkOrder(linkedSection, existingSection.formSectionOrder)
+      this.validateDisplayLinkOrder(
+        linkedSection,
+        existingSection.formSectionOrder
+      )
 
       // 4. Validar se a questão pertence à seção referenciada
       if (updateFormSectionDto.questionDisplayLink) {
@@ -80,7 +90,24 @@ export class FormSectionsHelper {
           throw new BadRequestException('#Questão referenciada não encontrada')
         }
 
-        if (linkedQuestion.formSectionId !== updateFormSectionDto.formSectionDisplayLink) {
+        const linkedQuestionType =
+          linkedQuestion.questionType as EQuestionsTypes
+        const allwedTypes = [
+          EQuestionsTypes.MULTIPLE_CHOICE,
+          EQuestionsTypes.SINGLE_CHOICE,
+          EQuestionsTypes.MULTIPLE_CHOICE_MATRIX,
+          EQuestionsTypes.SINGLE_CHOICE_MATRIX
+        ]
+        if (!allwedTypes.includes(linkedQuestionType)) {
+          throw new BadRequestException(
+            '#A questão referenciada deve ser uma questão de alternativas.'
+          )
+        }
+
+        if (
+          linkedQuestion.formSectionId !==
+          updateFormSectionDto.formSectionDisplayLink
+        ) {
           throw new BadRequestException(
             '#A questão deve pertencer à seção referenciada no link de exibição'
           )
@@ -103,17 +130,27 @@ export class FormSectionsHelper {
     )
   }
 
-  static validateAnswerDisplayValue(answerDisplayRule: number, answerDisplayValue: string[]): void {
+  static validateAnswerDisplayValue(
+    answerDisplayRule: number,
+    answerDisplayValue: string[]
+  ): void {
     // Regras 1, 2, 3, 4, 5 só podem ter um valor
-    if ([1, 2, 3, 4, 5].includes(answerDisplayRule) && answerDisplayValue.length !== 1) {
-      throw new BadRequestException('#Para esta regra de exibição, apenas um valor é permitido')
+    if (
+      [1, 2, 3, 4, 5].includes(answerDisplayRule) &&
+      answerDisplayValue.length !== 1
+    ) {
+      throw new BadRequestException(
+        '#Para esta regra de exibição, apenas um valor é permitido'
+      )
     }
 
-    // Regras 2, 3, 4, 5 devem ter valores numéricos
+    // Regras 2, 3, 4, 5 devem ter valores numéricos ou tranformaveis em datas ou em horarios
     if ([2, 3, 4, 5].includes(answerDisplayRule)) {
       const value = answerDisplayValue[0]
-      if (isNaN(Number(value))) {
-        throw new BadRequestException('#Para esta regra de exibição, o valor deve ser numérico')
+      if (isNaN(Number(value)) || isNaN(Date.parse(value))) {
+        throw new BadRequestException(
+          '#Para esta regra de exibição, o valor deve ser numérico'
+        )
       }
     }
   }
@@ -125,16 +162,30 @@ export class FormSectionsHelper {
     answerDisplayRule?: number,
     answerDisplayValue?: string[]
   ): void {
-    if (formSectionDisplayRule === FormSectionDisplayRules.ALWAYS_SHOW) {
+    if (
+      (formSectionDisplayRule as FormSectionDisplayRules) ===
+      FormSectionDisplayRules.ALWAYS_SHOW
+    ) {
       // Se "sempre aparecer", as outras propriedades são proibidas
-      if (formSectionDisplayLink || questionDisplayLink || answerDisplayRule || answerDisplayValue) {
+      if (
+        formSectionDisplayLink ||
+        questionDisplayLink ||
+        answerDisplayRule ||
+        answerDisplayValue
+      ) {
         throw new BadRequestException(
           '#Quando a regra é "Sempre aparecer", não deve haver link de seção, link de questão, regra de resposta ou valor de resposta'
         )
       }
     } else {
       // Se não é "sempre aparecer", todas as propriedades são obrigatórias
-      if (!formSectionDisplayLink || !questionDisplayLink || !answerDisplayRule || !answerDisplayValue || answerDisplayValue.length === 0) {
+      if (
+        !formSectionDisplayLink ||
+        !questionDisplayLink ||
+        !answerDisplayRule ||
+        !answerDisplayValue ||
+        answerDisplayValue.length === 0
+      ) {
         throw new BadRequestException(
           '#Quando a regra não é "Sempre aparecer", link de seção, link de questão, regra de resposta e valor de resposta são obrigatórios'
         )
@@ -231,7 +282,10 @@ export class FormSectionsHelper {
           throw new BadRequestException('#Questão referenciada não encontrada')
         }
 
-        if (linkedQuestion.formSectionId !== createFormSectionDto.formSectionDisplayLink) {
+        if (
+          linkedQuestion.formSectionId !==
+          createFormSectionDto.formSectionDisplayLink
+        ) {
           throw new BadRequestException(
             '#A questão deve pertencer à seção referenciada no link de exibição'
           )

@@ -3,6 +3,7 @@ import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
 import * as db from '../constants/db-schema.enum'
 import { CreateFormSection, FormSection, UpdateFormSection } from './types'
+import { Question } from 'src/questions/types'
 
 @Injectable()
 export class FormSectionsRepo {
@@ -111,5 +112,11 @@ export class FormSectionsRepo {
           })
       }
     })
+  }
+
+  async findQuestionById(questionId: number): Promise<Question> {
+    return await this.knex(db.Tables.QUESTIONS)
+      .where(db.Questions.QUESTION_ID, questionId)
+      .first()
   }
 }

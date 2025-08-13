@@ -35,14 +35,21 @@ export class QuestionsService {
 
   async findAllBySectionId(formSectionId: number): Promise<Question[]> {
     const questions = await this.questionsRepo.findAllBySectionId(formSectionId)
-    
+
     for (const question of questions) {
       // Se o tipo da pergunta não for 1, 7 ou 8, busca as options
-      if (question.questionType !== 1 && question.questionType !== 7 && question.questionType !== 8) {
-        question.questionOptions = await this.questionsRepo.findQuestionOptionsByQuestionId(question.questionId)
+      if (
+        question.questionType !== 1 &&
+        question.questionType !== 7 &&
+        question.questionType !== 8
+      ) {
+        question.questionOptions =
+          await this.questionsRepo.findQuestionOptionsByQuestionId(
+            question.questionId
+          )
       }
     }
-    
+
     return questions
   }
 
@@ -96,23 +103,38 @@ export class QuestionsService {
 
   async findById(questionId: number): Promise<Question | null> {
     const question = await this.questionsRepo.findById(questionId)
-    
-    if (question && question.questionType !== 1 && question.questionType !== 7 && question.questionType !== 8) {
-      question.questionOptions = await this.questionsRepo.findQuestionOptionsByQuestionId(question.questionId)
+
+    if (
+      question &&
+      question.questionType !== 1 &&
+      question.questionType !== 7 &&
+      question.questionType !== 8
+    ) {
+      question.questionOptions =
+        await this.questionsRepo.findQuestionOptionsByQuestionId(
+          question.questionId
+        )
     }
-    
+
     return question
   }
 
   async findByIds(questionIds: number[]): Promise<Question[]> {
     const questions = await this.questionsRepo.findByIds(questionIds)
-    
+
     for (const question of questions) {
-      if (question.questionType !== 1 && question.questionType !== 7 && question.questionType !== 8) {
-        question.questionOptions = await this.questionsRepo.findQuestionOptionsByQuestionId(question.questionId)
+      if (
+        question.questionType !== 1 &&
+        question.questionType !== 7 &&
+        question.questionType !== 8
+      ) {
+        question.questionOptions =
+          await this.questionsRepo.findQuestionOptionsByQuestionId(
+            question.questionId
+          )
       }
     }
-    
+
     return questions
   }
 }
