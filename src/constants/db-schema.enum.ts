@@ -9,7 +9,8 @@ export enum Tables {
   MINISTERIALS = 'ministerials',
   FORM_SECTIONS = 'formSections',
   QUESTIONS = 'questions',
-  QUESTION_OPTIONS = 'questionOptions'
+  QUESTION_OPTIONS = 'questionOptions',
+  VALIDATIONS = 'validations'
 }
 
 export enum Users {
@@ -107,4 +108,14 @@ export enum QuestionOptions {
   QUESTION_ID = 'questionId',
   QUESTION_OPTION_TYPE = 'questionOptionType',
   QUESTION_OPTION_VALUE = 'questionOptionValue'
+}
+
+export enum Validations {
+  VALIDATION_ID = 'validationId',
+  VALIDATION_TYPE = 'validationType',
+  QUESTION_ID = 'questionId',
+  VALUE_ONE = 'valueOne',
+  VALUE_TWO = 'valueTwo',
+  VALUE_THREE = 'valueThree',
+  VALUE_FOUR = 'valueFour'
 }

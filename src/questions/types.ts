@@ -1,3 +1,11 @@
+// Representa uma validação associada a uma questão
+export interface Validation {
+  validationType: number
+  valueOne?: any
+  valueTwo?: any
+  valueThree?: any
+  valueFour?: any
+}
 export interface Question {
   questionId: number
   formSectionId: number
@@ -28,6 +36,7 @@ export interface CreateQuestion {
   questionDisplayLink?: number
   answerDisplayRule?: number
   answerDisplayValue?: string
+  validations?: Validation[]
 }
 
 export interface UpdateQuestion {
@@ -49,3 +58,16 @@ export interface QuestionOption {
   questionOptionType: number
   questionOptionValue: string
 }
+
+export interface ValidationSpcification {
+  validationType: number
+  validationName: string
+  validationDescription: string
+  valueOneType: AcceptedTypes
+  valueTwoType: AcceptedTypes
+  valueThreeType: AcceptedTypes
+  valueFourType: AcceptedTypes
+  validationFunction: (...args: any[]) => boolean
+}
+
+type AcceptedTypes = 'string' | 'number' | 'boolean' | 'undefined'

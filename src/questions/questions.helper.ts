@@ -63,7 +63,93 @@ export class QuestionsHelper {
     questionsRepo: QuestionsRepo
   ): Promise<void> {
     // Validar opções da pergunta
-    this.validateQuestionOptions(createQuestionDto.questionType, createQuestionDto.questionOptions)
+    this.validateQuestionOptions(
+      createQuestionDto.questionType,
+      createQuestionDto.questionOptions
+    )
+    // Validar as validações da questão (se existirem)
+    if (
+      createQuestionDto.validations &&
+      createQuestionDto.validations.length > 0
+    ) {
+      const { VALIDATION_SPECIFICATIONS_BY_TYPE } = await import(
+        './validations'
+      )
+      createQuestionDto.validations = createQuestionDto.validations.map(
+        (validation) => {
+          const spec =
+            VALIDATION_SPECIFICATIONS_BY_TYPE[validation.validationType]
+          if (!spec) {
+            throw new BadRequestException(
+              `#Validação desconhecida: type ${validation.validationType}`
+            )
+          }
+          const valueTypes = [
+            spec.valueOneType,
+            spec.valueTwoType,
+            spec.valueThreeType,
+            spec.valueFourType
+          ]
+          const values = [
+            validation.valueOne,
+            validation.valueTwo,
+            validation.valueThree,
+            validation.valueFour
+          ]
+          for (let i = 0; i < valueTypes.length; i++) {
+            const expectedType = valueTypes[i]
+            const value = values[i]
+            if (expectedType === 'undefined' && value !== undefined) {
+              throw new BadRequestException(
+                `#Validação '${spec.validationName}': valor ${i + 1} deve ser undefined, recebido: ${typeof value}`
+              )
+            }
+            if (value === undefined || value === null) {
+              throw new BadRequestException(
+                `#Validação '${spec.validationName}': valor ${i + 1} ausente (esperado tipo ${expectedType})`
+              )
+            }
+            if (expectedType === 'number' && typeof value !== 'number') {
+              throw new BadRequestException(
+                `#Validação '${spec.validationName}': valor ${i + 1} deve ser um número, recebido: ${typeof value}`
+              )
+            }
+            if (expectedType === 'string' && typeof value !== 'string') {
+              throw new BadRequestException(
+                `#Validação '${spec.validationName}': valor ${i + 1} deve ser um texto, recebido: ${typeof value}`
+              )
+            }
+            if (expectedType === 'boolean' && typeof value !== 'boolean') {
+              throw new BadRequestException(
+                `#Validação '${spec.validationName}': valor ${i + 1} deve ser uma indicação de verdadeiro ou falso, recebido: ${typeof value}`
+              )
+            }
+          }
+          // Após validar tipos, transformar todos os valores em string (exceto undefined)
+          return {
+            ...validation,
+            valueOne:
+              validation.valueOne !== undefined && validation.valueOne !== null
+                ? String(validation.valueOne)
+                : undefined,
+            valueTwo:
+              validation.valueTwo !== undefined && validation.valueTwo !== null
+                ? String(validation.valueTwo)
+                : undefined,
+            valueThree:
+              validation.valueThree !== undefined &&
+              validation.valueThree !== null
+                ? String(validation.valueThree)
+                : undefined,
+            valueFour:
+              validation.valueFour !== undefined &&
+              validation.valueFour !== null
+                ? String(validation.valueFour)
+                : undefined
+          }
+        }
+      )
+    }
     // Validar se a regra de exibição é válida
     if (
       !Object.values(FormSectionDisplayRules).includes(
@@ -171,7 +257,10 @@ export class QuestionsHelper {
     questionsRepo: QuestionsRepo
   ): Promise<void> {
     // Validar opções da pergunta
-    this.validateQuestionOptions(updateQuestionDto.questionType, updateQuestionDto.questionOptions)
+    this.validateQuestionOptions(
+      updateQuestionDto.questionType,
+      updateQuestionDto.questionOptions
+    )
     // Buscar a pergunta existente
     const existingQuestion = await questionsRepo.findById(
       updateQuestionDto.questionId
@@ -348,7 +437,10 @@ export class QuestionsHelper {
 
   static validateQuestionOptions(
     questionType: number,
-    questionOptions?: { questionOptionType: number; questionOptionValue: string }[]
+    questionOptions?: {
+      questionOptionType: number
+      questionOptionValue: string
+    }[]
   ): void {
     // a) se a pergunta for do tipo "Resposta Aberta", "Data" ou "Hora", as questionOptions devem não existir
     if (
@@ -442,13 +534,16 @@ export class QuestionsHelper {
 
     // d) duas options, da mesma question, do mesmo optionType, não podem ter o mesmo valor
     if (questionOptions) {
-      const groupedByType = questionOptions.reduce((acc, option) => {
-        if (!acc[option.questionOptionType]) {
-          acc[option.questionOptionType] = []
-        }
-        acc[option.questionOptionType].push(option.questionOptionValue)
-        return acc
-      }, {} as Record<number, string[]>)
+      const groupedByType = questionOptions.reduce(
+        (acc, option) => {
+          if (!acc[option.questionOptionType]) {
+            acc[option.questionOptionType] = []
+          }
+          acc[option.questionOptionType].push(option.questionOptionValue)
+          return acc
+        },
+        {} as Record<number, string[]>
+      )
 
       for (const [type, values] of Object.entries(groupedByType)) {
         const uniqueValues = new Set(values)

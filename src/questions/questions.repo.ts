@@ -59,6 +59,23 @@ export class QuestionsRepo {
           createQuestionData.answerDisplayValue
       })
 
+      // Inserir validações, se houver
+      if (
+        createQuestionData.validations &&
+        createQuestionData.validations.length > 0
+      ) {
+        const validationsToInsert = createQuestionData.validations.map((v) => ({
+          [db.Validations.VALIDATION_TYPE]: v.validationType,
+          [db.Validations.QUESTION_ID]: questionId,
+          [db.Validations.VALUE_ONE]: v.valueOne,
+          [db.Validations.VALUE_TWO]: v.valueTwo,
+          [db.Validations.VALUE_THREE]: v.valueThree,
+          [db.Validations.VALUE_FOUR]: v.valueFour
+        }))
+
+        await trx(db.Tables.VALIDATIONS).insert(validationsToInsert)
+      }
+
       return questionId
     })
   }

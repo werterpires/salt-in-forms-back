@@ -5,9 +5,28 @@ import {
   Min,
   IsArray,
   IsString,
-  ValidateNested
+  ValidateNested,
+  IsDefined,
+  ValidateIf
 } from 'class-validator'
 import { Type } from 'class-transformer'
+
+export class ValidationDto {
+  @IsNumber({}, { message: '#O tipo da validação deve ser numérico.' })
+  validationType!: number
+
+  @IsOptional()
+  valueOne?: any
+
+  @IsOptional()
+  valueTwo?: any
+
+  @IsOptional()
+  valueThree?: any
+
+  @IsOptional()
+  valueFour?: any
+}
 
 export class QuestionOptionDto {
   @IsNumber({}, { message: '#O tipo da opção deve ser numérico.' })
@@ -60,6 +79,11 @@ export class CreateQuestionDto {
     {},
     { message: '#A regra de exibição da resposta deve ser numérica.' }
   )
+  @IsOptional()
+  @IsArray({ message: '#As validações devem ser um array.' })
+  @ValidateNested({ each: true })
+  @Type(() => ValidationDto)
+  validations?: ValidationDto[]
   answerDisplayRule?: number
 
   @IsOptional()
