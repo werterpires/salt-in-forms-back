@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common'
+import { BadRequestException, ConsoleLogger } from '@nestjs/common'
 import { CreateQuestion, UpdateQuestion } from './types'
 import { FormSectionDisplayRules } from '../constants/form-section-display-rules.const'
 import { QuestionsRepo } from './questions.repo'
@@ -30,7 +30,8 @@ export class QuestionsHelper {
       formSectionDisplayLink: createQuestionDto.formSectionDisplayLink,
       questionDisplayLink: createQuestionDto.questionDisplayLink,
       answerDisplayRule: createQuestionDto.answerDisplayRule,
-      answerDisplayValue
+      answerDisplayValue,
+      validations: createQuestionDto.validations
     }
   }
 
@@ -102,11 +103,6 @@ export class QuestionsHelper {
             if (expectedType === 'undefined' && value !== undefined) {
               throw new BadRequestException(
                 `#Validação '${spec.validationName}': valor ${i + 1} deve ser undefined, recebido: ${typeof value}`
-              )
-            }
-            if (value === undefined || value === null) {
-              throw new BadRequestException(
-                `#Validação '${spec.validationName}': valor ${i + 1} ausente (esperado tipo ${expectedType})`
               )
             }
             if (expectedType === 'number' && typeof value !== 'number') {

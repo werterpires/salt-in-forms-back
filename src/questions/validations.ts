@@ -125,7 +125,7 @@ export const maxLength: ValidationSpcification = {
   validationDescription:
     'Verifica se o tamanho do valor é menor ou igual ao máximo especificado',
   valueOneType: 'number',
-  valueTwoType: 'number',
+  valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
   validationFunction: (value: any, maxLength: number) => {

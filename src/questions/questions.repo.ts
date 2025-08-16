@@ -80,54 +80,6 @@ export class QuestionsRepo {
     })
   }
 
-  async createQuestion(createQuestionData: CreateQuestion): Promise<void> {
-    return this.knex.transaction(async (trx) => {
-      // obter id do formulário da seção
-      const { sFormId } = await trx(db.Tables.FORM_SECTIONS)
-        .where(
-          db.FormSections.FORM_SECTION_ID,
-          createQuestionData.formSectionId
-        )
-        .first(db.FormSections.S_FORM_ID)
-
-      // Incrementar a ordem das perguntas com ordem maior ou igual
-      await trx(db.Tables.QUESTIONS)
-        .join(
-          db.Tables.FORM_SECTIONS,
-          db.Tables.FORM_SECTIONS + '.' + db.FormSections.FORM_SECTION_ID,
-          db.Tables.QUESTIONS + '.' + db.Questions.FORM_SECTION_ID
-        )
-        .where(db.FormSections.S_FORM_ID, sFormId)
-        .andWhere(
-          db.Questions.QUESTION_ORDER,
-          '>=',
-          createQuestionData.questionOrder
-        )
-        .increment(db.Questions.QUESTION_ORDER, 1)
-
-      // Inserir a nova pergunta
-      await trx(db.Tables.QUESTIONS).insert({
-        [db.Questions.FORM_SECTION_ID]: createQuestionData.formSectionId,
-        [db.Questions.QUESTION_AREA_ID]: createQuestionData.questionAreaId,
-        [db.Questions.QUESTION_ORDER]: createQuestionData.questionOrder,
-        [db.Questions.QUESTION_TYPE]: createQuestionData.questionType,
-        [db.Questions.QUESTION_STATEMENT]: createQuestionData.questionStatement,
-        [db.Questions.QUESTION_DESCRIPTION]:
-          createQuestionData.questionDescription,
-        [db.Questions.QUESTION_DISPLAY_RULE]:
-          createQuestionData.questionDisplayRule,
-        [db.Questions.FORM_SECTION_DISPLAY_LINK]:
-          createQuestionData.formSectionDisplayLink,
-        [db.Questions.QUESTION_DISPLAY_LINK]:
-          createQuestionData.questionDisplayLink,
-        [db.Questions.ANSWER_DISPLEY_RULE]:
-          createQuestionData.answerDisplayRule,
-        [db.Questions.ANSWER_DISPLAY_VALUE]:
-          createQuestionData.answerDisplayValue
-      })
-    })
-  }
-
   async findAllBySectionId(formSectionId: number): Promise<Question[]> {
     const questions: Question[] = await this.knex(db.Tables.QUESTIONS)
       .where(db.Questions.FORM_SECTION_ID, formSectionId)

@@ -79,12 +79,13 @@ export class CreateQuestionDto {
     {},
     { message: '#A regra de exibição da resposta deve ser numérica.' }
   )
+  answerDisplayRule?: number
+
   @IsOptional()
   @IsArray({ message: '#As validações devem ser um array.' })
   @ValidateNested({ each: true })
   @Type(() => ValidationDto)
   validations?: ValidationDto[]
-  answerDisplayRule?: number
 
   @IsOptional()
   @IsArray({ message: '#O valor de exibição da resposta deve ser um array.' })
