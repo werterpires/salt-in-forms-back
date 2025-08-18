@@ -48,6 +48,12 @@ export class QuestionsService {
             question.questionId
           )
       }
+
+      // Buscar e transformar validações para todas as questões
+      const validations = await this.questionsRepo.findValidationsByQuestionId(
+        question.questionId
+      )
+      question.validations = await QuestionsHelper.transformValidations(validations)
     }
 
     return questions
@@ -104,8 +110,11 @@ export class QuestionsService {
   async findById(questionId: number): Promise<Question | null> {
     const question = await this.questionsRepo.findById(questionId)
 
+    if (!question) {
+      return null
+    }
+
     if (
-      question &&
       question.questionType !== 1 &&
       question.questionType !== 7 &&
       question.questionType !== 8
@@ -115,6 +124,12 @@ export class QuestionsService {
           question.questionId
         )
     }
+
+    // Buscar e transformar validações
+    const validations = await this.questionsRepo.findValidationsByQuestionId(
+      question.questionId
+    )
+    question.validations = await QuestionsHelper.transformValidations(validations)
 
     return question
   }
@@ -133,6 +148,12 @@ export class QuestionsService {
             question.questionId
           )
       }
+
+      // Buscar e transformar validações para todas as questões
+      const validations = await this.questionsRepo.findValidationsByQuestionId(
+        question.questionId
+      )
+      question.validations = await QuestionsHelper.transformValidations(validations)
     }
 
     return questions

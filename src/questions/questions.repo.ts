@@ -256,4 +256,24 @@ export class QuestionsRepo {
 
     return options
   }
+
+  async findValidationsByQuestionId(questionId: number): Promise<Validation[]> {
+    const validations = await this.knex(db.Tables.VALIDATIONS)
+      .select(
+        db.Validations.VALIDATION_TYPE,
+        db.Validations.VALUE_ONE,
+        db.Validations.VALUE_TWO,
+        db.Validations.VALUE_THREE,
+        db.Validations.VALUE_FOUR
+      )
+      .where(db.Validations.QUESTION_ID, questionId)
+
+    return validations.map((validation) => ({
+      validationType: validation[db.Validations.VALIDATION_TYPE],
+      valueOne: validation[db.Validations.VALUE_ONE],
+      valueTwo: validation[db.Validations.VALUE_TWO],
+      valueThree: validation[db.Validations.VALUE_THREE],
+      valueFour: validation[db.Validations.VALUE_FOUR]
+    }))
+  }
 }

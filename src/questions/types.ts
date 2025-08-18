@@ -22,6 +22,7 @@ export interface Question {
   createdAt: Date
   updatedAt: Date
   questionOptions?: QuestionOption[]
+  validations?: Validation[]
 }
 
 export interface CreateQuestion {
