@@ -1,5 +1,5 @@
 import { BadRequestException, ConsoleLogger } from '@nestjs/common'
-import { CreateQuestion, UpdateQuestion } from './types'
+import { CreateQuestion, UpdateQuestion, Validation } from './types'
 import { FormSectionDisplayRules } from '../constants/form-section-display-rules.const'
 import { QuestionsRepo } from './questions.repo'
 import { CreateQuestionDto } from './dto/create-question.dto'
@@ -449,23 +449,51 @@ export class QuestionsHelper {
       const transformedValidation = { ...validation }
 
       // Converter valueOne
-      if (spec.valueOneType !== 'undefined' && validation.valueOne !== undefined && validation.valueOne !== null) {
-        transformedValidation.valueOne = this.convertValue(validation.valueOne, spec.valueOneType)
+      if (
+        spec.valueOneType !== 'undefined' &&
+        validation.valueOne !== undefined &&
+        validation.valueOne !== null
+      ) {
+        transformedValidation.valueOne = this.convertValue(
+          validation.valueOne,
+          spec.valueOneType
+        )
       }
 
       // Converter valueTwo
-      if (spec.valueTwoType !== 'undefined' && validation.valueTwo !== undefined && validation.valueTwo !== null) {
-        transformedValidation.valueTwo = this.convertValue(validation.valueTwo, spec.valueTwoType)
+      if (
+        spec.valueTwoType !== 'undefined' &&
+        validation.valueTwo !== undefined &&
+        validation.valueTwo !== null
+      ) {
+        transformedValidation.valueTwo = this.convertValue(
+          validation.valueTwo,
+          spec.valueTwoType
+        )
       }
 
       // Converter valueThree
-      if (spec.valueThreeType !== 'undefined' && validation.valueThree !== undefined && validation.valueThree !== null) {
-        transformedValidation.valueThree = this.convertValue(validation.valueThree, spec.valueThreeType)
+      if (
+        spec.valueThreeType !== 'undefined' &&
+        validation.valueThree !== undefined &&
+        validation.valueThree !== null
+      ) {
+        transformedValidation.valueThree = this.convertValue(
+          validation.valueThree,
+          spec.valueThreeType
+        )
       }
 
       // Converter valueFour
-      if (spec.valueFourType !== 'undefined' && validation.valueFour !== undefined && validation.valueFour !== null) {
-        transformedValidation.valueFour = this.convertValue(validation.valueFour, spec.valueFourType)
+      if (
+        spec.valueFourType !== 'undefined' &&
+        validation.valueFour !== undefined &&
+        validation.valueFour !== null
+      ) {
+        transformedValidation.valueFour = this.convertValue(
+          validation.valueFour,
+          spec.valueFourType
+        )
       }
 
       return transformedValidation
@@ -481,13 +509,17 @@ export class QuestionsHelper {
       case 'number':
         const numValue = parseFloat(value)
         if (isNaN(numValue)) {
-          throw new BadRequestException(`Valor '${value}' não pode ser convertido para número`)
+          throw new BadRequestException(
+            `Valor '${value}' não pode ser convertido para número`
+          )
         }
         return numValue
       case 'boolean':
         if (value === 'true') return true
         if (value === 'false') return false
-        throw new BadRequestException(`Valor '${value}' não pode ser convertido para boolean`)
+        throw new BadRequestException(
+          `Valor '${value}' não pode ser convertido para boolean`
+        )
       case 'string':
         return value
       default:

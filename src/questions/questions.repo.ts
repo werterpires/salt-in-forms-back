@@ -5,7 +5,8 @@ import {
   Question,
   CreateQuestion,
   UpdateQuestion,
-  QuestionOption
+  QuestionOption,
+  Validation
 } from './types'
 import * as db from '../constants/db-schema.enum'
 
