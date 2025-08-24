@@ -8,6 +8,23 @@ import {
 } from 'class-validator'
 import { Type } from 'class-transformer'
 
+export class ValidationDto {
+  @IsNumber({}, { message: '#O tipo da validação deve ser numérico.' })
+  validationType!: number
+
+  @IsOptional()
+  valueOne?: any
+
+  @IsOptional()
+  valueTwo?: any
+
+  @IsOptional()
+  valueThree?: any
+
+  @IsOptional()
+  valueFour?: any
+}
+
 export class QuestionOptionDto {
   @IsNumber({}, { message: '#O tipo da opção deve ser numérico.' })
   questionOptionType: number
@@ -75,4 +92,10 @@ export class UpdateQuestionDto {
   @ValidateNested({ each: true })
   @Type(() => QuestionOptionDto)
   questionOptions?: QuestionOptionDto[]
+
+  @IsOptional()
+  @IsArray({ message: '#As validações devem ser um array.' })
+  @ValidateNested({ each: true })
+  @Type(() => ValidationDto)
+  validations?: ValidationDto[]
 }

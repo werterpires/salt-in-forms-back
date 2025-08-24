@@ -51,6 +51,7 @@ export interface UpdateQuestion {
   questionDisplayLink?: number
   answerDisplayRule?: number
   answerDisplayValue?: string
+  validations?: Validation[]
 }
 
 export interface QuestionOption {

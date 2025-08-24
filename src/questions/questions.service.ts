@@ -68,6 +68,9 @@ export class QuestionsService {
     // e) ao editar, rodar uma query que apaga todas as options daquela question
     await this.questionsRepo.deleteQuestionOptions(updateQuestionDto.questionId)
 
+    // Deletar todas as validações existentes da questão
+    await this.questionsRepo.deleteValidations(updateQuestionDto.questionId)
+
     await this.questionsRepo.updateQuestion(updateQuestionData)
 
     if (
@@ -83,11 +86,23 @@ export class QuestionsService {
       )
       await this.questionsRepo.createQuestionOptions(questionOptions)
     }
+
+    // Criar novas validações se existirem
+    if (
+      updateQuestionData.validations &&
+      updateQuestionData.validations.length > 0
+    ) {
+      await this.questionsRepo.createValidations(
+        updateQuestionDto.questionId,
+        updateQuestionData.validations
+      )
+    }
   }
 
   async delete(questionId: number): Promise<void> {
-    // f) ao deletar uma question, deletar suas options junto
+    // f) ao deletar uma question, deletar suas options e validações junto
     await this.questionsRepo.deleteQuestionOptions(questionId)
+    await this.questionsRepo.deleteValidations(questionId)
     await this.questionsRepo.deleteQuestion(questionId)
   }
 

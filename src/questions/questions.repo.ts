@@ -277,4 +277,28 @@ export class QuestionsRepo {
       valueFour: validation[db.Validations.VALUE_FOUR]
     }))
   }
+
+  async deleteValidations(questionId: number): Promise<void> {
+    await this.knex(db.Tables.VALIDATIONS)
+      .where(db.Validations.QUESTION_ID, questionId)
+      .del()
+  }
+
+  async createValidations(
+    questionId: number,
+    validations: Validation[]
+  ): Promise<void> {
+    if (validations.length === 0) return
+
+    const validationsToInsert = validations.map((v) => ({
+      [db.Validations.VALIDATION_TYPE]: v.validationType,
+      [db.Validations.QUESTION_ID]: questionId,
+      [db.Validations.VALUE_ONE]: v.valueOne,
+      [db.Validations.VALUE_TWO]: v.valueTwo,
+      [db.Validations.VALUE_THREE]: v.valueThree,
+      [db.Validations.VALUE_FOUR]: v.valueFour
+    }))
+
+    await this.knex(db.Tables.VALIDATIONS).insert(validationsToInsert)
+  }
 }

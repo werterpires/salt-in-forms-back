@@ -55,7 +55,8 @@ export class QuestionsHelper {
       formSectionDisplayLink: updateQuestionDto.formSectionDisplayLink,
       questionDisplayLink: updateQuestionDto.questionDisplayLink,
       answerDisplayRule: updateQuestionDto.answerDisplayRule,
-      answerDisplayValue
+      answerDisplayValue,
+      validations: updateQuestionDto.validations
     }
   }
 
@@ -257,6 +258,84 @@ export class QuestionsHelper {
       updateQuestionDto.questionType,
       updateQuestionDto.questionOptions
     )
+    // Validar as validações da questão (se existirem)
+    if (
+      updateQuestionDto.validations &&
+      updateQuestionDto.validations.length > 0
+    ) {
+      const { VALIDATION_SPECIFICATIONS_BY_TYPE } = await import(
+        './validations'
+      )
+      updateQuestionDto.validations = updateQuestionDto.validations.map(
+        (validation) => {
+          const spec =
+            VALIDATION_SPECIFICATIONS_BY_TYPE[validation.validationType]
+          if (!spec) {
+            throw new BadRequestException(
+              `#Validação desconhecida: type ${validation.validationType}`
+            )
+          }
+          const valueTypes = [
+            spec.valueOneType,
+            spec.valueTwoType,
+            spec.valueThreeType,
+            spec.valueFourType
+          ]
+          const values = [
+            validation.valueOne,
+            validation.valueTwo,
+            validation.valueThree,
+            validation.valueFour
+          ]
+          for (let i = 0; i < valueTypes.length; i++) {
+            const expectedType = valueTypes[i]
+            const value = values[i]
+            if (expectedType === 'undefined' && value !== undefined) {
+              throw new BadRequestException(
+                `#Validação '${spec.validationName}': valor ${i + 1} deve ser undefined, recebido: ${typeof value}`
+              )
+            }
+            if (expectedType === 'number' && typeof value !== 'number') {
+              throw new BadRequestException(
+                `#Validação '${spec.validationName}': valor ${i + 1} deve ser um número, recebido: ${typeof value}`
+              )
+            }
+            if (expectedType === 'string' && typeof value !== 'string') {
+              throw new BadRequestException(
+                `#Validação '${spec.validationName}': valor ${i + 1} deve ser um texto, recebido: ${typeof value}`
+              )
+            }
+            if (expectedType === 'boolean' && typeof value !== 'boolean') {
+              throw new BadRequestException(
+                `#Validação '${spec.validationName}': valor ${i + 1} deve ser uma indicação de verdadeiro ou falso, recebido: ${typeof value}`
+              )
+            }
+          }
+          // Após validar tipos, transformar todos os valores em string (exceto undefined)
+          return {
+            ...validation,
+            valueOne:
+              validation.valueOne !== undefined && validation.valueOne !== null
+                ? String(validation.valueOne)
+                : undefined,
+            valueTwo:
+              validation.valueTwo !== undefined && validation.valueTwo !== null
+                ? String(validation.valueTwo)
+                : undefined,
+            valueThree:
+              validation.valueThree !== undefined &&
+              validation.valueThree !== null
+                ? String(validation.valueThree)
+                : undefined,
+            valueFour:
+              validation.valueFour !== undefined &&
+              validation.valueFour !== null
+                ? String(validation.valueFour)
+                : undefined
+          }
+        }
+      )
+    }
     // Buscar a pergunta existente
     const existingQuestion = await questionsRepo.findById(
       updateQuestionDto.questionId
