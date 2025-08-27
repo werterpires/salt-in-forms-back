@@ -1,3 +1,6 @@
+import { CreateSubQuestionDto } from './dto/create-question.dto'
+import { QuestionOptionDto } from './dto/optionsDto'
+
 // Representa uma validação associada a uma questão
 export interface Validation {
   validationType: number
@@ -6,6 +9,42 @@ export interface Validation {
   valueThree?: any
   valueFour?: any
 }
+
+export interface SubValidation {
+  subValidationType: number
+  subValueOne?: any
+  subValueTwo?: any
+  subValueThree?: any
+  subValueFour?: any
+}
+
+export interface QuestionOption {
+  questionOptionId?: number
+  questionId: number
+  questionOptionType: number
+  questionOptionValue: string
+}
+
+export interface SubQuestionOptions {
+  subQuestionOptionId?: number
+  subQuestionId: number
+  subQuestionOptionType: number
+  subQuestionOptionValue: string
+}
+
+export interface ValidationSpcification {
+  validationType: number
+  validationName: string
+  validationDescription: string
+  valueOneType: AcceptedTypes
+  valueTwoType: AcceptedTypes
+  valueThreeType: AcceptedTypes
+  valueFourType: AcceptedTypes
+  validationFunction: (...args: any[]) => boolean
+}
+
+type AcceptedTypes = 'string' | 'number' | 'boolean' | 'undefined'
+
 export interface Question {
   questionId: number
   formSectionId: number
@@ -23,6 +62,17 @@ export interface Question {
   updatedAt: Date
   questionOptions?: QuestionOption[]
   validations?: Validation[]
+  subQuestions?: SubQuestion[]
+}
+
+export interface SubQuestion {
+  subQuestionId: number
+  subQuestionPosition: number
+  subQuestionType: number
+  subQuestionStatement: string
+  questionId: number
+  subQuestionOptions?: SubQuestionOptions[]
+  subValidtions?: SubValidation[]
 }
 
 export interface CreateQuestion {
@@ -38,6 +88,8 @@ export interface CreateQuestion {
   answerDisplayRule?: number
   answerDisplayValue?: string
   validations?: Validation[]
+  subQuestions?: CreateSubQuestionDto[]
+  questionOptions?: QuestionOptionDto[]
 }
 
 export interface UpdateQuestion {
@@ -52,24 +104,5 @@ export interface UpdateQuestion {
   answerDisplayRule?: number
   answerDisplayValue?: string
   validations?: Validation[]
+  subQuestions?: SubQuestion[]
 }
-
-export interface QuestionOption {
-  questionOptionId?: number
-  questionId: number
-  questionOptionType: number
-  questionOptionValue: string
-}
-
-export interface ValidationSpcification {
-  validationType: number
-  validationName: string
-  validationDescription: string
-  valueOneType: AcceptedTypes
-  valueTwoType: AcceptedTypes
-  valueThreeType: AcceptedTypes
-  valueFourType: AcceptedTypes
-  validationFunction: (...args: any[]) => boolean
-}
-
-type AcceptedTypes = 'string' | 'number' | 'boolean' | 'undefined'

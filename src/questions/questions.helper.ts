@@ -3,7 +3,7 @@ import { CreateQuestion, UpdateQuestion, Validation } from './types'
 import { FormSectionDisplayRules } from '../constants/form-section-display-rules.const'
 import { QuestionsRepo } from './questions.repo'
 import { CreateQuestionDto } from './dto/create-question.dto'
-import { UpdateQuestionDto } from './dto/update-question.dto'
+import { QuestionOptionDto, UpdateQuestionDto } from './dto/update-question.dto'
 import { AnswersDisplayRules } from 'src/constants/answer_display_rule'
 import { EQuestionsTypes } from '../constants/questions-types.enum'
 import { EQuestionOptionsTypes } from '../constants/questions-options-types.enum'
@@ -31,7 +31,9 @@ export class QuestionsHelper {
       questionDisplayLink: createQuestionDto.questionDisplayLink,
       answerDisplayRule: createQuestionDto.answerDisplayRule,
       answerDisplayValue,
-      validations: createQuestionDto.validations
+      validations: createQuestionDto.validations,
+      questionOptions: createQuestionDto.questionOptions,
+      subQuestions: createQuestionDto.subQuestions
     }
   }
 
@@ -69,183 +71,84 @@ export class QuestionsHelper {
       createQuestionDto.questionType,
       createQuestionDto.questionOptions
     )
+
     // Validar as validações da questão (se existirem)
-    if (
-      createQuestionDto.validations &&
-      createQuestionDto.validations.length > 0
-    ) {
-      const { VALIDATION_SPECIFICATIONS_BY_TYPE } = await import(
-        './validations'
-      )
-      createQuestionDto.validations = createQuestionDto.validations.map(
-        (validation) => {
-          const spec =
-            VALIDATION_SPECIFICATIONS_BY_TYPE[validation.validationType]
-          if (!spec) {
-            throw new BadRequestException(
-              `#Validação desconhecida: type ${validation.validationType}`
-            )
-          }
-          const valueTypes = [
-            spec.valueOneType,
-            spec.valueTwoType,
-            spec.valueThreeType,
-            spec.valueFourType
-          ]
-          const values = [
-            validation.valueOne,
-            validation.valueTwo,
-            validation.valueThree,
-            validation.valueFour
-          ]
-          for (let i = 0; i < valueTypes.length; i++) {
-            const expectedType = valueTypes[i]
-            const value = values[i]
-            if (expectedType === 'undefined' && value !== undefined) {
-              throw new BadRequestException(
-                `#Validação '${spec.validationName}': valor ${i + 1} deve ser undefined, recebido: ${typeof value}`
-              )
-            }
-            if (expectedType === 'number' && typeof value !== 'number') {
-              throw new BadRequestException(
-                `#Validação '${spec.validationName}': valor ${i + 1} deve ser um número, recebido: ${typeof value}`
-              )
-            }
-            if (expectedType === 'string' && typeof value !== 'string') {
-              throw new BadRequestException(
-                `#Validação '${spec.validationName}': valor ${i + 1} deve ser um texto, recebido: ${typeof value}`
-              )
-            }
-            if (expectedType === 'boolean' && typeof value !== 'boolean') {
-              throw new BadRequestException(
-                `#Validação '${spec.validationName}': valor ${i + 1} deve ser uma indicação de verdadeiro ou falso, recebido: ${typeof value}`
-              )
-            }
-          }
-          // Após validar tipos, transformar todos os valores em string (exceto undefined)
-          return {
-            ...validation,
-            valueOne:
-              validation.valueOne !== undefined && validation.valueOne !== null
-                ? String(validation.valueOne)
-                : undefined,
-            valueTwo:
-              validation.valueTwo !== undefined && validation.valueTwo !== null
-                ? String(validation.valueTwo)
-                : undefined,
-            valueThree:
-              validation.valueThree !== undefined &&
-              validation.valueThree !== null
-                ? String(validation.valueThree)
-                : undefined,
-            valueFour:
-              validation.valueFour !== undefined &&
-              validation.valueFour !== null
-                ? String(validation.valueFour)
-                : undefined
-          }
-        }
-      )
-    }
-    // Validar se a regra de exibição é válida
-    if (
-      !Object.values(FormSectionDisplayRules).includes(
-        createQuestionDto.questionDisplayRule
-      )
-    ) {
-      throw new BadRequestException('#Regra de exibição inválida')
-    }
-
-    // Validar campos obrigatórios baseados na regra de exibição
-    if (
-      (createQuestionDto.questionDisplayRule as FormSectionDisplayRules) !==
-      FormSectionDisplayRules.ALWAYS_SHOW
-    ) {
-      if (
-        !createQuestionDto.formSectionDisplayLink ||
-        !createQuestionDto.questionDisplayLink ||
-        !createQuestionDto.answerDisplayRule ||
-        !createQuestionDto.answerDisplayValue
-      ) {
-        throw new BadRequestException(
-          '#Para regras de exibição diferentes de "Sempre aparecer", é obrigatório informar uma seção, uma questão, uma regra de checagem e os valores de reposta'
-        )
-      }
-    } else {
-      // Se for "Sempre aparecer", nenhum desses campos deve existir
-      if (
-        createQuestionDto.formSectionDisplayLink ||
-        createQuestionDto.questionDisplayLink ||
-        createQuestionDto.answerDisplayRule ||
-        createQuestionDto.answerDisplayValue
-      ) {
-        throw new BadRequestException(
-          '#Para regra "Sempre aparecer", não devem ser informados uma seção, uma questão, uma regra de checagem ou os valores de reposta'
-        )
-      }
-    }
-
-    // Validar se a seção existe
-    const section = await questionsRepo.findSectionById(
-      createQuestionDto.formSectionId
+    createQuestionDto.validations = await this.validateValidations(
+      createQuestionDto.validations
     )
-    if (!section) {
-      throw new BadRequestException('#Seção não encontrada')
+    // Validar regra de exibição
+    await this.validateDisplayRule(createQuestionDto, questionsRepo)
+
+    // Validar subQuestões
+    await this.validateSubquestions(createQuestionDto)
+  }
+
+  static async validateSubquestions(createQuestionDto: CreateQuestionDto) {
+    if (
+      (createQuestionDto.questionType as EQuestionsTypes) !==
+      EQuestionsTypes.MULTIPLE_RESPONSES
+    )
+      return
+    if (
+      !createQuestionDto.subQuestions ||
+      createQuestionDto.subQuestions.length === 0
+    ) {
+      throw new BadRequestException(
+        '#Para perguntas de múltiplas respostas, é obrigatório informar subquestões'
+      )
     }
 
-    // Validar se formSectionDisplayLink é válido (se fornecido)
-    if (createQuestionDto.formSectionDisplayLink) {
-      const linkedSection = await questionsRepo.findSectionById(
-        createQuestionDto.formSectionDisplayLink
-      )
-      if (!linkedSection) {
+    for (let subQuestion of createQuestionDto.subQuestions) {
+      const subQuestionType = subQuestion.subQuestionType as EQuestionsTypes
+
+      const allowableTypesForSubQuestions = [
+        EQuestionsTypes.OPEN_ANSWER,
+        EQuestionsTypes.DATE,
+        EQuestionsTypes.TIME,
+        EQuestionsTypes.SINGLE_CHOICE,
+        EQuestionsTypes.MULTIPLE_CHOICE
+      ]
+
+      if (!allowableTypesForSubQuestions.includes(subQuestionType)) {
         throw new BadRequestException(
-          '#Seção vinculada à regra de exibição não encontrada'
+          `#Para perguntas de múltiplas respostas, subquestões do tipo escolhido não podem ser criadas`
         )
       }
 
-      // Verificar se ambas as seções são do mesmo formulário
-      if (section.sFormId !== linkedSection.sFormId) {
-        throw new BadRequestException(
-          '#A seção vinculada deve ser do mesmo formulário'
-        )
-      }
+      // validar subQuestionsOptions
+      const questionOptionsDto: QuestionOptionDto[] | undefined =
+        subQuestion.subQuestionOptions?.map((subQuestionOption) => {
+          return {
+            questionOptionType: subQuestionOption.subQuestionOptionType,
+            questionOptionValue: subQuestionOption.subQuestionOptionValue
+          }
+        })
 
-      // Verificar se a seção vinculada tem ordem igual ou anterior
-      if (linkedSection.formSectionOrder > section.formSectionOrder) {
-        throw new BadRequestException(
-          '#A seção vinculada deve ter ordem igual ou anterior à seção da pergunta'
-        )
-      }
+      this.validateQuestionOptions(subQuestionType, questionOptionsDto)
 
-      // Se for a mesma seção, validar a pergunta vinculada
-      if (createQuestionDto.questionDisplayLink) {
-        const linkedQuestion = await questionsRepo.findById(
-          createQuestionDto.questionDisplayLink
-        )
-        if (!linkedQuestion) {
-          throw new BadRequestException('#Pergunta vinculada não encontrada')
+      // validar subQuestionsValidations
+      let validations: Validation[] | undefined =
+        subQuestion.subValidations?.map((subQuestionValidation) => {
+          return {
+            validationType: subQuestionValidation.subValidationType,
+            valueOne: subQuestionValidation.subValueOne,
+            valueTwo: subQuestionValidation.subValueTwo,
+            valueThree: subQuestionValidation.subValueThree,
+            valueFour: subQuestionValidation.subValueFour
+          }
+        })
+
+      validations = await this.validateValidations(validations)
+
+      subQuestion.subValidations = validations?.map((validation) => {
+        return {
+          subValidationType: validation.validationType,
+          subValueOne: validation.valueOne,
+          subValueTwo: validation.valueTwo,
+          subValueThree: validation.valueThree,
+          subValueFour: validation.valueFour
         }
-
-        if (linkedQuestion.questionOrder >= createQuestionDto.questionOrder) {
-          throw new BadRequestException(
-            '#A pergunta vinculada na regra de exibição deve ter ordem menor que a pergunta que está sendo criada'
-          )
-        }
-      }
-
-      // Validar se a regra de exibição da resposta é válida
-      if (createQuestionDto.answerDisplayRule) {
-        if (
-          !Object.values(AnswersDisplayRules).includes(
-            createQuestionDto.answerDisplayRule as AnswersDisplayRules
-          )
-        ) {
-          throw new BadRequestException(
-            '#Regra de exibição de resposta inválida'
-          )
-        }
-      }
+      })
     }
   }
 
@@ -526,8 +429,6 @@ export class QuestionsHelper {
       }
 
       const transformedValidation = { ...validation }
-
-      // Converter valueOne
       if (
         spec.valueOneType !== 'undefined' &&
         validation.valueOne !== undefined &&
@@ -606,6 +507,205 @@ export class QuestionsHelper {
     }
   }
 
+  private static async validateDisplayRule(
+    createQuestionDto: CreateQuestionDto,
+    questionsRepo: QuestionsRepo
+  ) {
+    // Validar se a regra de exibição é válida
+    if (
+      !Object.values(FormSectionDisplayRules).includes(
+        createQuestionDto.questionDisplayRule
+      )
+    ) {
+      throw new BadRequestException('#Regra de exibição inválida')
+    }
+
+    // Validar campos obrigatórios baseados na regra de exibição
+    if (
+      (createQuestionDto.questionDisplayRule as FormSectionDisplayRules) !==
+      FormSectionDisplayRules.ALWAYS_SHOW
+    ) {
+      if (
+        !createQuestionDto.formSectionDisplayLink ||
+        !createQuestionDto.questionDisplayLink ||
+        !createQuestionDto.answerDisplayRule ||
+        !createQuestionDto.answerDisplayValue
+      ) {
+        throw new BadRequestException(
+          '#Para regras de exibição diferentes de "Sempre aparecer", é obrigatório informar uma seção, uma questão, uma regra de checagem e os valores de reposta'
+        )
+      }
+    } else {
+      // Se for "Sempre aparecer", nenhum desses campos deve existir
+      if (
+        createQuestionDto.formSectionDisplayLink ||
+        createQuestionDto.questionDisplayLink ||
+        createQuestionDto.answerDisplayRule ||
+        createQuestionDto.answerDisplayValue
+      ) {
+        throw new BadRequestException(
+          '#Para regra "Sempre aparecer", não devem ser informados uma seção, uma questão, uma regra de checagem ou os valores de reposta'
+        )
+      }
+    }
+
+    // Validar se a seção existe
+    const section = await questionsRepo.findSectionById(
+      createQuestionDto.formSectionId
+    )
+    if (!section) {
+      throw new BadRequestException('#Seção não encontrada')
+    }
+
+    // Validar se formSectionDisplayLink é válido (se fornecido)
+    if (
+      !createQuestionDto.formSectionDisplayLink ||
+      !createQuestionDto.questionDisplayLink ||
+      !createQuestionDto.answerDisplayRule ||
+      !createQuestionDto.answerDisplayValue
+    ) {
+      return
+    }
+
+    const linkedSection = await questionsRepo.findSectionById(
+      createQuestionDto.formSectionDisplayLink
+    )
+    if (!linkedSection) {
+      throw new BadRequestException(
+        '#Seção vinculada à regra de exibição não encontrada'
+      )
+    }
+
+    // Verificar se ambas as seções são do mesmo formulário
+    if (section.sFormId !== linkedSection.sFormId) {
+      throw new BadRequestException(
+        '#A seção vinculada deve ser do mesmo formulário'
+      )
+    }
+
+    // Verificar se a seção vinculada tem ordem igual ou anterior
+    if (linkedSection.formSectionOrder > section.formSectionOrder) {
+      throw new BadRequestException(
+        '#A seção vinculada deve ter ordem igual ou anterior à seção da pergunta'
+      )
+    }
+
+    // Se for a mesma seção, validar a pergunta vinculada
+
+    const linkedQuestion = await questionsRepo.findById(
+      createQuestionDto.questionDisplayLink
+    )
+    if (!linkedQuestion) {
+      throw new BadRequestException('#Pergunta vinculada não encontrada')
+    }
+
+    if (linkedQuestion.questionOrder >= createQuestionDto.questionOrder) {
+      throw new BadRequestException(
+        '#A pergunta vinculada na regra de exibição deve ter ordem menor que a pergunta que está sendo criada'
+      )
+    }
+
+    // Validar se a regra de exibição da resposta é válida
+    if (
+      !Object.values(AnswersDisplayRules).includes(
+        createQuestionDto.answerDisplayRule as AnswersDisplayRules
+      )
+    ) {
+      throw new BadRequestException('#Regra de exibição de resposta inválida')
+    }
+  }
+
+  private static async validateValidations(
+    validations: Validation[] | undefined
+  ): Promise<Validation[] | undefined> {
+    if (!validations || validations.length === 0) {
+      return
+    }
+
+    console.log('chamando validação')
+    const { VALIDATION_SPECIFICATIONS_BY_TYPE } = await import('./validations')
+
+    const tranformedValidations: Validation[] = validations.map(
+      (validation) => {
+        const spec =
+          VALIDATION_SPECIFICATIONS_BY_TYPE[validation.validationType]
+        if (!spec) {
+          throw new BadRequestException(
+            `#Validação de tipo ${validation.validationType} desconhecida`
+          )
+        }
+        const valueTypes = [
+          spec.valueOneType,
+          spec.valueTwoType,
+          spec.valueThreeType,
+          spec.valueFourType
+        ]
+
+        const values = [
+          validation.valueOne,
+          validation.valueTwo,
+          validation.valueThree,
+          validation.valueFour
+        ]
+        for (let i = 0; i < valueTypes.length; i++) {
+          const expectedType = valueTypes[i]
+          const value = values[i]
+          if (expectedType === 'undefined' && value !== undefined) {
+            throw new BadRequestException(
+              `#Validação '${spec.validationName}': valor ${i + 1} deve ser undefined, recebido: ${typeof value}`
+            )
+          }
+          console.log(
+            'expectedType',
+            expectedType,
+            'value',
+            value,
+            'typeof',
+            typeof value
+          )
+          if (expectedType === 'number' && typeof value !== 'number') {
+            throw new BadRequestException(
+              `#Validação '${spec.validationName}': valor ${i + 1} deve ser um número, recebido: ${typeof value}`
+            )
+          }
+          if (expectedType === 'string' && typeof value !== 'string') {
+            throw new BadRequestException(
+              `#Validação '${spec.validationName}': valor ${i + 1} deve ser um texto, recebido: ${typeof value}`
+            )
+          }
+          if (expectedType === 'boolean' && typeof value !== 'boolean') {
+            throw new BadRequestException(
+              `#Validação '${spec.validationName}': valor ${i + 1} deve ser uma indicação de verdadeiro ou falso, recebido: ${typeof value}`
+            )
+          }
+          // Após validar tipos, transformar todos os valores em string (exceto undefined)
+        }
+        return {
+          ...validation,
+          valueOne:
+            validation.valueOne !== undefined && validation.valueOne !== null
+              ? String(validation.valueOne)
+              : undefined,
+          valueTwo:
+            validation.valueTwo !== undefined && validation.valueTwo !== null
+              ? String(validation.valueTwo)
+              : undefined,
+          valueThree:
+            validation.valueThree !== undefined &&
+            validation.valueThree !== null
+              ? String(validation.valueThree)
+              : undefined,
+          valueFour:
+            validation.valueFour !== undefined && validation.valueFour !== null
+              ? String(validation.valueFour)
+              : undefined
+        }
+      }
+    )
+
+    return tranformedValidations
+  }
+
   static validateQuestionOptions(
     questionType: number,
     questionOptions?: {
@@ -613,15 +713,16 @@ export class QuestionsHelper {
       questionOptionValue: string
     }[]
   ): void {
-    // a) se a pergunta for do tipo "Resposta Aberta", "Data" ou "Hora", as questionOptions devem não existir
+    // a) se a pergunta for do tipo "Resposta Aberta", "Data", "Hora" ou "Múltipla Resposta", as questionOptions devem não existir
     if (
       questionType === EQuestionsTypes.OPEN_ANSWER ||
       questionType === EQuestionsTypes.DATE ||
-      questionType === EQuestionsTypes.TIME
+      questionType === EQuestionsTypes.TIME ||
+      questionType === EQuestionsTypes.MULTIPLE_RESPONSES
     ) {
       if (questionOptions && questionOptions.length > 0) {
         throw new BadRequestException(
-          '#Perguntas do tipo Resposta Aberta, Data ou Hora não devem ter opções'
+          '#Perguntas do tipo Resposta Aberta, Data, Hora ou Múltipla Resposta não devem ter opções'
         )
       }
       return

@@ -16,21 +16,7 @@ export class QuestionsService {
       this.questionsRepo
     )
 
-    const questionId = await this.questionsRepo.create(createQuestionData)
-
-    if (
-      createQuestionDto.questionOptions &&
-      createQuestionDto.questionOptions.length > 0
-    ) {
-      const questionOptions = createQuestionDto.questionOptions.map(
-        (option) => ({
-          questionId,
-          questionOptionType: option.questionOptionType,
-          questionOptionValue: option.questionOptionValue
-        })
-      )
-      await this.questionsRepo.createQuestionOptions(questionOptions)
-    }
+    await this.questionsRepo.create(createQuestionData)
   }
 
   async findAllBySectionId(formSectionId: number): Promise<Question[]> {
@@ -53,7 +39,8 @@ export class QuestionsService {
       const validations = await this.questionsRepo.findValidationsByQuestionId(
         question.questionId
       )
-      question.validations = await QuestionsHelper.transformValidations(validations)
+      question.validations =
+        await QuestionsHelper.transformValidations(validations)
     }
 
     return questions
@@ -144,7 +131,8 @@ export class QuestionsService {
     const validations = await this.questionsRepo.findValidationsByQuestionId(
       question.questionId
     )
-    question.validations = await QuestionsHelper.transformValidations(validations)
+    question.validations =
+      await QuestionsHelper.transformValidations(validations)
 
     return question
   }
@@ -168,7 +156,8 @@ export class QuestionsService {
       const validations = await this.questionsRepo.findValidationsByQuestionId(
         question.questionId
       )
-      question.validations = await QuestionsHelper.transformValidations(validations)
+      question.validations =
+        await QuestionsHelper.transformValidations(validations)
     }
 
     return questions

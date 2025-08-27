@@ -73,8 +73,73 @@ export class QuestionsRepo {
           [db.Validations.VALUE_THREE]: v.valueThree,
           [db.Validations.VALUE_FOUR]: v.valueFour
         }))
-
         await trx(db.Tables.VALIDATIONS).insert(validationsToInsert)
+      }
+
+      // Inserir opções, se houver
+      if (
+        createQuestionData.questionOptions &&
+        createQuestionData.questionOptions.length > 0
+      ) {
+        for (let option of createQuestionData.questionOptions) {
+          await this.knex(db.Tables.QUESTION_OPTIONS).insert({
+            [db.QuestionOptions.QUESTION_ID]: questionId,
+            [db.QuestionOptions.QUESTION_OPTION_TYPE]:
+              option.questionOptionType,
+            [db.QuestionOptions.QUESTION_OPTION_VALUE]:
+              option.questionOptionValue
+          })
+        }
+      }
+
+      if (
+        !createQuestionData.subQuestions ||
+        createQuestionData.subQuestions.length === 0
+      ) {
+        return questionId
+      }
+
+      for (let subQuestion of createQuestionData.subQuestions) {
+        const subQuestionId = await this.knex(db.Tables.SUB_QUESTIONS).insert({
+          [db.SubQuestions.QUESTION_ID]: questionId,
+          [db.SubQuestions.SUB_QUESTION_STATEMENT]:
+            subQuestion.subQuestionStatement,
+          [db.SubQuestions.SUB_QUESTION_POSITION]:
+            subQuestion.subQuestionPosition,
+          [db.SubQuestions.SUB_QUESTION_TYPE]: subQuestion.subQuestionType
+        })
+
+        if (
+          subQuestion.subQuestionOptions &&
+          subQuestion.subQuestionOptions.length > 0
+        ) {
+          for (let subOption of subQuestion.subQuestionOptions) {
+            await this.knex(db.Tables.SUB_QUESTION_OPTIONS).insert({
+              [db.SubQuestionOptions.SUB_QUESTION_ID]: subQuestionId,
+              [db.SubQuestionOptions.SUB_QUESTION_OPTION_TYPE]:
+                subOption.subQuestionOptionType,
+              [db.SubQuestionOptions.SUB_QUESTION_OPTION_VALUE]:
+                subOption.subQuestionOptionValue
+            })
+          }
+        }
+
+        if (
+          subQuestion.subValidations &&
+          subQuestion.subValidations.length > 0
+        ) {
+          for (let subValidation of subQuestion.subValidations) {
+            await this.knex(db.Tables.SUB_VALIDATIONS).insert({
+              [db.SubValidations.SUB_VALIDATION_TYPE]:
+                subValidation.subValidationType,
+              [db.SubValidations.SUB_QUESTION_ID]: subQuestionId,
+              [db.SubValidations.SUB_VALUE_ONE]: subValidation.subValueOne,
+              [db.SubValidations.SUB_VALUE_TWO]: subValidation.subValueTwo,
+              [db.SubValidations.SUB_VALUE_THREE]: subValidation.subValueThree,
+              [db.SubValidations.SUB_VALUE_FOUR]: subValidation.subValueFour
+            })
+          }
+        }
       }
 
       return questionId
@@ -227,13 +292,11 @@ export class QuestionsRepo {
     questionOptions: QuestionOption[]
   ): Promise<void> {
     if (questionOptions.length === 0) return
-
     const optionsData = questionOptions.map((option) => ({
       [db.QuestionOptions.QUESTION_ID]: option.questionId,
       [db.QuestionOptions.QUESTION_OPTION_TYPE]: option.questionOptionType,
       [db.QuestionOptions.QUESTION_OPTION_VALUE]: option.questionOptionValue
     }))
-
     await this.knex(db.Tables.QUESTION_OPTIONS).insert(optionsData)
   }
 

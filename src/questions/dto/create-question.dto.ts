@@ -10,33 +10,9 @@ import {
   ValidateIf
 } from 'class-validator'
 import { Type } from 'class-transformer'
-
-export class ValidationDto {
-  @IsNumber({}, { message: '#O tipo da validação deve ser numérico.' })
-  validationType!: number
-
-  @IsOptional()
-  valueOne?: any
-
-  @IsOptional()
-  valueTwo?: any
-
-  @IsOptional()
-  valueThree?: any
-
-  @IsOptional()
-  valueFour?: any
-}
-
-export class QuestionOptionDto {
-  @IsNumber({}, { message: '#O tipo da opção deve ser numérico.' })
-  questionOptionType: number
-
-  @Length(1, 255, {
-    message: '#O valor da opção deve ter no mínimo 1 e no máximo 255 caracteres'
-  })
-  questionOptionValue: string
-}
+import { QuestionOptionDto, ValidationDto } from './update-question.dto'
+import { SubQuestionOptionDto } from './optionsDto'
+import { SubValidationDto } from './validationDto'
 
 export class CreateQuestionDto {
   @IsNumber({}, { message: '#O ID da seção deve ser numérico.' })
@@ -97,4 +73,40 @@ export class CreateQuestionDto {
   @ValidateNested({ each: true })
   @Type(() => QuestionOptionDto)
   questionOptions?: QuestionOptionDto[]
+
+  @IsOptional()
+  @IsArray({ message: '#As subquestões devem ser um array.' })
+  @ValidateNested({ each: true })
+  @Type(() => CreateSubQuestionDto)
+  subQuestions?: CreateSubQuestionDto[]
+}
+
+export class CreateSubQuestionDto {
+  @IsNumber({}, { message: '#O ID da pergunta deve ser numérico.' })
+  questionId: number
+
+  @IsNumber({}, { message: '#A ordem da pergunta deve ser numérica.' })
+  @Min(1, { message: '#A ordem da pergunta deve ser maior que 0.' })
+  subQuestionPosition: number
+
+  @IsNumber({}, { message: '#O tipo da pergunta deve ser numérico.' })
+  subQuestionType: number
+
+  @Length(3, 255, {
+    message:
+      '#O enunciado da pergunta deve ter no mínimo 3 e no.maxcdn 255 caracteres'
+  })
+  subQuestionStatement: string
+
+  @IsOptional()
+  @IsArray({ message: '#As opções da pergunta devem ser um array.' })
+  @ValidateNested({ each: true })
+  @Type(() => SubQuestionOptionDto)
+  subQuestionOptions?: SubQuestionOptionDto[]
+
+  @IsOptional()
+  @IsArray({ message: '#As validações devem ser um array.' })
+  @ValidateNested({ each: true })
+  @Type(() => SubValidationDto)
+  subValidations?: SubValidationDto[]
 }

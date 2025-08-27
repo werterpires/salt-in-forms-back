@@ -10,7 +10,10 @@ export enum Tables {
   FORM_SECTIONS = 'formSections',
   QUESTIONS = 'questions',
   QUESTION_OPTIONS = 'questionOptions',
-  VALIDATIONS = 'validations'
+  VALIDATIONS = 'validations',
+  SUB_QUESTIONS = 'subQuestions',
+  SUB_QUESTION_OPTIONS = 'subQuestionOptions',
+  SUB_VALIDATIONS = 'subValidations'
 }
 
 export enum Users {
@@ -118,4 +121,29 @@ export enum Validations {
   VALUE_TWO = 'valueTwo',
   VALUE_THREE = 'valueThree',
   VALUE_FOUR = 'valueFour'
+}
+
+export enum SubQuestions {
+  SUB_QUESTION_ID = 'subQuestionId',
+  QUESTION_ID = 'questionId',
+  SUB_QUESTION_POSITION = 'subQuestionPosition',
+  SUB_QUESTION_STATEMENT = 'subQuestionStatement',
+  SUB_QUESTION_TYPE = 'subQuestionType'
+}
+
+export enum SubQuestionOptions {
+  SUB_QUESTION_OPTION_ID = 'subQuestionOptionId',
+  SUB_QUESTION_ID = 'subQuestionId',
+  SUB_QUESTION_OPTION_TYPE = 'subQuestionOptionType',
+  SUB_QUESTION_OPTION_VALUE = 'subQuestionOptionValue'
+}
+
+export enum SubValidations {
+  SUB_VALIDATION_ID = 'subValidationId',
+  SUB_VALIDATION_TYPE = 'subValidationType',
+  SUB_QUESTION_ID = 'subQuestionId',
+  SUB_VALUE_ONE = 'subValueOne',
+  SUB_VALUE_TWO = 'subValueTwo',
+  SUB_VALUE_THREE = 'subValueThree',
+  SUB_VALUE_FOUR = 'subValueFour'
 }
