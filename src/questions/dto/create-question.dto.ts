@@ -65,7 +65,10 @@ export class CreateQuestionDto {
 
   @IsOptional()
   @IsArray({ message: '#O valor de exibição da resposta deve ser um array.' })
-  @IsString({ each: true, message: '#Cada valor deve ser uma string.' })
+  @IsNumber(undefined, {
+    each: true,
+    message: '#Cada valor deve ser numérico.'
+  })
   answerDisplayValue?: string[]
 
   @IsOptional()

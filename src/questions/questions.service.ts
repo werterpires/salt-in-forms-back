@@ -11,10 +11,13 @@ export class QuestionsService {
   constructor(private readonly questionsRepo: QuestionsRepo) {}
 
   async create(createQuestionDto: CreateQuestionDto): Promise<void> {
+    console.log('createQuestionDto no service', createQuestionDto)
     const createQuestionData = await QuestionsHelper.transformCreateDto(
       createQuestionDto,
       this.questionsRepo
     )
+
+    console.log('createQuestionData no service', createQuestionData)
 
     await this.questionsRepo.create(createQuestionData)
   }

@@ -126,29 +126,9 @@ export class QuestionsHelper {
 
       this.validateQuestionOptions(subQuestionType, questionOptionsDto)
 
-      // validar subQuestionsValidations
-      let validations: Validation[] | undefined =
-        subQuestion.subValidations?.map((subQuestionValidation) => {
-          return {
-            validationType: subQuestionValidation.subValidationType,
-            valueOne: subQuestionValidation.subValueOne,
-            valueTwo: subQuestionValidation.subValueTwo,
-            valueThree: subQuestionValidation.subValueThree,
-            valueFour: subQuestionValidation.subValueFour
-          }
-        })
-
-      validations = await this.validateValidations(validations)
-
-      subQuestion.subValidations = validations?.map((validation) => {
-        return {
-          subValidationType: validation.validationType,
-          subValueOne: validation.valueOne,
-          subValueTwo: validation.valueTwo,
-          subValueThree: validation.valueThree,
-          subValueFour: validation.valueFour
-        }
-      })
+      subQuestion.subValidations = await this.validateValidations(
+        subQuestion.subValidations
+      )
     }
   }
 
@@ -622,7 +602,6 @@ export class QuestionsHelper {
       return
     }
 
-    console.log('chamando validação')
     const { VALIDATION_SPECIFICATIONS_BY_TYPE } = await import('./validations')
 
     const tranformedValidations: Validation[] = validations.map(
@@ -655,14 +634,6 @@ export class QuestionsHelper {
               `#Validação '${spec.validationName}': valor ${i + 1} deve ser undefined, recebido: ${typeof value}`
             )
           }
-          console.log(
-            'expectedType',
-            expectedType,
-            'value',
-            value,
-            'typeof',
-            typeof value
-          )
           if (expectedType === 'number' && typeof value !== 'number') {
             throw new BadRequestException(
               `#Validação '${spec.validationName}': valor ${i + 1} deve ser um número, recebido: ${typeof value}`

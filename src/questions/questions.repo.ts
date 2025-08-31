@@ -82,7 +82,7 @@ export class QuestionsRepo {
         createQuestionData.questionOptions.length > 0
       ) {
         for (let option of createQuestionData.questionOptions) {
-          await this.knex(db.Tables.QUESTION_OPTIONS).insert({
+          await trx(db.Tables.QUESTION_OPTIONS).insert({
             [db.QuestionOptions.QUESTION_ID]: questionId,
             [db.QuestionOptions.QUESTION_OPTION_TYPE]:
               option.questionOptionType,
@@ -99,8 +99,9 @@ export class QuestionsRepo {
         return questionId
       }
 
+      // Inserir subquestões
       for (let subQuestion of createQuestionData.subQuestions) {
-        const subQuestionId = await this.knex(db.Tables.SUB_QUESTIONS).insert({
+        const subQuestionId = await trx(db.Tables.SUB_QUESTIONS).insert({
           [db.SubQuestions.QUESTION_ID]: questionId,
           [db.SubQuestions.SUB_QUESTION_STATEMENT]:
             subQuestion.subQuestionStatement,
@@ -114,11 +115,11 @@ export class QuestionsRepo {
           subQuestion.subQuestionOptions.length > 0
         ) {
           for (let subOption of subQuestion.subQuestionOptions) {
-            await this.knex(db.Tables.SUB_QUESTION_OPTIONS).insert({
-              [db.SubQuestionOptions.SUB_QUESTION_ID]: subQuestionId,
-              [db.SubQuestionOptions.SUB_QUESTION_OPTION_TYPE]:
+            await trx(db.Tables.SUB_QUESTION_OPTIONS).insert({
+              [db.SubQuestionOptions.QUESTION_ID]: subQuestionId,
+              [db.SubQuestionOptions.QUESTION_OPTION_TYPE]:
                 subOption.subQuestionOptionType,
-              [db.SubQuestionOptions.SUB_QUESTION_OPTION_VALUE]:
+              [db.SubQuestionOptions.QUESTION_OPTION_VALUE]:
                 subOption.subQuestionOptionValue
             })
           }
@@ -129,14 +130,13 @@ export class QuestionsRepo {
           subQuestion.subValidations.length > 0
         ) {
           for (let subValidation of subQuestion.subValidations) {
-            await this.knex(db.Tables.SUB_VALIDATIONS).insert({
-              [db.SubValidations.SUB_VALIDATION_TYPE]:
-                subValidation.subValidationType,
-              [db.SubValidations.SUB_QUESTION_ID]: subQuestionId,
-              [db.SubValidations.SUB_VALUE_ONE]: subValidation.subValueOne,
-              [db.SubValidations.SUB_VALUE_TWO]: subValidation.subValueTwo,
-              [db.SubValidations.SUB_VALUE_THREE]: subValidation.subValueThree,
-              [db.SubValidations.SUB_VALUE_FOUR]: subValidation.subValueFour
+            await trx(db.Tables.SUB_VALIDATIONS).insert({
+              [db.SubValidations.VALIDATION_TYPE]: subValidation.validationType,
+              [db.SubValidations.QUESTION_ID]: subQuestionId,
+              [db.SubValidations.VALUE_ONE]: subValidation.valueOne,
+              [db.SubValidations.VALUE_TWO]: subValidation.valueTwo,
+              [db.SubValidations.VALUE_THREE]: subValidation.valueThree,
+              [db.SubValidations.VALUE_FOUR]: subValidation.valueFour
             })
           }
         }

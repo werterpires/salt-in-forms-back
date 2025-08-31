@@ -132,18 +132,18 @@ export enum SubQuestions {
 }
 
 export enum SubQuestionOptions {
-  SUB_QUESTION_OPTION_ID = 'subQuestionOptionId',
-  SUB_QUESTION_ID = 'subQuestionId',
-  SUB_QUESTION_OPTION_TYPE = 'subQuestionOptionType',
-  SUB_QUESTION_OPTION_VALUE = 'subQuestionOptionValue'
+  QUESTION_OPTION_ID = 'questionOptionId',
+  QUESTION_ID = 'questionId',
+  QUESTION_OPTION_TYPE = 'questionOptionType',
+  QUESTION_OPTION_VALUE = 'questionOptionValue'
 }
 
 export enum SubValidations {
-  SUB_VALIDATION_ID = 'subValidationId',
-  SUB_VALIDATION_TYPE = 'subValidationType',
-  SUB_QUESTION_ID = 'subQuestionId',
-  SUB_VALUE_ONE = 'subValueOne',
-  SUB_VALUE_TWO = 'subValueTwo',
-  SUB_VALUE_THREE = 'subValueThree',
-  SUB_VALUE_FOUR = 'subValueFour'
+  VALIDATION_ID = 'validationId',
+  VALIDATION_TYPE = 'validationType',
+  QUESTION_ID = 'questionId',
+  VALUE_ONE = 'valueOne',
+  VALUE_TWO = 'valueTwo',
+  VALUE_THREE = 'valueThree',
+  VALUE_FOUR = 'valueFour'
 }

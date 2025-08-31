@@ -11,11 +11,11 @@ export interface Validation {
 }
 
 export interface SubValidation {
-  subValidationType: number
-  subValueOne?: any
-  subValueTwo?: any
-  subValueThree?: any
-  subValueFour?: any
+  validationType: number
+  valueOne?: any
+  valueTwo?: any
+  valueThree?: any
+  valueFour?: any
 }
 
 export interface QuestionOption {
@@ -26,10 +26,10 @@ export interface QuestionOption {
 }
 
 export interface SubQuestionOptions {
-  subQuestionOptionId?: number
-  subQuestionId: number
-  subQuestionOptionType: number
-  subQuestionOptionValue: string
+  questionOptionId?: number
+  questionId: number
+  questionOptionType: number
+  questionOptionValue: string
 }
 
 export interface ValidationSpcification {

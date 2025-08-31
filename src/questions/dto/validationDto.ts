@@ -19,17 +19,17 @@ export class ValidationDto {
 
 export class SubValidationDto {
   @IsNumber({}, { message: '#O tipo da validação deve ser numérico.' })
-  subValidationType!: number
+  validationType: number
 
   @IsOptional()
-  subValueOne?: any
+  valueOne?: any
 
   @IsOptional()
-  subValueTwo?: any
+  valueTwo?: any
 
   @IsOptional()
-  subValueThree?: any
+  valueThree?: any
 
   @IsOptional()
-  subValueFour?: any
+  valueFour?: any
 }

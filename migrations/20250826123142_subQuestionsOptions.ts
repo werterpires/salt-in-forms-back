@@ -6,16 +6,14 @@ export async function up(knex: Knex): Promise<void> {
   if (hasTable) return
 
   return knex.schema.createTable(db.Tables.SUB_QUESTION_OPTIONS, (table) => {
-    table.increments(db.SubQuestionOptions.SUB_QUESTION_OPTION_ID).primary()
+    table.increments(db.SubQuestionOptions.QUESTION_OPTION_ID).primary()
+    table.string(db.SubQuestionOptions.QUESTION_OPTION_VALUE, 255).notNullable()
     table
-      .string(db.SubQuestionOptions.SUB_QUESTION_OPTION_VALUE, 255)
-      .notNullable()
-    table
-      .integer(db.SubQuestionOptions.SUB_QUESTION_OPTION_TYPE)
+      .integer(db.SubQuestionOptions.QUESTION_OPTION_TYPE)
       .notNullable()
       .unsigned()
     table
-      .integer(db.SubQuestionOptions.SUB_QUESTION_ID)
+      .integer(db.SubQuestionOptions.QUESTION_ID)
       .unsigned()
       .notNullable()
       .references(db.SubQuestions.SUB_QUESTION_ID)
