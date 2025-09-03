@@ -119,8 +119,8 @@ export class QuestionsHelper {
       const questionOptionsDto: QuestionOptionDto[] | undefined =
         subQuestion.subQuestionOptions?.map((subQuestionOption) => {
           return {
-            questionOptionType: subQuestionOption.subQuestionOptionType,
-            questionOptionValue: subQuestionOption.subQuestionOptionValue
+            questionOptionType: subQuestionOption.questionOptionType,
+            questionOptionValue: subQuestionOption.questionOptionValue
           }
         })
 
@@ -703,8 +703,7 @@ export class QuestionsHelper {
     if (
       questionType === EQuestionsTypes.MULTIPLE_CHOICE ||
       questionType === EQuestionsTypes.SINGLE_CHOICE ||
-      questionType === EQuestionsTypes.LIKERT_SCALE ||
-      questionType === EQuestionsTypes.MULTIPLE_RESPONSES
+      questionType === EQuestionsTypes.LIKERT_SCALE
     ) {
       if (!questionOptions || questionOptions.length < 2) {
         throw new BadRequestException(

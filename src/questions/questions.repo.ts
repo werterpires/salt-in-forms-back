@@ -99,6 +99,11 @@ export class QuestionsRepo {
         return questionId
       }
 
+      console.log(
+        'createQuestionData.subQuestions',
+        createQuestionData.subQuestions
+      )
+
       // Inserir subquestões
       for (let subQuestion of createQuestionData.subQuestions) {
         const subQuestionId = await trx(db.Tables.SUB_QUESTIONS).insert({
@@ -118,9 +123,9 @@ export class QuestionsRepo {
             await trx(db.Tables.SUB_QUESTION_OPTIONS).insert({
               [db.SubQuestionOptions.QUESTION_ID]: subQuestionId,
               [db.SubQuestionOptions.QUESTION_OPTION_TYPE]:
-                subOption.subQuestionOptionType,
+                subOption.questionOptionType,
               [db.SubQuestionOptions.QUESTION_OPTION_VALUE]:
-                subOption.subQuestionOptionValue
+                subOption.questionOptionValue
             })
           }
         }

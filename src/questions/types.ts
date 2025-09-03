@@ -66,7 +66,7 @@ export interface Question {
 }
 
 export interface SubQuestion {
-  subQuestionId: number
+  subQuestionId?: number
   subQuestionPosition: number
   subQuestionType: number
   subQuestionStatement: string
