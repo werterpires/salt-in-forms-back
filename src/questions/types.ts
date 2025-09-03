@@ -72,7 +72,7 @@ export interface SubQuestion {
   subQuestionStatement: string
   questionId: number
   subQuestionOptions?: SubQuestionOptions[]
-  subValidtions?: SubValidation[]
+  subValidations?: SubValidation[]
 }
 
 export interface CreateQuestion {

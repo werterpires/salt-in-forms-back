@@ -369,4 +369,45 @@ export class QuestionsRepo {
 
     await this.knex(db.Tables.VALIDATIONS).insert(validationsToInsert)
   }
+
+  async findSubQuestionsByQuestionId(questionId: number): Promise<any[]> {
+    const subQuestions = await this.knex(db.Tables.SUB_QUESTIONS)
+      .where(db.SubQuestions.QUESTION_ID, questionId)
+      .orderBy(db.SubQuestions.SUB_QUESTION_POSITION, 'asc')
+
+    return subQuestions
+  }
+
+  async findSubValidationsBySubQuestionId(subQuestionId: number): Promise<any[]> {
+    const subValidations = await this.knex(db.Tables.SUB_VALIDATIONS)
+      .select(
+        db.SubValidations.VALIDATION_TYPE,
+        db.SubValidations.VALUE_ONE,
+        db.SubValidations.VALUE_TWO,
+        db.SubValidations.VALUE_THREE,
+        db.SubValidations.VALUE_FOUR
+      )
+      .where(db.SubValidations.QUESTION_ID, subQuestionId)
+
+    return subValidations.map((validation) => ({
+      validationType: validation[db.SubValidations.VALIDATION_TYPE],
+      valueOne: validation[db.SubValidations.VALUE_ONE],
+      valueTwo: validation[db.SubValidations.VALUE_TWO],
+      valueThree: validation[db.SubValidations.VALUE_THREE],
+      valueFour: validation[db.SubValidations.VALUE_FOUR]
+    }))
+  }
+
+  async findSubQuestionOptionsBySubQuestionId(subQuestionId: number): Promise<any[]> {
+    const options = await this.knex(db.Tables.SUB_QUESTION_OPTIONS)
+      .select(
+        db.SubQuestionOptions.QUESTION_OPTION_TYPE,
+        db.SubQuestionOptions.QUESTION_OPTION_VALUE,
+        db.SubQuestionOptions.QUESTION_OPTION_ID,
+        db.SubQuestionOptions.QUESTION_ID
+      )
+      .where(db.SubQuestionOptions.QUESTION_ID, subQuestionId)
+
+    return options
+  }
 }

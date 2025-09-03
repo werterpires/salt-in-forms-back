@@ -41,6 +41,38 @@ export class QuestionsService {
       )
       question.validations =
         await QuestionsHelper.transformValidations(validations)
+
+      // Buscar subQuestions
+      const subQuestions = await this.questionsRepo.findSubQuestionsByQuestionId(
+        question.questionId
+      )
+
+      if (subQuestions && subQuestions.length > 0) {
+        question.subQuestions = []
+
+        for (const subQuestion of subQuestions) {
+          // Se o tipo da subquestão não for 1, 7 ou 8, busca as options
+          if (
+            subQuestion.subQuestionType !== 1 &&
+            subQuestion.subQuestionType !== 7 &&
+            subQuestion.subQuestionType !== 8
+          ) {
+            subQuestion.subQuestionOptions =
+              await this.questionsRepo.findSubQuestionOptionsBySubQuestionId(
+                subQuestion.subQuestionId
+              )
+          }
+
+          // Buscar e transformar validações para a subquestão
+          const subValidations = await this.questionsRepo.findSubValidationsBySubQuestionId(
+            subQuestion.subQuestionId
+          )
+          subQuestion.subValidations =
+            await QuestionsHelper.transformValidations(subValidations)
+
+          question.subQuestions.push(subQuestion)
+        }
+      }
     }
 
     return questions
@@ -134,6 +166,38 @@ export class QuestionsService {
     question.validations =
       await QuestionsHelper.transformValidations(validations)
 
+    // Buscar subQuestions
+    const subQuestions = await this.questionsRepo.findSubQuestionsByQuestionId(
+      question.questionId
+    )
+
+    if (subQuestions && subQuestions.length > 0) {
+      question.subQuestions = []
+
+      for (const subQuestion of subQuestions) {
+        // Se o tipo da subquestão não for 1, 7 ou 8, busca as options
+        if (
+          subQuestion.subQuestionType !== 1 &&
+          subQuestion.subQuestionType !== 7 &&
+          subQuestion.subQuestionType !== 8
+        ) {
+          subQuestion.subQuestionOptions =
+            await this.questionsRepo.findSubQuestionOptionsBySubQuestionId(
+              subQuestion.subQuestionId
+            )
+        }
+
+        // Buscar e transformar validações para a subquestão
+        const subValidations = await this.questionsRepo.findSubValidationsBySubQuestionId(
+          subQuestion.subQuestionId
+        )
+        subQuestion.subValidations =
+          await QuestionsHelper.transformValidations(subValidations)
+
+        question.subQuestions.push(subQuestion)
+      }
+    }
+
     return question
   }
 
@@ -158,6 +222,38 @@ export class QuestionsService {
       )
       question.validations =
         await QuestionsHelper.transformValidations(validations)
+
+      // Buscar subQuestions
+      const subQuestions = await this.questionsRepo.findSubQuestionsByQuestionId(
+        question.questionId
+      )
+
+      if (subQuestions && subQuestions.length > 0) {
+        question.subQuestions = []
+
+        for (const subQuestion of subQuestions) {
+          // Se o tipo da subquestão não for 1, 7 ou 8, busca as options
+          if (
+            subQuestion.subQuestionType !== 1 &&
+            subQuestion.subQuestionType !== 7 &&
+            subQuestion.subQuestionType !== 8
+          ) {
+            subQuestion.subQuestionOptions =
+              await this.questionsRepo.findSubQuestionOptionsBySubQuestionId(
+                subQuestion.subQuestionId
+              )
+          }
+
+          // Buscar e transformar validações para a subquestão
+          const subValidations = await this.questionsRepo.findSubValidationsBySubQuestionId(
+            subQuestion.subQuestionId
+          )
+          subQuestion.subValidations =
+            await QuestionsHelper.transformValidations(subValidations)
+
+          question.subQuestions.push(subQuestion)
+        }
+      }
     }
 
     return questions
