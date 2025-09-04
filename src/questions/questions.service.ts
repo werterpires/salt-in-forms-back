@@ -86,37 +86,19 @@ export class QuestionsService {
       this.questionsRepo
     )
 
-    await this.questionsRepo.deleteQuestionOptions(updateQuestionDto.questionId)
-
-    // Deletar todas as validações existentes da questão
-    await this.questionsRepo.deleteValidations(updateQuestionDto.questionId)
-
-    await this.questionsRepo.updateQuestion(updateQuestionData)
-
-    if (
-      updateQuestionDto.questionOptions &&
-      updateQuestionDto.questionOptions.length > 0
-    ) {
-      const questionOptions = updateQuestionDto.questionOptions.map(
-        (option) => ({
-          questionId: updateQuestionDto.questionId,
-          questionOptionType: option.questionOptionType,
-          questionOptionValue: option.questionOptionValue
-        })
-      )
-      await this.questionsRepo.createQuestionOptions(questionOptions)
+    // Prepare question options if they exist
+    let questionOptions: QuestionOption[] | undefined
+    if (updateQuestionDto.questionOptions && updateQuestionDto.questionOptions.length > 0) {
+      questionOptions = updateQuestionDto.questionOptions.map((option) => ({
+        questionId: updateQuestionDto.questionId,
+        questionOptionId: option.questionOptionId,
+        questionOptionType: option.questionOptionType,
+        questionOptionValue: option.questionOptionValue
+      }))
     }
 
-    // Criar novas validações se existirem
-    if (
-      updateQuestionData.validations &&
-      updateQuestionData.validations.length > 0
-    ) {
-      await this.questionsRepo.createValidations(
-        updateQuestionDto.questionId,
-        updateQuestionData.validations
-      )
-    }
+    // Use the new transaction-based update method
+    await this.questionsRepo.updateQuestionWithOptions(updateQuestionData, questionOptions)
   }
 
   async delete(questionId: number): Promise<void> {

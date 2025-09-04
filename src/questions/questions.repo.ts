@@ -370,6 +370,109 @@ export class QuestionsRepo {
     await this.knex(db.Tables.VALIDATIONS).insert(validationsToInsert)
   }
 
+  async updateQuestionWithOptions(
+    updateQuestionData: UpdateQuestion,
+    questionOptions?: QuestionOption[]
+  ): Promise<void> {
+    return this.knex.transaction(async (trx) => {
+      // Update question data
+      await trx(db.Tables.QUESTIONS)
+        .where(db.Questions.QUESTION_ID, updateQuestionData.questionId)
+        .update({
+          [db.Questions.QUESTION_AREA_ID]: updateQuestionData.questionAreaId,
+          [db.Questions.QUESTION_TYPE]: updateQuestionData.questionType,
+          [db.Questions.QUESTION_STATEMENT]: updateQuestionData.questionStatement,
+          [db.Questions.QUESTION_DESCRIPTION]:
+            updateQuestionData.questionDescription,
+          [db.Questions.QUESTION_DISPLAY_RULE]:
+            updateQuestionData.questionDisplayRule,
+          [db.Questions.FORM_SECTION_DISPLAY_LINK]:
+            updateQuestionData.formSectionDisplayLink,
+          [db.Questions.QUESTION_DISPLAY_LINK]:
+            updateQuestionData.questionDisplayLink,
+          [db.Questions.ANSWER_DISPLEY_RULE]:
+            updateQuestionData.answerDisplayRule,
+          [db.Questions.ANSWER_DISPLAY_VALUE]:
+            updateQuestionData.answerDisplayValue
+        })
+
+      // Handle question options if provided
+      if (questionOptions) {
+        // Get current options from database
+        const optionsDb = await trx(db.Tables.QUESTION_OPTIONS)
+          .select(
+            db.QuestionOptions.QUESTION_OPTION_ID,
+            db.QuestionOptions.QUESTION_OPTION_TYPE,
+            db.QuestionOptions.QUESTION_OPTION_VALUE,
+            db.QuestionOptions.QUESTION_ID
+          )
+          .where(db.QuestionOptions.QUESTION_ID, updateQuestionData.questionId)
+
+        const optionsUpdate = questionOptions
+
+        // Get IDs from update options (only those that have IDs)
+        const updateOptionIds = optionsUpdate
+          .filter(opt => opt.questionOptionId)
+          .map(opt => opt.questionOptionId!)
+
+        // 1) Delete options that exist in DB but not in update
+        const optionsToDelete = optionsDb.filter(
+          optionDb => !updateOptionIds.includes(optionDb[db.QuestionOptions.QUESTION_OPTION_ID])
+        )
+
+        if (optionsToDelete.length > 0) {
+          const idsToDelete = optionsToDelete.map(opt => opt[db.QuestionOptions.QUESTION_OPTION_ID])
+          await trx(db.Tables.QUESTION_OPTIONS)
+            .whereIn(db.QuestionOptions.QUESTION_OPTION_ID, idsToDelete)
+            .del()
+        }
+
+        // 2) Insert new options (those without ID)
+        const optionsToInsert = optionsUpdate.filter(opt => !opt.questionOptionId)
+        
+        if (optionsToInsert.length > 0) {
+          const insertData = optionsToInsert.map(opt => ({
+            [db.QuestionOptions.QUESTION_ID]: updateQuestionData.questionId,
+            [db.QuestionOptions.QUESTION_OPTION_TYPE]: opt.questionOptionType,
+            [db.QuestionOptions.QUESTION_OPTION_VALUE]: opt.questionOptionValue
+          }))
+          await trx(db.Tables.QUESTION_OPTIONS).insert(insertData)
+        }
+
+        // 3) Update existing options
+        const optionsToUpdate = optionsUpdate.filter(opt => opt.questionOptionId)
+        
+        for (const optionUpdate of optionsToUpdate) {
+          await trx(db.Tables.QUESTION_OPTIONS)
+            .where(db.QuestionOptions.QUESTION_OPTION_ID, optionUpdate.questionOptionId!)
+            .update({
+              [db.QuestionOptions.QUESTION_OPTION_TYPE]: optionUpdate.questionOptionType,
+              [db.QuestionOptions.QUESTION_OPTION_VALUE]: optionUpdate.questionOptionValue
+            })
+        }
+      }
+
+      // Handle validations if provided
+      if (updateQuestionData.validations && updateQuestionData.validations.length > 0) {
+        // Delete existing validations
+        await trx(db.Tables.VALIDATIONS)
+          .where(db.Validations.QUESTION_ID, updateQuestionData.questionId)
+          .del()
+
+        // Insert new validations
+        const validationsToInsert = updateQuestionData.validations.map((v) => ({
+          [db.Validations.VALIDATION_TYPE]: v.validationType,
+          [db.Validations.QUESTION_ID]: updateQuestionData.questionId,
+          [db.Validations.VALUE_ONE]: v.valueOne,
+          [db.Validations.VALUE_TWO]: v.valueTwo,
+          [db.Validations.VALUE_THREE]: v.valueThree,
+          [db.Validations.VALUE_FOUR]: v.valueFour
+        }))
+        await trx(db.Tables.VALIDATIONS).insert(validationsToInsert)
+      }
+    })
+  }
+
   async findSubQuestionsByQuestionId(questionId: number): Promise<any[]> {
     const subQuestions = await this.knex(db.Tables.SUB_QUESTIONS)
       .where(db.SubQuestions.QUESTION_ID, questionId)
