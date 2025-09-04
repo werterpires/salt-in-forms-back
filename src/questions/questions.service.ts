@@ -43,9 +43,10 @@ export class QuestionsService {
         await QuestionsHelper.transformValidations(validations)
 
       // Buscar subQuestions
-      const subQuestions = await this.questionsRepo.findSubQuestionsByQuestionId(
-        question.questionId
-      )
+      const subQuestions =
+        await this.questionsRepo.findSubQuestionsByQuestionId(
+          question.questionId
+        )
 
       if (subQuestions && subQuestions.length > 0) {
         question.subQuestions = []
@@ -64,9 +65,10 @@ export class QuestionsService {
           }
 
           // Buscar e transformar validações para a subquestão
-          const subValidations = await this.questionsRepo.findSubValidationsBySubQuestionId(
-            subQuestion.subQuestionId
-          )
+          const subValidations =
+            await this.questionsRepo.findSubValidationsBySubQuestionId(
+              subQuestion.subQuestionId
+            )
           subQuestion.subValidations =
             await QuestionsHelper.transformValidations(subValidations)
 
@@ -84,7 +86,6 @@ export class QuestionsService {
       this.questionsRepo
     )
 
-    // e) ao editar, rodar uma query que apaga todas as options daquela question
     await this.questionsRepo.deleteQuestionOptions(updateQuestionDto.questionId)
 
     // Deletar todas as validações existentes da questão
@@ -188,9 +189,10 @@ export class QuestionsService {
         }
 
         // Buscar e transformar validações para a subquestão
-        const subValidations = await this.questionsRepo.findSubValidationsBySubQuestionId(
-          subQuestion.subQuestionId
-        )
+        const subValidations =
+          await this.questionsRepo.findSubValidationsBySubQuestionId(
+            subQuestion.subQuestionId
+          )
         subQuestion.subValidations =
           await QuestionsHelper.transformValidations(subValidations)
 
@@ -224,9 +226,10 @@ export class QuestionsService {
         await QuestionsHelper.transformValidations(validations)
 
       // Buscar subQuestions
-      const subQuestions = await this.questionsRepo.findSubQuestionsByQuestionId(
-        question.questionId
-      )
+      const subQuestions =
+        await this.questionsRepo.findSubQuestionsByQuestionId(
+          question.questionId
+        )
 
       if (subQuestions && subQuestions.length > 0) {
         question.subQuestions = []
@@ -245,9 +248,10 @@ export class QuestionsService {
           }
 
           // Buscar e transformar validações para a subquestão
-          const subValidations = await this.questionsRepo.findSubValidationsBySubQuestionId(
-            subQuestion.subQuestionId
-          )
+          const subValidations =
+            await this.questionsRepo.findSubValidationsBySubQuestionId(
+              subQuestion.subQuestionId
+            )
           subQuestion.subValidations =
             await QuestionsHelper.transformValidations(subValidations)
 

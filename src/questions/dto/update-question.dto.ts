@@ -7,6 +7,7 @@ import {
   ValidateNested
 } from 'class-validator'
 import { Type } from 'class-transformer'
+import { QuestionOptionDto } from './optionsDto'
 
 export class ValidationDto {
   @IsNumber({}, { message: '#O tipo da validação deve ser numérico.' })
@@ -23,24 +24,6 @@ export class ValidationDto {
 
   @IsOptional()
   valueFour?: any
-}
-
-export class QuestionOptionDto {
-  @IsNumber({}, { message: '#O tipo da opção deve ser numérico.' })
-  questionOptionType: number
-
-  @Length(1, 255, {
-    message: '#O valor da opção deve ter no mínimo 1 e no máximo 255 caracteres'
-  })
-  questionOptionValue: string
-
-  @IsOptional()
-  @IsNumber({}, { message: '#O ID da opção da pergunta deve ser numérico' })
-  questionOptionId?: number
-
-  @IsOptional()
-  @IsNumber({}, { message: '#O ID da pergunta deve ser numérico.' })
-  questionId?: number
 }
 
 export class UpdateQuestionDto {
