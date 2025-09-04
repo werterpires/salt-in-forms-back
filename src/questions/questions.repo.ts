@@ -488,6 +488,75 @@ export class QuestionsRepo {
         }))
         await trx(db.Tables.VALIDATIONS).insert(validationsToInsert)
       }
+
+      // Delete existing subquestions and their related data
+      const existingSubQuestions = await trx(db.Tables.SUB_QUESTIONS)
+        .where(db.SubQuestions.QUESTION_ID, updateQuestionData.questionId)
+        .select(db.SubQuestions.SUB_QUESTION_ID)
+
+      if (existingSubQuestions.length > 0) {
+        const subQuestionIds = existingSubQuestions.map(sq => sq[db.SubQuestions.SUB_QUESTION_ID])
+        
+        // Delete sub validations
+        await trx(db.Tables.SUB_VALIDATIONS)
+          .whereIn(db.SubValidations.QUESTION_ID, subQuestionIds)
+          .del()
+
+        // Delete sub question options
+        await trx(db.Tables.SUB_QUESTION_OPTIONS)
+          .whereIn(db.SubQuestionOptions.QUESTION_ID, subQuestionIds)
+          .del()
+
+        // Delete sub questions
+        await trx(db.Tables.SUB_QUESTIONS)
+          .where(db.SubQuestions.QUESTION_ID, updateQuestionData.questionId)
+          .del()
+      }
+
+      // Handle subquestions if provided
+      if (
+        updateQuestionData.subQuestions &&
+        updateQuestionData.subQuestions.length > 0
+      ) {
+        // Insert new subquestions
+        for (let subQuestion of updateQuestionData.subQuestions) {
+          const [subQuestionId] = await trx(db.Tables.SUB_QUESTIONS).insert({
+            [db.SubQuestions.QUESTION_ID]: updateQuestionData.questionId,
+            [db.SubQuestions.SUB_QUESTION_STATEMENT]: subQuestion.subQuestionStatement,
+            [db.SubQuestions.SUB_QUESTION_POSITION]: subQuestion.subQuestionPosition,
+            [db.SubQuestions.SUB_QUESTION_TYPE]: subQuestion.subQuestionType
+          })
+
+          if (
+            subQuestion.subQuestionOptions &&
+            subQuestion.subQuestionOptions.length > 0
+          ) {
+            for (let subOption of subQuestion.subQuestionOptions) {
+              await trx(db.Tables.SUB_QUESTION_OPTIONS).insert({
+                [db.SubQuestionOptions.QUESTION_ID]: subQuestionId,
+                [db.SubQuestionOptions.QUESTION_OPTION_TYPE]: subOption.questionOptionType,
+                [db.SubQuestionOptions.QUESTION_OPTION_VALUE]: subOption.questionOptionValue
+              })
+            }
+          }
+
+          if (
+            subQuestion.subValidations &&
+            subQuestion.subValidations.length > 0
+          ) {
+            for (let subValidation of subQuestion.subValidations) {
+              await trx(db.Tables.SUB_VALIDATIONS).insert({
+                [db.SubValidations.VALIDATION_TYPE]: subValidation.validationType,
+                [db.SubValidations.QUESTION_ID]: subQuestionId,
+                [db.SubValidations.VALUE_ONE]: subValidation.valueOne,
+                [db.SubValidations.VALUE_TWO]: subValidation.valueTwo,
+                [db.SubValidations.VALUE_THREE]: subValidation.valueThree,
+                [db.SubValidations.VALUE_FOUR]: subValidation.valueFour
+              })
+            }
+          }
+        }
+      }
     })
   }
 
