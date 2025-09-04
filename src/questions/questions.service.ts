@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { QuestionsRepo } from './questions.repo'
 import { QuestionsHelper } from './questions.helper'
-import { Question } from './types'
+import { Question, QuestionOption } from './types'
 import { CreateQuestionDto } from './dto/create-question.dto'
 import { UpdateQuestionDto } from './dto/update-question.dto'
 import { ReorderQuestionsDto } from './dto/reorder-questions.dto'
@@ -81,21 +81,10 @@ export class QuestionsService {
   }
 
   async update(updateQuestionDto: UpdateQuestionDto): Promise<void> {
-    const updateQuestionData = await QuestionsHelper.transformUpdateDto(
+    const { updateQuestionData, questionOptions } = await QuestionsHelper.transformUpdateDto(
       updateQuestionDto,
       this.questionsRepo
     )
-
-    // Prepare question options if they exist
-    let questionOptions: QuestionOption[] | undefined
-    if (updateQuestionDto.questionOptions && updateQuestionDto.questionOptions.length > 0) {
-      questionOptions = updateQuestionDto.questionOptions.map((option) => ({
-        questionId: updateQuestionDto.questionId,
-        questionOptionId: option.questionOptionId,
-        questionOptionType: option.questionOptionType,
-        questionOptionValue: option.questionOptionValue
-      }))
-    }
 
     // Use the new transaction-based update method
     await this.questionsRepo.updateQuestionWithOptions(updateQuestionData, questionOptions)

@@ -1,5 +1,5 @@
 import { BadRequestException, ConsoleLogger } from '@nestjs/common'
-import { CreateQuestion, UpdateQuestion, Validation } from './types'
+import { CreateQuestion, UpdateQuestion, Validation, QuestionOption } from './types'
 import { FormSectionDisplayRules } from '../constants/form-section-display-rules.const'
 import { QuestionsRepo } from './questions.repo'
 import { CreateQuestionDto } from './dto/create-question.dto'
@@ -40,14 +40,14 @@ export class QuestionsHelper {
   static async transformUpdateDto(
     updateQuestionDto: UpdateQuestionDto,
     questionsRepo: QuestionsRepo
-  ): Promise<UpdateQuestion> {
+  ): Promise<{ updateQuestionData: UpdateQuestion; questionOptions?: QuestionOption[] }> {
     await this.validateUpdateQuestion(updateQuestionDto, questionsRepo)
 
     const answerDisplayValue = updateQuestionDto.answerDisplayValue
       ? updateQuestionDto.answerDisplayValue.join('||')
       : undefined
 
-    return {
+    const updateQuestionData: UpdateQuestion = {
       questionId: updateQuestionDto.questionId,
       questionAreaId: updateQuestionDto.questionAreaId,
       questionType: updateQuestionDto.questionType,
@@ -60,6 +60,19 @@ export class QuestionsHelper {
       answerDisplayValue,
       validations: updateQuestionDto.validations
     }
+
+    // Prepare question options if they exist
+    let questionOptions: QuestionOption[] | undefined
+    if (updateQuestionDto.questionOptions && updateQuestionDto.questionOptions.length > 0) {
+      questionOptions = updateQuestionDto.questionOptions.map((option) => ({
+        questionId: updateQuestionDto.questionId,
+        questionOptionId: option.questionOptionId,
+        questionOptionType: option.questionOptionType,
+        questionOptionValue: option.questionOptionValue
+      }))
+    }
+
+    return { updateQuestionData, questionOptions }
   }
 
   static async validateCreateQuestion(
