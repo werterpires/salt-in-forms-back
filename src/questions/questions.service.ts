@@ -81,13 +81,13 @@ export class QuestionsService {
   }
 
   async update(updateQuestionDto: UpdateQuestionDto): Promise<void> {
-    const { updateQuestionData, questionOptions } = await QuestionsHelper.transformUpdateDto(
+    const updateQuestionData = await QuestionsHelper.transformUpdateDto(
       updateQuestionDto,
       this.questionsRepo
     )
 
     // Use the new transaction-based update method
-    await this.questionsRepo.updateQuestionWithOptions(updateQuestionData, questionOptions)
+    await this.questionsRepo.updateQuestionWithOptions(updateQuestionData)
   }
 
   async delete(questionId: number): Promise<void> {

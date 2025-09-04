@@ -4,10 +4,12 @@ import {
   Length,
   IsArray,
   IsString,
-  ValidateNested
+  ValidateNested,
+  Min
 } from 'class-validator'
 import { Type } from 'class-transformer'
-import { QuestionOptionDto } from './optionsDto'
+import { QuestionOptionDto, SubQuestionOptionDto } from './optionsDto'
+import { SubValidationDto } from './validationDto'
 
 export class ValidationDto {
   @IsNumber({}, { message: '#O tipo da validação deve ser numérico.' })
@@ -84,4 +86,43 @@ export class UpdateQuestionDto {
   @ValidateNested({ each: true })
   @Type(() => ValidationDto)
   validations?: ValidationDto[]
+
+  @IsOptional()
+  @IsArray({ message: '#As subquestões devem ser um array.' })
+  @ValidateNested({ each: true })
+  @Type(() => UpdateSubQuestionDto)
+  subQuestions?: UpdateSubQuestionDto[]
+}
+
+export class UpdateSubQuestionDto {
+  @IsNumber({})
+  subQuestionId: number
+
+  @IsNumber({}, { message: '#O ID da pergunta deve ser numérico.' })
+  questionId: number
+
+  @IsNumber({}, { message: '#A ordem da pergunta deve ser numérica.' })
+  @Min(1, { message: '#A ordem da pergunta deve ser maior que 0.' })
+  subQuestionPosition: number
+
+  @IsNumber({}, { message: '#O tipo da pergunta deve ser numérico.' })
+  subQuestionType: number
+
+  @Length(3, 255, {
+    message:
+      '#O enunciado da pergunta deve ter no mínimo 3 e no.maxcdn 255 caracteres'
+  })
+  subQuestionStatement: string
+
+  @IsOptional()
+  @IsArray({ message: '#As opções da pergunta devem ser um array.' })
+  @ValidateNested({ each: true })
+  @Type(() => SubQuestionOptionDto)
+  subQuestionOptions?: SubQuestionOptionDto[]
+
+  @IsOptional()
+  @IsArray({ message: '#As validações devem ser um array.' })
+  @ValidateNested({ each: true })
+  @Type(() => SubValidationDto)
+  subValidations?: SubValidationDto[]
 }

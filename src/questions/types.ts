@@ -20,7 +20,7 @@ export interface SubValidation {
 
 export interface QuestionOption {
   questionOptionId?: number
-  questionId: number
+  questionId?: number
   questionOptionType: number
   questionOptionValue: string
 }
@@ -105,4 +105,5 @@ export interface UpdateQuestion {
   answerDisplayValue?: string
   validations?: Validation[]
   subQuestions?: SubQuestion[]
+  questionOptions?: QuestionOption[]
 }

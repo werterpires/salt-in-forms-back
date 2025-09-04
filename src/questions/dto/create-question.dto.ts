@@ -10,8 +10,8 @@ import {
   ValidateIf
 } from 'class-validator'
 import { Type } from 'class-transformer'
-import { QuestionOptionDto, ValidationDto } from './update-question.dto'
-import { SubQuestionOptionDto } from './optionsDto'
+import { ValidationDto } from './update-question.dto'
+import { QuestionOptionDto, SubQuestionOptionDto } from './optionsDto'
 import { SubValidationDto } from './validationDto'
 
 export class CreateQuestionDto {
