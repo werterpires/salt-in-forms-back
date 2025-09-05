@@ -495,8 +495,10 @@ export class QuestionsRepo {
         .select(db.SubQuestions.SUB_QUESTION_ID)
 
       if (existingSubQuestions.length > 0) {
-        const subQuestionIds = existingSubQuestions.map(sq => sq[db.SubQuestions.SUB_QUESTION_ID])
-        
+        const subQuestionIds = existingSubQuestions.map(
+          (sq) => sq[db.SubQuestions.SUB_QUESTION_ID]
+        )
+
         // Delete sub validations
         await trx(db.Tables.SUB_VALIDATIONS)
           .whereIn(db.SubValidations.QUESTION_ID, subQuestionIds)
@@ -522,8 +524,10 @@ export class QuestionsRepo {
         for (let subQuestion of updateQuestionData.subQuestions) {
           const [subQuestionId] = await trx(db.Tables.SUB_QUESTIONS).insert({
             [db.SubQuestions.QUESTION_ID]: updateQuestionData.questionId,
-            [db.SubQuestions.SUB_QUESTION_STATEMENT]: subQuestion.subQuestionStatement,
-            [db.SubQuestions.SUB_QUESTION_POSITION]: subQuestion.subQuestionPosition,
+            [db.SubQuestions.SUB_QUESTION_STATEMENT]:
+              subQuestion.subQuestionStatement,
+            [db.SubQuestions.SUB_QUESTION_POSITION]:
+              subQuestion.subQuestionPosition,
             [db.SubQuestions.SUB_QUESTION_TYPE]: subQuestion.subQuestionType
           })
 
@@ -534,8 +538,10 @@ export class QuestionsRepo {
             for (let subOption of subQuestion.subQuestionOptions) {
               await trx(db.Tables.SUB_QUESTION_OPTIONS).insert({
                 [db.SubQuestionOptions.QUESTION_ID]: subQuestionId,
-                [db.SubQuestionOptions.QUESTION_OPTION_TYPE]: subOption.questionOptionType,
-                [db.SubQuestionOptions.QUESTION_OPTION_VALUE]: subOption.questionOptionValue
+                [db.SubQuestionOptions.QUESTION_OPTION_TYPE]:
+                  subOption.questionOptionType,
+                [db.SubQuestionOptions.QUESTION_OPTION_VALUE]:
+                  subOption.questionOptionValue
               })
             }
           }
@@ -546,7 +552,8 @@ export class QuestionsRepo {
           ) {
             for (let subValidation of subQuestion.subValidations) {
               await trx(db.Tables.SUB_VALIDATIONS).insert({
-                [db.SubValidations.VALIDATION_TYPE]: subValidation.validationType,
+                [db.SubValidations.VALIDATION_TYPE]:
+                  subValidation.validationType,
                 [db.SubValidations.QUESTION_ID]: subQuestionId,
                 [db.SubValidations.VALUE_ONE]: subValidation.valueOne,
                 [db.SubValidations.VALUE_TWO]: subValidation.valueTwo,
@@ -562,6 +569,13 @@ export class QuestionsRepo {
 
   async findSubQuestionsByQuestionId(questionId: number): Promise<any[]> {
     const subQuestions = await this.knex(db.Tables.SUB_QUESTIONS)
+      .select(
+        db.SubQuestions.SUB_QUESTION_ID,
+        db.SubQuestions.SUB_QUESTION_POSITION,
+        db.SubQuestions.SUB_QUESTION_TYPE,
+        db.SubQuestions.SUB_QUESTION_STATEMENT,
+        db.SubQuestions.QUESTION_ID
+      )
       .where(db.SubQuestions.QUESTION_ID, questionId)
       .orderBy(db.SubQuestions.SUB_QUESTION_POSITION, 'asc')
 
