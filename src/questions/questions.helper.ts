@@ -256,6 +256,45 @@ export class QuestionsHelper {
         )
       }
     }
+
+    // Validação 3: Uma questão não pode ser movida para uma ordem anterior à de uma questão da qual depende
+    for (const questionReorder of questions) {
+      const currentQuestion = allQuestions.find(q => q.questionId === questionReorder.questionId)
+      
+      if (currentQuestion?.questionDisplayLink) {
+        // Verificar se a questão referenciada é da mesma seção
+        const referencedQuestion = allQuestions.find(q => q.questionId === currentQuestion.questionDisplayLink)
+        
+        if (referencedQuestion) {
+          // Encontrar a nova ordem da questão referenciada no array
+          const referencedQuestionNewOrder = questions.find(q => q.questionId === referencedQuestion.questionId)?.questionOrder
+          
+          if (referencedQuestionNewOrder && questionReorder.questionOrder <= referencedQuestionNewOrder) {
+            throw new BadRequestException(
+              `#A questão "${currentQuestion.questionStatement}" não pode ser movida para uma posição anterior ou igual à questão da qual depende (ordem ${referencedQuestionNewOrder})`
+            )
+          }
+        }
+      }
+    }
+
+    // Validação 4: Uma questão não pode ser movida para uma posição posterior à de uma questão que é sua dependente
+    for (const questionReorder of questions) {
+      const currentQuestion = allQuestions.find(q => q.questionId === questionReorder.questionId)
+      
+      // Verificar se alguma questão da mesma seção referencia esta questão
+      const dependentQuestions = allQuestions.filter(q => q.questionDisplayLink === currentQuestion?.questionId)
+      
+      for (const dependentQuestion of dependentQuestions) {
+        const dependentQuestionNewOrder = questions.find(q => q.questionId === dependentQuestion.questionId)?.questionOrder
+        
+        if (dependentQuestionNewOrder && questionReorder.questionOrder >= dependentQuestionNewOrder) {
+          throw new BadRequestException(
+            `#A questão "${currentQuestion?.questionStatement}" não pode ser movida para uma posição posterior ou igual à questão que depende dela: "${dependentQuestion.questionStatement}" (ordem ${dependentQuestionNewOrder})`
+          )
+        }
+      }
+    }
   }
 
   static async transformValidations(
