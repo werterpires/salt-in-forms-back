@@ -569,6 +569,31 @@ export class QuestionsHelper {
     return tranformedValidations
   }
 
+  static async validateQuestionDeletion(
+    questionId: number,
+    questionsRepo: QuestionsRepo
+  ): Promise<void> {
+    // 1. Verificar se o ID da questão está sendo usado em alguma regra de display de seção
+    const sectionsUsingQuestion = await questionsRepo.findSectionsUsingQuestionDisplayLink(questionId)
+    
+    if (sectionsUsingQuestion.length > 0) {
+      const section = sectionsUsingQuestion[0]
+      throw new BadRequestException(
+        `#A questão não pode ser excluída porque está vinculada à seção "${section.formSectionName}" (ordem ${section.formSectionOrder}). Desfaça a vinculação antes de excluir a questão.`
+      )
+    }
+
+    // 2. Verificar se o ID da questão está sendo usado em alguma regra de display de questão
+    const questionsUsingQuestion = await questionsRepo.findQuestionsUsingQuestionDisplayLink(questionId)
+    
+    if (questionsUsingQuestion.length > 0) {
+      const question = questionsUsingQuestion[0]
+      throw new BadRequestException(
+        `#A questão não pode ser excluída porque está vinculada à questão "${question.questionStatement}" (ordem ${question.questionOrder}). Desfaça a vinculação antes de excluir a questão.`
+      )
+    }
+  }
+
   static validateQuestionOptions(
     questionType: number,
     questionOptions?: {

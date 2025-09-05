@@ -690,4 +690,28 @@ export class QuestionsRepo {
 
     return options
   }
+
+  async findQuestionsUsingQuestionDisplayLink(questionId: number): Promise<any[]> {
+    const questions = await this.knex(db.Tables.QUESTIONS)
+      .select(
+        db.Questions.QUESTION_ID,
+        db.Questions.QUESTION_ORDER,
+        db.Questions.QUESTION_STATEMENT
+      )
+      .where(db.Questions.QUESTION_DISPLAY_LINK, questionId)
+
+    return questions
+  }
+
+  async findSectionsUsingQuestionDisplayLink(questionId: number): Promise<any[]> {
+    const sections = await this.knex(db.Tables.FORM_SECTIONS)
+      .select(
+        db.FormSections.FORM_SECTION_ID,
+        db.FormSections.FORM_SECTION_ORDER,
+        db.FormSections.FORM_SECTION_NAME
+      )
+      .where(db.FormSections.QUESTION_DISPLAY_LINK, questionId)
+
+    return sections
+  }
 }

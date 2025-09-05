@@ -91,6 +91,9 @@ export class QuestionsService {
   }
 
   async delete(questionId: number): Promise<void> {
+    // Validar se a questão pode ser excluída (verificar vínculos)
+    await QuestionsHelper.validateQuestionDeletion(questionId, this.questionsRepo)
+    
     await this.questionsRepo.deleteQuestionCompletely(questionId)
   }
 
