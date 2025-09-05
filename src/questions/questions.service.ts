@@ -91,10 +91,7 @@ export class QuestionsService {
   }
 
   async delete(questionId: number): Promise<void> {
-    // f) ao deletar uma question, deletar suas options e validações junto
-    await this.questionsRepo.deleteQuestionOptions(questionId)
-    await this.questionsRepo.deleteValidations(questionId)
-    await this.questionsRepo.deleteQuestion(questionId)
+    await this.questionsRepo.deleteQuestionCompletely(questionId)
   }
 
   async reorder(reorderQuestionsDto: ReorderQuestionsDto): Promise<void> {

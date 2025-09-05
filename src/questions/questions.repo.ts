@@ -232,6 +232,78 @@ export class QuestionsRepo {
     })
   }
 
+  async deleteQuestionCompletely(questionId: number): Promise<void> {
+    return this.knex.transaction(async (trx) => {
+      // 1. Buscar todas as subquestões da questão
+      const subQuestions = await trx(db.Tables.SUB_QUESTIONS)
+        .where(db.SubQuestions.QUESTION_ID, questionId)
+        .select(db.SubQuestions.SUB_QUESTION_ID)
+
+      if (subQuestions.length > 0) {
+        const subQuestionIds = subQuestions.map(sq => sq[db.SubQuestions.SUB_QUESTION_ID])
+
+        // 2. Deletar sub validações das subquestões
+        await trx(db.Tables.SUB_VALIDATIONS)
+          .whereIn(db.SubValidations.QUESTION_ID, subQuestionIds)
+          .del()
+
+        // 3. Deletar sub opções das subquestões
+        await trx(db.Tables.SUB_QUESTION_OPTIONS)
+          .whereIn(db.SubQuestionOptions.QUESTION_ID, subQuestionIds)
+          .del()
+
+        // 4. Deletar as subquestões
+        await trx(db.Tables.SUB_QUESTIONS)
+          .where(db.SubQuestions.QUESTION_ID, questionId)
+          .del()
+      }
+
+      // 5. Deletar opções da questão principal
+      await trx(db.Tables.QUESTION_OPTIONS)
+        .where(db.QuestionOptions.QUESTION_ID, questionId)
+        .del()
+
+      // 6. Deletar validações da questão principal
+      await trx(db.Tables.VALIDATIONS)
+        .where(db.Validations.QUESTION_ID, questionId)
+        .del()
+
+      // 7. Buscar dados da questão para reordenação
+      const questionToDelete = await trx(db.Tables.QUESTIONS)
+        .join(
+          db.Tables.FORM_SECTIONS,
+          db.Tables.FORM_SECTIONS + '.' + db.FormSections.FORM_SECTION_ID,
+          db.Tables.QUESTIONS + '.' + db.Questions.FORM_SECTION_ID
+        )
+        .where(db.Questions.QUESTION_ID, questionId)
+        .first()
+
+      if (!questionToDelete) {
+        return
+      }
+
+      // 8. Deletar a questão principal
+      await trx(db.Tables.QUESTIONS)
+        .where(db.Questions.QUESTION_ID, questionId)
+        .del()
+
+      // 9. Reordenar questões subsequentes
+      await trx(db.Tables.QUESTIONS)
+        .join(
+          db.Tables.FORM_SECTIONS,
+          db.Tables.FORM_SECTIONS + '.' + db.FormSections.FORM_SECTION_ID,
+          db.Tables.QUESTIONS + '.' + db.Questions.FORM_SECTION_ID
+        )
+        .where(db.FormSections.S_FORM_ID, questionToDelete.sFormId)
+        .andWhere(
+          db.Questions.QUESTION_ORDER,
+          '>',
+          questionToDelete.questionOrder
+        )
+        .decrement(db.Questions.QUESTION_ORDER, 1)
+    })
+  }
+
   async reorderQuestions(
     questions: { questionId: number; questionOrder: number }[]
   ): Promise<void> {
