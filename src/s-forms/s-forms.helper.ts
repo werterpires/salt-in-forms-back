@@ -2,13 +2,15 @@ import {
   SFormFilter,
   SFormToValidate,
   SFormType,
-  sFormTypesArray
+  sFormTypesArray,
+  CopySForm
 } from './types'
 import { Knex } from 'knex'
 import * as db from '../constants/db-schema.enum'
 import { CreateSFormDto } from './dto/create-s-form.dto'
 import { BadRequestException } from '@nestjs/common'
 import { UpdateSFormDto } from './dto/update-s-form.dto'
+import { CopySFormDto } from './dto/copy-s-form.dto'
 
 export function applyFilters(filters: SFormFilter, query: Knex.QueryBuilder) {
   if (filters.sFormName) {
@@ -87,4 +89,26 @@ export function validateCreateDto(
 
 function isValidFormType(value: string): value is SFormType {
   return sFormTypesArray.includes(value as SFormType)
+}
+
+export function validateCopyDto(
+  copySFormDto: CopySFormDto,
+  targetProcessForms: SFormToValidate[]
+) {
+  const { newSFormName } = copySFormDto
+
+  if (!newSFormName || newSFormName.trim().length === 0) {
+    throw new BadRequestException('#O nome do novo formulário é obrigatório.')
+  }
+
+  // Por enquanto, não validamos duplicação de nome pois SFormToValidate não tem sFormName
+  // Esta validação pode ser adicionada se necessário
+}
+
+export function processCopyDto(copySFormDto: CopySFormDto): CopySForm {
+  return {
+    sourceSFormId: copySFormDto.sourceSFormId,
+    targetProcessId: copySFormDto.targetProcessId,
+    newSFormName: copySFormDto.newSFormName.trim()
+  }
 }
