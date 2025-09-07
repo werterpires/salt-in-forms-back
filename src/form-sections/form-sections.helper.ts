@@ -315,6 +315,33 @@ export class FormSectionsHelper {
     }
   }
 
+  static async validateSectionDeletion(
+    formSectionId: number,
+    formSectionsRepo: FormSectionsRepo
+  ): Promise<void> {
+    // 1. Verificar se o ID da seção está sendo usado em alguma regra de display de questão
+    const questionsUsingSection = 
+      await formSectionsRepo.findQuestionsUsingFormSectionDisplayLink(formSectionId)
+
+    if (questionsUsingSection.length > 0) {
+      const question = questionsUsingSection[0]
+      throw new BadRequestException(
+        `#A seção não pode ser excluída porque está vinculada à questão "${question.questionStatement}" (ordem ${question.questionOrder}). Desfaça a vinculação antes de excluir a seção.`
+      )
+    }
+
+    // 2. Verificar se o ID da seção está sendo usado em alguma regra de display de seção
+    const sectionsUsingSection =
+      await formSectionsRepo.findSectionsUsingFormSectionDisplayLink(formSectionId)
+
+    if (sectionsUsingSection.length > 0) {
+      const section = sectionsUsingSection[0]
+      throw new BadRequestException(
+        `#A seção não pode ser excluída porque está vinculada à seção "${section.formSectionName}" (ordem ${section.formSectionOrder}). Desfaça a vinculação antes de excluir a seção.`
+      )
+    }
+  }
+
   static async validateReorderData(
     sections: { formSectionId: number; formSectionOrder: number }[],
     formSectionsRepo: FormSectionsRepo
