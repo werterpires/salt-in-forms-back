@@ -714,4 +714,27 @@ export class QuestionsRepo {
 
     return sections
   }
+
+  // Método auxiliar para tratar regras de exibição em updates de questões
+  private processQuestionDisplayRuleUpdate(updateData: any): any {
+    // Se a regra de exibição for ALWAYS_SHOW (1), definir campos relacionados como null
+    if (updateData.questionDisplayRule === 1) {
+      return {
+        ...updateData,
+        formSectionDisplayLink: null,
+        questionDisplayLink: null,
+        answerDisplayRule: null,
+        answerDisplayValue: null
+      }
+    }
+    return updateData
+  }
+
+  async updateQuestion(questionId: number, updateData: any): Promise<void> {
+    const processedData = this.processQuestionDisplayRuleUpdate(updateData)
+    
+    await this.knex(db.Tables.QUESTIONS)
+      .where(db.Questions.QUESTION_ID, questionId)
+      .update(processedData)
+  }
 }

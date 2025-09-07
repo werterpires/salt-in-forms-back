@@ -20,9 +20,18 @@ export class FormSectionsRepo {
   }
 
   async updateFormSection(updateFormSection: UpdateFormSection): Promise<void> {
+    // Se a regra de exibição for ALWAYS_SHOW (1), definir campos relacionados como null
+    const updateData = { ...updateFormSection }
+    if (updateFormSection.formSectionDisplayRule === 1) {
+      updateData.formSectionDisplayLink = null
+      updateData.questionDisplayLink = null
+      updateData.answerDisplayRule = null
+      updateData.answerDisplayValue = null
+    }
+
     await this.knex(db.Tables.FORM_SECTIONS)
       .where(db.FormSections.FORM_SECTION_ID, updateFormSection.formSectionId)
-      .update(updateFormSection)
+      .update(updateData)
   }
 
   async deleteFormSection(formSectionId: number): Promise<void> {
