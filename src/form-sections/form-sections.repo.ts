@@ -104,10 +104,45 @@ export class FormSectionsRepo {
     sections: { formSectionId: number; formSectionOrder: number }[]
   ): Promise<void> {
     await this.knex.transaction(async (trx) => {
+      // Primeiro, vamos obter o sFormId das seções
+      const firstSection = sections[0]
+      const { sFormId } = await trx(db.Tables.FORM_SECTIONS)
+        .where(db.FormSections.FORM_SECTION_ID, firstSection.formSectionId)
+        .first(db.FormSections.S_FORM_ID)
+
+      // Atualizar as ordens das seções
       for (const section of sections) {
         await trx(db.Tables.FORM_SECTIONS)
           .where(db.FormSections.FORM_SECTION_ID, section.formSectionId)
           .update({
+            [db.FormSections.FORM_SECTION_ORDER]: section.formSectionOrder
+          })
+      }
+
+      // Agora reordenar as questions baseado na nova ordem das seções
+      // Ordenar as seções pela nova ordem
+      const sortedSections = [...sections].sort((a, b) => a.formSectionOrder - b.formSectionOrder)
+
+      let currentQuestionOrder = 1
+
+      // Para cada seção na nova ordem, reordenar suas questions
+      for (const section of sortedSections) {
+        // Buscar todas as questions desta seção ordenadas pela ordem atual
+        const questions = await trx(db.Tables.QUESTIONS)
+          .where(db.Questions.FORM_SECTION_ID, section.formSectionId)
+          .orderBy(db.Questions.QUESTION_ORDER, 'asc')
+          .select(db.Questions.QUESTION_ID)
+
+        // Atualizar a ordem de cada question
+        for (const question of questions) {
+          await trx(db.Tables.QUESTIONS)
+            .where(db.Questions.QUESTION_ID, question.questionId)
+            .update({
+              [db.Questions.QUESTION_ORDER]: currentQuestionOrder
+            })
+          currentQuestionOrder++
+        }
+      }</old_str></old_str>
             [db.FormSections.FORM_SECTION_ORDER]: section.formSectionOrder
           })
       }
