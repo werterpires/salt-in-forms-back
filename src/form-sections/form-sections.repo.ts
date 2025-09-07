@@ -121,7 +121,9 @@ export class FormSectionsRepo {
 
       // Agora reordenar as questions baseado na nova ordem das seções
       // Ordenar as seções pela nova ordem
-      const sortedSections = [...sections].sort((a, b) => a.formSectionOrder - b.formSectionOrder)
+      const sortedSections = [...sections].sort(
+        (a, b) => a.formSectionOrder - b.formSectionOrder
+      )
 
       let currentQuestionOrder = 1
 
@@ -142,11 +144,6 @@ export class FormSectionsRepo {
             })
           currentQuestionOrder++
         }
-      }
-    })
-  }</old_str></old_str>
-            [db.FormSections.FORM_SECTION_ORDER]: section.formSectionOrder
-          })
       }
     })
   }
