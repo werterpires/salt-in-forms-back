@@ -173,8 +173,9 @@ export class QuestionsRepo {
   }
 
   async updateQuestion(updateQuestionData: UpdateQuestion): Promise<void> {
-    const processedData =
-      this.processQuestionDisplayRuleUpdate(updateQuestionData)
+    console.log('updateQuestionData', updateQuestionData)
+
+    console.log('processedData', updateQuestionData)
     await this.knex(db.Tables.QUESTIONS)
       .where(db.Questions.QUESTION_ID, updateQuestionData.questionId)
       .update({
@@ -450,6 +451,8 @@ export class QuestionsRepo {
     updateQuestionData: UpdateQuestion,
     questionOptions?: QuestionOption[]
   ): Promise<void> {
+    updateQuestionData =
+      this.processQuestionDisplayRuleUpdate(updateQuestionData)
     return this.knex.transaction(async (trx) => {
       // Update question data
       await trx(db.Tables.QUESTIONS)
