@@ -31,3 +31,16 @@ export interface SFormToValidate {
   sFormId: number
   sFormType: SFormType
 }
+
+export interface CopySForm {
+  sourceSFormId: number
+  targetProcessId: number
+  newSFormName: string
+}
+
+export interface FormCopyResult {
+  newSFormId: number
+  sectionsMapping: Map<number, number>
+  questionsMapping: Map<number, number>
+  subQuestionsMapping: Map<number, number>
+}
