@@ -38,6 +38,16 @@ export class FormSectionsHelper {
   }
 
   static sortFormSectionsByOrder(formSections: FormSection[]): FormSection[] {
+    for (let section of formSections) {
+      if (
+        section.answerDisplayValue &&
+        typeof section.answerDisplayValue === 'string'
+      ) {
+        section.answerDisplayValue = section.answerDisplayValue
+          .split('||')
+          .map((value) => Number(value))
+      }
+    }
     return formSections.sort((a, b) => a.formSectionOrder - b.formSectionOrder)
   }
 

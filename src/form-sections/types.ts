@@ -7,7 +7,7 @@ export interface FormSection {
   formSectionDisplayLink?: number
   questionDisplayLink?: number
   answerDisplayRule?: number
-  answerDisplayValue?: string
+  answerDisplayValue?: string | number[]
   createdAt: Date
   updatedAt: Date
 }
