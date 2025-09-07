@@ -1,4 +1,8 @@
-import { BadRequestException, ConsoleLogger } from '@nestjs/common'
+import {
+  BadRequestException,
+  ConsoleLogger,
+  InternalServerErrorException
+} from '@nestjs/common'
 import {
   CreateQuestion,
   UpdateQuestion,
@@ -247,29 +251,50 @@ export class QuestionsHelper {
     }
 
     // Validar ordenação sequencial sem saltos nem repetições
+    const currentOrders = allSectionQuestions
+      .map((q) => q.questionOrder)
+      .sort((a, b) => a - b)
     const orders = questions.map((q) => q.questionOrder).sort((a, b) => a - b)
 
+    const minorCurrentOrder = currentOrders[0]
+    const majorCurrentOrder = currentOrders[currentOrders.length - 1]
+
+    if (minorCurrentOrder >= majorCurrentOrder) {
+      throw new InternalServerErrorException(
+        '#Não foi possível identificar a ordenação atual das perguntas'
+      )
+    }
+
     for (let i = 0; i < orders.length; i++) {
-      if (orders[i] !== i + 1) {
+      if (orders[i] !== i + minorCurrentOrder) {
         throw new BadRequestException(
-          '#A ordenação deve ser sequencial, começando em 1 e sem saltos'
+          `#A ordenação deve ser sequencial, começando em ${minorCurrentOrder} até ${majorCurrentOrder}, sem saltos`
         )
       }
     }
 
     // Validação 3: Uma questão não pode ser movida para uma ordem anterior à de uma questão da qual depende
     for (const questionReorder of questions) {
-      const currentQuestion = allQuestions.find(q => q.questionId === questionReorder.questionId)
-      
+      const currentQuestion = allQuestions.find(
+        (q) => q.questionId === questionReorder.questionId
+      )
+
       if (currentQuestion?.questionDisplayLink) {
         // Verificar se a questão referenciada é da mesma seção
-        const referencedQuestion = allQuestions.find(q => q.questionId === currentQuestion.questionDisplayLink)
-        
+        const referencedQuestion = allQuestions.find(
+          (q) => q.questionId === currentQuestion.questionDisplayLink
+        )
+
         if (referencedQuestion) {
           // Encontrar a nova ordem da questão referenciada no array
-          const referencedQuestionNewOrder = questions.find(q => q.questionId === referencedQuestion.questionId)?.questionOrder
-          
-          if (referencedQuestionNewOrder && questionReorder.questionOrder <= referencedQuestionNewOrder) {
+          const referencedQuestionNewOrder = questions.find(
+            (q) => q.questionId === referencedQuestion.questionId
+          )?.questionOrder
+
+          if (
+            referencedQuestionNewOrder &&
+            questionReorder.questionOrder <= referencedQuestionNewOrder
+          ) {
             throw new BadRequestException(
               `#A questão "${currentQuestion.questionStatement}" não pode ser movida para uma posição anterior ou igual à questão da qual depende (ordem ${referencedQuestionNewOrder})`
             )
@@ -280,15 +305,24 @@ export class QuestionsHelper {
 
     // Validação 4: Uma questão não pode ser movida para uma posição posterior à de uma questão que é sua dependente
     for (const questionReorder of questions) {
-      const currentQuestion = allQuestions.find(q => q.questionId === questionReorder.questionId)
-      
+      const currentQuestion = allQuestions.find(
+        (q) => q.questionId === questionReorder.questionId
+      )
+
       // Verificar se alguma questão da mesma seção referencia esta questão
-      const dependentQuestions = allQuestions.filter(q => q.questionDisplayLink === currentQuestion?.questionId)
-      
+      const dependentQuestions = allQuestions.filter(
+        (q) => q.questionDisplayLink === currentQuestion?.questionId
+      )
+
       for (const dependentQuestion of dependentQuestions) {
-        const dependentQuestionNewOrder = questions.find(q => q.questionId === dependentQuestion.questionId)?.questionOrder
-        
-        if (dependentQuestionNewOrder && questionReorder.questionOrder >= dependentQuestionNewOrder) {
+        const dependentQuestionNewOrder = questions.find(
+          (q) => q.questionId === dependentQuestion.questionId
+        )?.questionOrder
+
+        if (
+          dependentQuestionNewOrder &&
+          questionReorder.questionOrder >= dependentQuestionNewOrder
+        ) {
           throw new BadRequestException(
             `#A questão "${currentQuestion?.questionStatement}" não pode ser movida para uma posição posterior ou igual à questão que depende dela: "${dependentQuestion.questionStatement}" (ordem ${dependentQuestionNewOrder})`
           )
@@ -613,8 +647,9 @@ export class QuestionsHelper {
     questionsRepo: QuestionsRepo
   ): Promise<void> {
     // 1. Verificar se o ID da questão está sendo usado em alguma regra de display de seção
-    const sectionsUsingQuestion = await questionsRepo.findSectionsUsingQuestionDisplayLink(questionId)
-    
+    const sectionsUsingQuestion =
+      await questionsRepo.findSectionsUsingQuestionDisplayLink(questionId)
+
     if (sectionsUsingQuestion.length > 0) {
       const section = sectionsUsingQuestion[0]
       throw new BadRequestException(
@@ -623,8 +658,9 @@ export class QuestionsHelper {
     }
 
     // 2. Verificar se o ID da questão está sendo usado em alguma regra de display de questão
-    const questionsUsingQuestion = await questionsRepo.findQuestionsUsingQuestionDisplayLink(questionId)
-    
+    const questionsUsingQuestion =
+      await questionsRepo.findQuestionsUsingQuestionDisplayLink(questionId)
+
     if (questionsUsingQuestion.length > 0) {
       const question = questionsUsingQuestion[0]
       throw new BadRequestException(
