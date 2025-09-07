@@ -58,7 +58,9 @@ export class FormSectionsRepo {
           .select(db.SubQuestions.SUB_QUESTION_ID)
 
         if (subQuestions.length > 0) {
-          const subQuestionIds = subQuestions.map(sq => sq[db.SubQuestions.SUB_QUESTION_ID])
+          const subQuestionIds = subQuestions.map(
+            (sq) => sq[db.SubQuestions.SUB_QUESTION_ID]
+          )
 
           // Deletar sub validações das subquestões
           await trx(db.Tables.SUB_VALIDATIONS)
@@ -235,7 +237,9 @@ export class FormSectionsRepo {
       .first()
   }
 
-  async findQuestionsUsingFormSectionDisplayLink(formSectionId: number): Promise<any[]> {
+  async findQuestionsUsingFormSectionDisplayLink(
+    formSectionId: number
+  ): Promise<any[]> {
     const questions = await this.knex(db.Tables.QUESTIONS)
       .select(
         db.Questions.QUESTION_ID,
@@ -248,7 +252,9 @@ export class FormSectionsRepo {
     return questions
   }
 
-  async findSectionsUsingFormSectionDisplayLink(formSectionId: number): Promise<any[]> {
+  async findSectionsUsingFormSectionDisplayLink(
+    formSectionId: number
+  ): Promise<any[]> {
     const sections = await this.knex(db.Tables.FORM_SECTIONS)
       .select(
         db.FormSections.FORM_SECTION_ID,
@@ -259,3 +265,4 @@ export class FormSectionsRepo {
 
     return sections
   }
+}
