@@ -6,7 +6,9 @@ import {
   SForm,
   SFormFilter,
   SFormToValidate,
-  UpdateSForm
+  UpdateSForm,
+  CopySForm,
+  SFormType
 } from './types'
 import * as db from '../constants/db-schema.enum'
 import { Paginator } from 'src/shared/types/types'
@@ -102,5 +104,219 @@ export class SFormsRepo {
       .first()) as SForm
 
     return formConsult
+  }
+
+  async copySForm(copyData: CopySForm, sourceFormType: SFormType) {
+    return this.knex.transaction(async (trx) => {
+      // 1. Criar o novo formulário
+      const newForm = {
+        [db.SForms.PROCESS_ID]: copyData.targetProcessId,
+        [db.SForms.S_FORM_NAME]: copyData.newSFormName,
+        [db.SForms.S_FORM_TYPE]: sourceFormType
+      }
+
+      const [newSFormId] = await trx(db.Tables.S_FORMS).insert(newForm)
+
+      // 2. Buscar e copiar seções
+      const sections = await trx(db.Tables.FORM_SECTIONS)
+        .select('*')
+        .where(db.FormSections.S_FORM_ID, copyData.sourceSFormId)
+        .orderBy(db.FormSections.FORM_SECTION_ORDER, 'asc')
+
+      const sectionsMapping = new Map<number, number>()
+
+      // Primeiro passo: copiar seções sem as referências (para ter os IDs)
+      for (const section of sections) {
+        const newSection = {
+          [db.FormSections.S_FORM_ID]: newSFormId,
+          [db.FormSections.FORM_SECTION_NAME]: section[db.FormSections.FORM_SECTION_NAME],
+          [db.FormSections.FORM_SECTION_ORDER]: section[db.FormSections.FORM_SECTION_ORDER],
+          [db.FormSections.FORM_SECTION_DISPLAY_RULE]: section[db.FormSections.FORM_SECTION_DISPLAY_RULE],
+          [db.FormSections.FORM_SECTION_DISPLAY_LINK]: null, // Será atualizado depois
+          [db.FormSections.QUESTION_DISPLAY_LINK]: null, // Será atualizado depois
+          [db.FormSections.ANSWER_DISPLEY_RULE]: section[db.FormSections.ANSWER_DISPLEY_RULE],
+          [db.FormSections.ANSWER_DISPLAY_VALUE]: section[db.FormSections.ANSWER_DISPLAY_VALUE]
+        }
+
+        const [newSectionId] = await trx(db.Tables.FORM_SECTIONS).insert(newSection)
+        sectionsMapping.set(section[db.FormSections.FORM_SECTION_ID], newSectionId)
+      }
+
+      // 3. Buscar e copiar questões
+      const questionsMapping = new Map<number, number>()
+
+      for (const [oldSectionId, newSectionId] of sectionsMapping.entries()) {
+        const questions = await trx(db.Tables.QUESTIONS)
+          .select('*')
+          .where(db.Questions.FORM_SECTION_ID, oldSectionId)
+          .orderBy(db.Questions.QUESTION_ORDER, 'asc')
+
+        for (const question of questions) {
+          const newQuestion = {
+            [db.Questions.FORM_SECTION_ID]: newSectionId,
+            [db.Questions.QUESTION_AREA_ID]: question[db.Questions.QUESTION_AREA_ID],
+            [db.Questions.QUESTION_ORDER]: question[db.Questions.QUESTION_ORDER],
+            [db.Questions.QUESTION_TYPE]: question[db.Questions.QUESTION_TYPE],
+            [db.Questions.QUESTION_STATEMENT]: question[db.Questions.QUESTION_STATEMENT],
+            [db.Questions.QUESTION_DESCRIPTION]: question[db.Questions.QUESTION_DESCRIPTION],
+            [db.Questions.QUESTION_DISPLAY_RULE]: question[db.Questions.QUESTION_DISPLAY_RULE],
+            [db.Questions.FORM_SECTION_DISPLAY_LINK]: null, // Será atualizado depois
+            [db.Questions.QUESTION_DISPLAY_LINK]: null, // Será atualizado depois
+            [db.Questions.ANSWER_DISPLEY_RULE]: question[db.Questions.ANSWER_DISPLEY_RULE],
+            [db.Questions.ANSWER_DISPLAY_VALUE]: question[db.Questions.ANSWER_DISPLAY_VALUE]
+          }
+
+          const [newQuestionId] = await trx(db.Tables.QUESTIONS).insert(newQuestion)
+          questionsMapping.set(question[db.Questions.QUESTION_ID], newQuestionId)
+
+          // Copiar opções das questões
+          const questionOptions = await trx(db.Tables.QUESTION_OPTIONS)
+            .select('*')
+            .where(db.QuestionOptions.QUESTION_ID, question[db.Questions.QUESTION_ID])
+
+          for (const option of questionOptions) {
+            const newOption = {
+              [db.QuestionOptions.QUESTION_ID]: newQuestionId,
+              [db.QuestionOptions.QUESTION_OPTION_TYPE]: option[db.QuestionOptions.QUESTION_OPTION_TYPE],
+              [db.QuestionOptions.QUESTION_OPTION_VALUE]: option[db.QuestionOptions.QUESTION_OPTION_VALUE]
+            }
+            await trx(db.Tables.QUESTION_OPTIONS).insert(newOption)
+          }
+
+          // Copiar validações das questões
+          const validations = await trx(db.Tables.VALIDATIONS)
+            .select('*')
+            .where(db.Validations.QUESTION_ID, question[db.Questions.QUESTION_ID])
+
+          for (const validation of validations) {
+            const newValidation = {
+              [db.Validations.QUESTION_ID]: newQuestionId,
+              [db.Validations.VALIDATION_TYPE]: validation[db.Validations.VALIDATION_TYPE],
+              [db.Validations.VALUE_ONE]: validation[db.Validations.VALUE_ONE],
+              [db.Validations.VALUE_TWO]: validation[db.Validations.VALUE_TWO],
+              [db.Validations.VALUE_THREE]: validation[db.Validations.VALUE_THREE],
+              [db.Validations.VALUE_FOUR]: validation[db.Validations.VALUE_FOUR]
+            }
+            await trx(db.Tables.VALIDATIONS).insert(newValidation)
+          }
+
+          // Copiar subquestões
+          const subQuestionsMapping = new Map<number, number>()
+          const subQuestions = await trx(db.Tables.SUB_QUESTIONS)
+            .select('*')
+            .where(db.SubQuestions.QUESTION_ID, question[db.Questions.QUESTION_ID])
+
+          for (const subQuestion of subQuestions) {
+            const newSubQuestion = {
+              [db.SubQuestions.QUESTION_ID]: newQuestionId,
+              [db.SubQuestions.SUB_QUESTION_POSITION]: subQuestion[db.SubQuestions.SUB_QUESTION_POSITION],
+              [db.SubQuestions.SUB_QUESTION_TYPE]: subQuestion[db.SubQuestions.SUB_QUESTION_TYPE],
+              [db.SubQuestions.SUB_QUESTION_STATEMENT]: subQuestion[db.SubQuestions.SUB_QUESTION_STATEMENT]
+            }
+
+            const [newSubQuestionId] = await trx(db.Tables.SUB_QUESTIONS).insert(newSubQuestion)
+            subQuestionsMapping.set(subQuestion[db.SubQuestions.SUB_QUESTION_ID], newSubQuestionId)
+
+            // Copiar opções das subquestões
+            const subOptions = await trx(db.Tables.SUB_QUESTION_OPTIONS)
+              .select('*')
+              .where(db.SubQuestionOptions.QUESTION_ID, subQuestion[db.SubQuestions.SUB_QUESTION_ID])
+
+            for (const subOption of subOptions) {
+              const newSubOption = {
+                [db.SubQuestionOptions.QUESTION_ID]: newSubQuestionId,
+                [db.SubQuestionOptions.QUESTION_OPTION_TYPE]: subOption[db.SubQuestionOptions.QUESTION_OPTION_TYPE],
+                [db.SubQuestionOptions.QUESTION_OPTION_VALUE]: subOption[db.SubQuestionOptions.QUESTION_OPTION_VALUE]
+              }
+              await trx(db.Tables.SUB_QUESTION_OPTIONS).insert(newSubOption)
+            }
+
+            // Copiar validações das subquestões
+            const subValidations = await trx(db.Tables.SUB_VALIDATIONS)
+              .select('*')
+              .where(db.SubValidations.QUESTION_ID, subQuestion[db.SubQuestions.SUB_QUESTION_ID])
+
+            for (const subValidation of subValidations) {
+              const newSubValidation = {
+                [db.SubValidations.QUESTION_ID]: newSubQuestionId,
+                [db.SubValidations.VALIDATION_TYPE]: subValidation[db.SubValidations.VALIDATION_TYPE],
+                [db.SubValidations.VALUE_ONE]: subValidation[db.SubValidations.VALUE_ONE],
+                [db.SubValidations.VALUE_TWO]: subValidation[db.SubValidations.VALUE_TWO],
+                [db.SubValidations.VALUE_THREE]: subValidation[db.SubValidations.VALUE_THREE],
+                [db.SubValidations.VALUE_FOUR]: subValidation[db.SubValidations.VALUE_FOUR]
+              }
+              await trx(db.Tables.SUB_VALIDATIONS).insert(newSubValidation)
+            }
+          }
+        }
+      }
+
+      // 4. Atualizar referências nas seções
+      for (const section of sections) {
+        const newSectionId = sectionsMapping.get(section[db.FormSections.FORM_SECTION_ID])
+        
+        const updates: any = {}
+        
+        // Mapear formSectionDisplayLink
+        if (section[db.FormSections.FORM_SECTION_DISPLAY_LINK]) {
+          const newRefSectionId = sectionsMapping.get(section[db.FormSections.FORM_SECTION_DISPLAY_LINK])
+          if (newRefSectionId) {
+            updates[db.FormSections.FORM_SECTION_DISPLAY_LINK] = newRefSectionId
+          }
+        }
+
+        // Mapear questionDisplayLink
+        if (section[db.FormSections.QUESTION_DISPLAY_LINK]) {
+          const newRefQuestionId = questionsMapping.get(section[db.FormSections.QUESTION_DISPLAY_LINK])
+          if (newRefQuestionId) {
+            updates[db.FormSections.QUESTION_DISPLAY_LINK] = newRefQuestionId
+          }
+        }
+
+        if (Object.keys(updates).length > 0) {
+          await trx(db.Tables.FORM_SECTIONS)
+            .where(db.FormSections.FORM_SECTION_ID, newSectionId)
+            .update(updates)
+        }
+      }
+
+      // 5. Atualizar referências nas questões
+      for (const [oldQuestionId, newQuestionId] of questionsMapping.entries()) {
+        const originalQuestion = await trx(db.Tables.QUESTIONS)
+          .select('*')
+          .where(db.Questions.QUESTION_ID, oldQuestionId)
+          .first()
+
+        const updates: any = {}
+
+        // Mapear formSectionDisplayLink
+        if (originalQuestion[db.Questions.FORM_SECTION_DISPLAY_LINK]) {
+          const newRefSectionId = sectionsMapping.get(originalQuestion[db.Questions.FORM_SECTION_DISPLAY_LINK])
+          if (newRefSectionId) {
+            updates[db.Questions.FORM_SECTION_DISPLAY_LINK] = newRefSectionId
+          }
+        }
+
+        // Mapear questionDisplayLink
+        if (originalQuestion[db.Questions.QUESTION_DISPLAY_LINK]) {
+          const newRefQuestionId = questionsMapping.get(originalQuestion[db.Questions.QUESTION_DISPLAY_LINK])
+          if (newRefQuestionId) {
+            updates[db.Questions.QUESTION_DISPLAY_LINK] = newRefQuestionId
+          }
+        }
+
+        if (Object.keys(updates).length > 0) {
+          await trx(db.Tables.QUESTIONS)
+            .where(db.Questions.QUESTION_ID, newQuestionId)
+            .update(updates)
+        }
+      }
+
+      return {
+        newSFormId,
+        sectionsMapping: Object.fromEntries(sectionsMapping),
+        questionsMapping: Object.fromEntries(questionsMapping)
+      }
+    })
   }
 }
