@@ -12,6 +12,7 @@ import {
 import { SFormsService } from './s-forms.service'
 import { CreateSFormDto } from './dto/create-s-form.dto'
 import { UpdateSFormDto } from './dto/update-s-form.dto'
+import { CopySFormDto } from './dto/copy-s-form.dto'
 import { Roles } from 'src/users/decorators/roles.decorator'
 import { ERoles } from 'src/constants/roles.const'
 import { Paginator } from 'src/shared/types/types'
@@ -74,5 +75,11 @@ export class SFormsController {
   @Delete(':sFormId')
   async remove(@Param('sFormId', ParseIntPipe) sFormId: number) {
     return await this.sFormsService.deleteSForm(sFormId)
+  }
+
+  @Roles(ERoles.ADMIN)
+  @Post('copy')
+  async copy(@Body() copySFormDto: CopySFormDto) {
+    return await this.sFormsService.copySForm(copySFormDto)
   }
 }
