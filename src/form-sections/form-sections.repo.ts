@@ -142,7 +142,9 @@ export class FormSectionsRepo {
             })
           currentQuestionOrder++
         }
-      }</old_str></old_str>
+      }
+    })
+  }</old_str></old_str>
             [db.FormSections.FORM_SECTION_ORDER]: section.formSectionOrder
           })
       }
