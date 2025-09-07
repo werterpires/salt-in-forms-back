@@ -27,8 +27,8 @@ export interface UpdateFormSection {
   formSectionId: number
   formSectionName: string
   formSectionDisplayRule: number
-  formSectionDisplayLink?: number
-  questionDisplayLink?: number
-  answerDisplayRule?: number
-  answerDisplayValue?: string
+  formSectionDisplayLink?: number | null
+  questionDisplayLink?: number | null
+  answerDisplayRule?: number | null
+  answerDisplayValue?: string | null
 }

@@ -173,6 +173,8 @@ export class QuestionsRepo {
   }
 
   async updateQuestion(updateQuestionData: UpdateQuestion): Promise<void> {
+    const processedData =
+      this.processQuestionDisplayRuleUpdate(updateQuestionData)
     await this.knex(db.Tables.QUESTIONS)
       .where(db.Questions.QUESTION_ID, updateQuestionData.questionId)
       .update({
@@ -240,7 +242,9 @@ export class QuestionsRepo {
         .select(db.SubQuestions.SUB_QUESTION_ID)
 
       if (subQuestions.length > 0) {
-        const subQuestionIds = subQuestions.map(sq => sq[db.SubQuestions.SUB_QUESTION_ID])
+        const subQuestionIds = subQuestions.map(
+          (sq) => sq[db.SubQuestions.SUB_QUESTION_ID]
+        )
 
         // 2. Deletar sub validações das subquestões
         await trx(db.Tables.SUB_VALIDATIONS)
@@ -691,7 +695,9 @@ export class QuestionsRepo {
     return options
   }
 
-  async findQuestionsUsingQuestionDisplayLink(questionId: number): Promise<any[]> {
+  async findQuestionsUsingQuestionDisplayLink(
+    questionId: number
+  ): Promise<any[]> {
     const questions = await this.knex(db.Tables.QUESTIONS)
       .select(
         db.Questions.QUESTION_ID,
@@ -703,7 +709,9 @@ export class QuestionsRepo {
     return questions
   }
 
-  async findSectionsUsingQuestionDisplayLink(questionId: number): Promise<any[]> {
+  async findSectionsUsingQuestionDisplayLink(
+    questionId: number
+  ): Promise<any[]> {
     const sections = await this.knex(db.Tables.FORM_SECTIONS)
       .select(
         db.FormSections.FORM_SECTION_ID,
@@ -728,13 +736,5 @@ export class QuestionsRepo {
       }
     }
     return updateData
-  }
-
-  async updateQuestion(questionId: number, updateData: any): Promise<void> {
-    const processedData = this.processQuestionDisplayRuleUpdate(updateData)
-    
-    await this.knex(db.Tables.QUESTIONS)
-      .where(db.Questions.QUESTION_ID, questionId)
-      .update(processedData)
   }
 }
