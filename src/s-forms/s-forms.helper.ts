@@ -101,6 +101,10 @@ export function validateCopyDto(
     throw new BadRequestException('#O nome do novo formulário é obrigatório.')
   }
 
+  //validar se não há uma restrição quanto ao tipo de formulário a ser copiado
+  // Exemplo: se o formulário de origem é do tipo 'ministerial', não pode haver outro 'ministerial' no processo de destino
+  // Para isso, precisamos saber o tipo do formulário de origem, que deve ser passado no DTO
+
   // Por enquanto, não validamos duplicação de nome pois SFormToValidate não tem sFormName
   // Esta validação pode ser adicionada se necessário
 }
