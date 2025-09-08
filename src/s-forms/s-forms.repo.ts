@@ -154,6 +154,7 @@ export class SFormsRepo {
 
       // 3. Buscar e copiar questões
       const questionsMapping = new Map<number, number>()
+      const questionOptionsMapping = new Map<number, number>()
 
       for (const [oldSectionId, newSectionId] of sectionsMapping.entries()) {
         const questions = await trx(db.Tables.QUESTIONS)
@@ -179,8 +180,7 @@ export class SFormsRepo {
             [db.Questions.QUESTION_DISPLAY_LINK]: null, // Será atualizado depois
             [db.Questions.ANSWER_DISPLEY_RULE]:
               question[db.Questions.ANSWER_DISPLEY_RULE],
-            [db.Questions.ANSWER_DISPLAY_VALUE]:
-              question[db.Questions.ANSWER_DISPLAY_VALUE] // Também deveria ser atualizado depois
+            [db.Questions.ANSWER_DISPLAY_VALUE]: null // Será atualizado depois
           }
 
           const [newQuestionId] = await trx(db.Tables.QUESTIONS).insert(
@@ -207,7 +207,11 @@ export class SFormsRepo {
               [db.QuestionOptions.QUESTION_OPTION_VALUE]:
                 option[db.QuestionOptions.QUESTION_OPTION_VALUE]
             }
-            await trx(db.Tables.QUESTION_OPTIONS).insert(newOption)
+            const [newOptionId] = await trx(db.Tables.QUESTION_OPTIONS).insert(newOption)
+            questionOptionsMapping.set(
+              option[db.QuestionOptions.QUESTION_OPTION_ID],
+              newOptionId
+            )
           }
 
           // Copiar validações das questões
@@ -307,6 +311,18 @@ export class SFormsRepo {
         }
       }
 
+      // Helper function to remap ANSWER_DISPLAY_VALUE
+      const remapAnswerDisplayValue = (answerDisplayValue: string | null): string | null => {
+        if (!answerDisplayValue) return null
+        
+        const optionIds = answerDisplayValue.split('||')
+        const newOptionIds = optionIds
+          .map(id => questionOptionsMapping.get(parseInt(id)))
+          .filter(id => id !== undefined)
+        
+        return newOptionIds.length > 0 ? newOptionIds.join('||') : null
+      }
+
       // 4. Atualizar referências nas seções
       for (const section of sections) {
         const newSectionId = sectionsMapping.get(
@@ -332,6 +348,16 @@ export class SFormsRepo {
           )
           if (newRefQuestionId) {
             updates[db.FormSections.QUESTION_DISPLAY_LINK] = newRefQuestionId
+          }
+        }
+
+        // Mapear answerDisplayValue
+        if (section[db.FormSections.ANSWER_DISPLAY_VALUE]) {
+          const newAnswerDisplayValue = remapAnswerDisplayValue(
+            section[db.FormSections.ANSWER_DISPLAY_VALUE] as string
+          )
+          if (newAnswerDisplayValue) {
+            updates[db.FormSections.ANSWER_DISPLAY_VALUE] = newAnswerDisplayValue
           }
         }
 
@@ -371,6 +397,16 @@ export class SFormsRepo {
           }
         }
 
+        // Mapear answerDisplayValue
+        if (originalQuestion[db.Questions.ANSWER_DISPLAY_VALUE]) {
+          const newAnswerDisplayValue = remapAnswerDisplayValue(
+            originalQuestion[db.Questions.ANSWER_DISPLAY_VALUE] as string
+          )
+          if (newAnswerDisplayValue) {
+            updates[db.Questions.ANSWER_DISPLAY_VALUE] = newAnswerDisplayValue
+          }
+        }
+
         if (Object.keys(updates).length > 0) {
           await trx(db.Tables.QUESTIONS)
             .where(db.Questions.QUESTION_ID, newQuestionId)
@@ -381,7 +417,8 @@ export class SFormsRepo {
       return {
         newSFormId,
         sectionsMapping: Object.fromEntries(sectionsMapping),
-        questionsMapping: Object.fromEntries(questionsMapping)
+        questionsMapping: Object.fromEntries(questionsMapping),
+        questionOptionsMapping: Object.fromEntries(questionOptionsMapping)
       }
     })
   }
