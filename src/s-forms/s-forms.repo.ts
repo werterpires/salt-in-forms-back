@@ -14,6 +14,7 @@ import * as db from '../constants/db-schema.enum'
 import { Paginator } from 'src/shared/types/types'
 import { applyFilters } from './s-forms.helper'
 
+
 @Injectable()
 export class SFormsRepo {
   elementsPerPage = 20
@@ -207,7 +208,9 @@ export class SFormsRepo {
               [db.QuestionOptions.QUESTION_OPTION_VALUE]:
                 option[db.QuestionOptions.QUESTION_OPTION_VALUE]
             }
-            const [newOptionId] = await trx(db.Tables.QUESTION_OPTIONS).insert(newOption)
+            const [newOptionId] = await trx(db.Tables.QUESTION_OPTIONS).insert(
+              newOption
+            )
             questionOptionsMapping.set(
               option[db.QuestionOptions.QUESTION_OPTION_ID],
               newOptionId
@@ -312,14 +315,16 @@ export class SFormsRepo {
       }
 
       // Helper function to remap ANSWER_DISPLAY_VALUE
-      const remapAnswerDisplayValue = (answerDisplayValue: string | null): string | null => {
+      const remapAnswerDisplayValue = (
+        answerDisplayValue: string | null
+      ): string | null => {
         if (!answerDisplayValue) return null
-        
+
         const optionIds = answerDisplayValue.split('||')
         const newOptionIds = optionIds
-          .map(id => questionOptionsMapping.get(parseInt(id)))
-          .filter(id => id !== undefined)
-        
+          .map((id) => questionOptionsMapping.get(parseInt(id)))
+          .filter((id) => id !== undefined)
+
         return newOptionIds.length > 0 ? newOptionIds.join('||') : null
       }
 
@@ -357,7 +362,8 @@ export class SFormsRepo {
             section[db.FormSections.ANSWER_DISPLAY_VALUE] as string
           )
           if (newAnswerDisplayValue) {
-            updates[db.FormSections.ANSWER_DISPLAY_VALUE] = newAnswerDisplayValue
+            updates[db.FormSections.ANSWER_DISPLAY_VALUE] =
+              newAnswerDisplayValue
           }
         }
 
