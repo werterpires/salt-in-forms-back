@@ -93,7 +93,8 @@ function isValidFormType(value: string): value is SFormType {
 
 export function validateCopyDto(
   copySFormDto: CopySFormDto,
-  targetProcessForms: SFormToValidate[]
+  targetProcessForms: SFormToValidate[],
+  sourceFormType: SFormType
 ) {
   const { newSFormName } = copySFormDto
 
@@ -101,12 +102,22 @@ export function validateCopyDto(
     throw new BadRequestException('#O nome do novo formulário é obrigatório.')
   }
 
-  //validar se não há uma restrição quanto ao tipo de formulário a ser copiado
-  // Exemplo: se o formulário de origem é do tipo 'ministerial', não pode haver outro 'ministerial' no processo de destino
-  // Para isso, precisamos saber o tipo do formulário de origem, que deve ser passado no DTO
+  // Validar se não há uma restrição quanto ao tipo de formulário a ser copiado
+  if (sourceFormType === 'ministerial') {
+    if (targetProcessForms.some((form) => form.sFormType === 'ministerial')) {
+      throw new BadRequestException(
+        '#O processo de destino já possui um formulário do tipo ministerial.'
+      )
+    }
+  }
 
-  // Por enquanto, não validamos duplicação de nome pois SFormToValidate não tem sFormName
-  // Esta validação pode ser adicionada se necessário
+  if (sourceFormType === 'candidate') {
+    if (targetProcessForms.some((form) => form.sFormType === 'candidate')) {
+      throw new BadRequestException(
+        '#O processo de destino já possui um formulário do tipo candidato.'
+      )
+    }
+  }
 }
 
 export function processCopyDto(copySFormDto: CopySFormDto): CopySForm {

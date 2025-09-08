@@ -94,7 +94,7 @@ export class SFormsService {
       copySFormDto.targetProcessId
     )
 
-    validateCopyDto(copySFormDto, targetProcessForms)
+    validateCopyDto(copySFormDto, targetProcessForms, sourceForm.sFormType)
 
     const copyData = processCopyDto(copySFormDto)
 
