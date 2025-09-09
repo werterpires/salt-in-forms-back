@@ -9,7 +9,7 @@ import {
 } from './processes.helper'
 import { FindAllResponse, Paginator } from 'src/shared/types/types'
 import * as db from 'src/constants/db-schema.enum'
-import { Process, ProcessesFilter } from './types'
+import { Process, ProcessesFilter, ProcessSimple } from './types'
 
 @Injectable()
 export class ProcessesService {
@@ -46,7 +46,7 @@ export class ProcessesService {
     return this.processesRepo.updateProcess(updateProcessData)
   }
 
-  async findAllProcessesSimple() {
+  async findAllProcessesSimple(): Promise<ProcessSimple[]> {
     return await this.processesRepo.findAllProcessesSimple()
   }
 
