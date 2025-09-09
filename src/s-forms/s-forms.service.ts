@@ -5,7 +5,11 @@ import { CopySFormDto } from './dto/copy-s-form.dto'
 import { SFormsRepo } from './s-forms.repo'
 import * as db from 'src/constants/db-schema.enum'
 import { FindAllResponse, Paginator } from 'src/shared/types/types'
-import { validateCreateDto, validateUpdateDto, validateCopyDto, processCopyDto } from './s-forms.helper'
+import {
+  validateCreateDto,
+  validateUpdateDto,
+  processCopyDto
+} from './s-forms.helper'
 import {
   CreateSForm,
   SForm,
@@ -34,7 +38,6 @@ export class SFormsService {
     return await this.sFormsRepo.createSForm(sFormCreateData)
   }
 
-  
   async findAllformsByProcessId(
     processId: number,
     orderBy: Paginator<typeof db.SForms>,
@@ -63,7 +66,9 @@ export class SFormsService {
     return await this.sFormsRepo.findFormByFormId(sFormId)
   }
 
-  async findAllSFormsSimpleByProcessId(processId: number): Promise<SFormSimple[]> {
+  async findAllSFormsSimpleByProcessId(
+    processId: number
+  ): Promise<SFormSimple[]> {
     return await this.sFormsRepo.findAllSFormsSimpleByProcessId(processId)
   }
 
@@ -89,17 +94,16 @@ export class SFormsService {
 
   async copySForm(copySFormDto: CopySFormDto) {
     // Verificar se o formulário de origem existe
-    const sourceForm = await this.sFormsRepo.findFormByFormId(copySFormDto.sourceSFormId)
+    const sourceForm = await this.sFormsRepo.findFormByFormId(
+      copySFormDto.sourceSFormId
+    )
     if (!sourceForm) {
       throw new Error('#Formulário de origem não encontrado.')
     }
 
-    // Validar o processo de destino
-    const targetProcessForms = await this.sFormsRepo.findAllFormTypesByProcessId(
-      copySFormDto.targetProcessId
+    const targetForm = await this.sFormsRepo.findAllFormTypesByProcessId(
+      copySFormDto.targetFormId
     )
-
-    validateCopyDto(copySFormDto, targetProcessForms, sourceForm.sFormType)
 
     const copyData = processCopyDto(copySFormDto)
 

@@ -91,39 +91,9 @@ function isValidFormType(value: string): value is SFormType {
   return sFormTypesArray.includes(value as SFormType)
 }
 
-export function validateCopyDto(
-  copySFormDto: CopySFormDto,
-  targetProcessForms: SFormToValidate[],
-  sourceFormType: SFormType
-) {
-  const { newSFormName } = copySFormDto
-
-  if (!newSFormName || newSFormName.trim().length === 0) {
-    throw new BadRequestException('#O nome do novo formulário é obrigatório.')
-  }
-
-  // Validar se não há uma restrição quanto ao tipo de formulário a ser copiado
-  if (sourceFormType === 'ministerial') {
-    if (targetProcessForms.some((form) => form.sFormType === 'ministerial')) {
-      throw new BadRequestException(
-        '#O processo de destino já possui um formulário do tipo ministerial.'
-      )
-    }
-  }
-
-  if (sourceFormType === 'candidate') {
-    if (targetProcessForms.some((form) => form.sFormType === 'candidate')) {
-      throw new BadRequestException(
-        '#O processo de destino já possui um formulário do tipo candidato.'
-      )
-    }
-  }
-}
-
 export function processCopyDto(copySFormDto: CopySFormDto): CopySForm {
   return {
     sourceSFormId: copySFormDto.sourceSFormId,
-    targetProcessId: copySFormDto.targetProcessId,
-    newSFormName: copySFormDto.newSFormName.trim()
+    targetFormId: copySFormDto.targetFormId
   }
 }

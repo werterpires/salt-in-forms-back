@@ -15,7 +15,6 @@ import * as db from '../constants/db-schema.enum'
 import { Paginator } from 'src/shared/types/types'
 import { applyFilters } from './s-forms.helper'
 
-
 @Injectable()
 export class SFormsRepo {
   elementsPerPage = 20
@@ -108,7 +107,9 @@ export class SFormsRepo {
     return formConsult
   }
 
-  async findAllSFormsSimpleByProcessId(processId: number): Promise<SFormSimple[]> {
+  async findAllSFormsSimpleByProcessId(
+    processId: number
+  ): Promise<SFormSimple[]> {
     return this.knex(db.Tables.S_FORMS)
       .select(db.SForms.S_FORM_ID, db.SForms.S_FORM_NAME)
       .where(db.SForms.PROCESS_ID, processId)
@@ -117,15 +118,6 @@ export class SFormsRepo {
 
   async copySForm(copyData: CopySForm, sourceFormType: SFormType) {
     return this.knex.transaction(async (trx) => {
-      // 1. Criar o novo formulário
-      const newForm = {
-        [db.SForms.PROCESS_ID]: copyData.targetProcessId,
-        [db.SForms.S_FORM_NAME]: copyData.newSFormName,
-        [db.SForms.S_FORM_TYPE]: sourceFormType
-      }
-
-      const [newSFormId] = await trx(db.Tables.S_FORMS).insert(newForm)
-
       // 2. Buscar e copiar seções
       const sections = await trx(db.Tables.FORM_SECTIONS)
         .select('*')
@@ -137,7 +129,7 @@ export class SFormsRepo {
       // Primeiro passo: copiar seções sem as referências (para ter os IDs)
       for (const section of sections) {
         const newSection = {
-          [db.FormSections.S_FORM_ID]: newSFormId,
+          [db.FormSections.S_FORM_ID]: copyData.targetFormId,
           [db.FormSections.FORM_SECTION_NAME]:
             section[db.FormSections.FORM_SECTION_NAME],
           [db.FormSections.FORM_SECTION_ORDER]:
@@ -426,13 +418,6 @@ export class SFormsRepo {
             .where(db.Questions.QUESTION_ID, newQuestionId)
             .update(updates)
         }
-      }
-
-      return {
-        newSFormId,
-        sectionsMapping: Object.fromEntries(sectionsMapping),
-        questionsMapping: Object.fromEntries(questionsMapping),
-        questionOptionsMapping: Object.fromEntries(questionOptionsMapping)
       }
     })
   }

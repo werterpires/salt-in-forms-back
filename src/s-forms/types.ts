@@ -36,8 +36,7 @@ export interface SFormToValidate {
 
 export interface CopySForm {
   sourceSFormId: number
-  targetProcessId: number
-  newSFormName: string
+  targetFormId: number
 }
 
 export interface FormCopyResult {
