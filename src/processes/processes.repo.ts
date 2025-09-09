@@ -67,6 +67,12 @@ export class ProcessesRepo {
       .where(db.Processes.PROCESS_ID, processId)
   }
 
+  async findAllProcessesSimple() {
+    return this.knex(db.Tables.PROCESSES)
+      .select(db.Processes.PROCESS_ID, db.Processes.PROCESS_TITLE)
+      .orderBy(db.Processes.PROCESS_TITLE, 'asc')
+  }
+
   async findProcessQuantity(filters?: ProcessesFilter) {
     const query = this.knex(db.Tables.PROCESSES)
 

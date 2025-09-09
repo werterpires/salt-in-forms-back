@@ -59,6 +59,12 @@ export class ProcessesController {
   }
 
   @Roles(ERoles.ADMIN)
+  @Get('all')
+  async findAllProcessesSimple() {
+    return await this.processesService.findAllProcessesSimple()
+  }
+
+  @Roles(ERoles.ADMIN)
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return await this.processesService.deleteProcess(+id)

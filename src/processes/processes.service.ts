@@ -46,6 +46,10 @@ export class ProcessesService {
     return this.processesRepo.updateProcess(updateProcessData)
   }
 
+  async findAllProcessesSimple() {
+    return await this.processesRepo.findAllProcessesSimple()
+  }
+
   async deleteProcess(processId: number) {
     return this.processesRepo.deleteProcess(processId)
   }
