@@ -11,7 +11,8 @@ import {
   SForm,
   SFormFilter,
   SFormType,
-  UpdateSForm
+  UpdateSForm,
+  SFormSimple
 } from './types'
 
 @Injectable()
@@ -60,6 +61,10 @@ export class SFormsService {
 
   async findSFormById(sFormId: number) {
     return await this.sFormsRepo.findFormByFormId(sFormId)
+  }
+
+  async findAllSFormsSimpleByProcessId(processId: number): Promise<SFormSimple[]> {
+    return await this.sFormsRepo.findAllSFormsSimpleByProcessId(processId)
   }
 
   async updateSForm(updateSFormDto: UpdateSFormDto) {

@@ -1,3 +1,5 @@
+import * as db from '../constants/db-schema.enum'
+
 export interface CreateSForm {
   processId: number
   sFormName: string
@@ -43,4 +45,9 @@ export interface FormCopyResult {
   sectionsMapping: Map<number, number>
   questionsMapping: Map<number, number>
   subQuestionsMapping: Map<number, number>
+}
+
+export interface SFormSimple {
+  [db.SForms.S_FORM_ID]: number
+  [db.SForms.S_FORM_NAME]: string
 }

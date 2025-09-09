@@ -8,7 +8,8 @@ import {
   SFormToValidate,
   UpdateSForm,
   CopySForm,
-  SFormType
+  SFormType,
+  SFormSimple
 } from './types'
 import * as db from '../constants/db-schema.enum'
 import { Paginator } from 'src/shared/types/types'
@@ -105,6 +106,13 @@ export class SFormsRepo {
       .first()) as SForm
 
     return formConsult
+  }
+
+  async findAllSFormsSimpleByProcessId(processId: number): Promise<SFormSimple[]> {
+    return this.knex(db.Tables.S_FORMS)
+      .select(db.SForms.S_FORM_ID, db.SForms.S_FORM_NAME)
+      .where(db.SForms.PROCESS_ID, processId)
+      .orderBy(db.SForms.S_FORM_NAME, 'asc')
   }
 
   async copySForm(copyData: CopySForm, sourceFormType: SFormType) {
