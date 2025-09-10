@@ -25,6 +25,9 @@ export class CustomErrorHandlerService {
   handleErrors(error: Error, uniqueId: string): Error {
     if (error.message.startsWith('#')) {
       return error
+    } else if ('code' in error) {
+      const errCode = (error as any).code
+      return this.handleKnexError(errCode, uniqueId)
     } else if (error.message.includes(conectError)) {
       return new InternalServerErrorException(
         '#Erro de conexão com o banco de dados. Informe o seguinte ID para o time de suporte: ' +
@@ -55,6 +58,17 @@ export class CustomErrorHandlerService {
       return error
     } else {
       return new InternalServerErrorException(defaultError + uniqueId)
+    }
+  }
+
+  handleKnexError(code: string, uniqueId: string): Error {
+    switch (code) {
+      case 'ER_ROW_IS_REFERENCED_2':
+        return new BadRequestException(
+          '#Nãoé possível apagar este registro pois ele é referenciado em outro local.'
+        )
+      default:
+        return new InternalServerErrorException(defaultError + uniqueId)
     }
   }
 }

@@ -5,7 +5,7 @@ import { ValidationPipe } from '@nestjs/common'
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface'
 
 const corsOptions: CorsOptions = {
-  origin: 'http://localhost:4200'
+  origin: ['http://localhost:4200', 'http://31.97.162.197']
 }
 
 async function bootstrap() {
