@@ -18,3 +18,8 @@ export interface ProcessesFilter {
 }
 
 export type ProcessStatus = 'draft' | 'active' | 'completed'
+
+export interface ProcessSimple {
+  [db.Processes.PROCESS_ID]: number
+  [db.Processes.PROCESS_TITLE]: string
+}

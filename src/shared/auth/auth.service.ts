@@ -138,8 +138,6 @@ export class AuthService {
       throw new GoneException(CustomErrors.INVITE_CODE_EXPIRED)
     }
 
-    console.log('user', user)
-
     return user
   }
 }

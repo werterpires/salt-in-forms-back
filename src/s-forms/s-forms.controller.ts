@@ -12,6 +12,7 @@ import {
 import { SFormsService } from './s-forms.service'
 import { CreateSFormDto } from './dto/create-s-form.dto'
 import { UpdateSFormDto } from './dto/update-s-form.dto'
+import { CopySFormDto } from './dto/copy-s-form.dto'
 import { Roles } from 'src/users/decorators/roles.decorator'
 import { ERoles } from 'src/constants/roles.const'
 import { Paginator } from 'src/shared/types/types'
@@ -59,6 +60,12 @@ export class SFormsController {
   }
 
   @Roles(ERoles.ADMIN)
+  @Get('form/:sFormId')
+  async findOne(@Param('sFormId', ParseIntPipe) sFormId: number) {
+    return await this.sFormsService.findSFormById(sFormId)
+  }
+
+  @Roles(ERoles.ADMIN)
   @Put()
   async update(@Body() updateSFormDto: UpdateSFormDto) {
     return await this.sFormsService.updateSForm(updateSFormDto)
@@ -68,5 +75,17 @@ export class SFormsController {
   @Delete(':sFormId')
   async remove(@Param('sFormId', ParseIntPipe) sFormId: number) {
     return await this.sFormsService.deleteSForm(sFormId)
+  }
+
+  @Roles(ERoles.ADMIN)
+  @Get('simple/:processId')
+  async findAllSimple(@Param('processId', ParseIntPipe) processId: number) {
+    return await this.sFormsService.findAllSFormsSimpleByProcessId(processId)
+  }
+
+  @Roles(ERoles.ADMIN)
+  @Post('copy')
+  async copy(@Body() copySFormDto: CopySFormDto) {
+    return await this.sFormsService.copySForm(copySFormDto)
   }
 }

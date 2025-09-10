@@ -1,16 +1,22 @@
 import { Injectable } from '@nestjs/common'
 import { CreateSFormDto } from './dto/create-s-form.dto'
 import { UpdateSFormDto } from './dto/update-s-form.dto'
+import { CopySFormDto } from './dto/copy-s-form.dto'
 import { SFormsRepo } from './s-forms.repo'
 import * as db from 'src/constants/db-schema.enum'
 import { FindAllResponse, Paginator } from 'src/shared/types/types'
-import { validateCreateDto, validateUpdateDto } from './s-forms.helper'
+import {
+  validateCreateDto,
+  validateUpdateDto,
+  processCopyDto
+} from './s-forms.helper'
 import {
   CreateSForm,
   SForm,
   SFormFilter,
   SFormType,
-  UpdateSForm
+  UpdateSForm,
+  SFormSimple
 } from './types'
 
 @Injectable()
@@ -56,6 +62,16 @@ export class SFormsService {
     return response
   }
 
+  async findSFormById(sFormId: number) {
+    return await this.sFormsRepo.findFormByFormId(sFormId)
+  }
+
+  async findAllSFormsSimpleByProcessId(
+    processId: number
+  ): Promise<SFormSimple[]> {
+    return await this.sFormsRepo.findAllSFormsSimpleByProcessId(processId)
+  }
+
   async updateSForm(updateSFormDto: UpdateSFormDto) {
     const sForms = await this.sFormsRepo.findAllFormTypesByProcessId(
       updateSFormDto.sFormId
@@ -74,5 +90,23 @@ export class SFormsService {
 
   async deleteSForm(sFormId: number) {
     return await this.sFormsRepo.deleteSForm(sFormId)
+  }
+
+  async copySForm(copySFormDto: CopySFormDto) {
+    // Verificar se o formulário de origem existe
+    const sourceForm = await this.sFormsRepo.findFormByFormId(
+      copySFormDto.sourceSFormId
+    )
+    if (!sourceForm) {
+      throw new Error('#Formulário de origem não encontrado.')
+    }
+
+    const targetForm = await this.sFormsRepo.findAllFormTypesByProcessId(
+      copySFormDto.targetFormId
+    )
+
+    const copyData = processCopyDto(copySFormDto)
+
+    return await this.sFormsRepo.copySForm(copyData, sourceForm.sFormType)
   }
 }

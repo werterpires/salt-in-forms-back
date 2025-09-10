@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { FormSectionsRepo } from './form-sections.repo'
 import { CreateFormSectionDto } from './dto/create-form-section.dto'
 import { UpdateFormSectionDto } from './dto/update-form-section.dto'
-import { FormSectionsRepo } from './form-sections.repo'
-import { FormSectionsHelper } from './form-sections.helper'
+import { ReorderFormSectionsDto } from './dto/reorder-form-sections.dto'
 import { FormSection } from './types'
+import { FormSectionsHelper } from './form-sections.helper'
 
 @Injectable()
 export class FormSectionsService {
@@ -11,41 +12,39 @@ export class FormSectionsService {
 
   async findAllBySFormId(sFormId: number): Promise<FormSection[]> {
     const formSections = await this.formSectionsRepo.findAllBySFormId(sFormId)
-    return formSections
+    return FormSectionsHelper.sortFormSectionsByOrder(formSections)
   }
 
-  async create(
-    createFormSectionDto: CreateFormSectionDto
-  ): Promise<FormSection> {
-    const createFormSection =
-      FormSectionsHelper.mapCreateDtoToEntity(createFormSectionDto)
-    return this.formSectionsRepo.createFormSection(createFormSection)
-  }
-
-  async update(
-    updateFormSectionDto: UpdateFormSectionDto
-  ): Promise<FormSection> {
-    const existingFormSection = await this.formSectionsRepo.findById(
-      updateFormSectionDto.formSectionId
+  async create(createFormSectionDto: CreateFormSectionDto): Promise<void> {
+    const createFormSection = await FormSectionsHelper.processCreateFormSection(
+      createFormSectionDto,
+      this.formSectionsRepo
     )
+    return this.formSectionsRepo.createFormSectionWithReorder(createFormSection)
+  }
 
-    if (!existingFormSection) {
-      throw new NotFoundException('#Seção do formulário não encontrada')
-    }
-
-    const updateFormSection =
-      FormSectionsHelper.mapUpdateDtoToEntity(updateFormSectionDto)
+  async update(updateFormSectionDto: UpdateFormSectionDto): Promise<void> {
+    const updateFormSection = await FormSectionsHelper.processUpdateFormSection(
+      updateFormSectionDto,
+      this.formSectionsRepo
+    )
     return this.formSectionsRepo.updateFormSection(updateFormSection)
   }
 
   async remove(formSectionId: number): Promise<void> {
-    const existingFormSection =
-      await this.formSectionsRepo.findById(formSectionId)
+    // Validar se a seção pode ser excluída (verificar vínculos)
+    await FormSectionsHelper.validateSectionDeletion(formSectionId, this.formSectionsRepo)
+    
+    return this.formSectionsRepo.deleteFormSection(formSectionId)
+  }
 
-    if (!existingFormSection) {
-      throw new NotFoundException('#Seção do formulário não encontrada')
-    }
-
-    await this.formSectionsRepo.deleteFormSection(formSectionId)
+  async reorder(reorderFormSectionsDto: ReorderFormSectionsDto): Promise<void> {
+    await FormSectionsHelper.validateReorderData(
+      reorderFormSectionsDto.sections,
+      this.formSectionsRepo
+    )
+    return this.formSectionsRepo.reorderFormSections(
+      reorderFormSectionsDto.sections
+    )
   }
 }

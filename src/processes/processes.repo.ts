@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
-import { CreateProcess, ProcessesFilter, UpdateProcess } from './types'
+import { CreateProcess, ProcessesFilter, ProcessSimple, UpdateProcess } from './types'
 import * as db from '../constants/db-schema.enum'
 import { Paginator } from 'src/shared/types/types'
 import { applyFilters } from './processes.helper'
@@ -65,6 +65,12 @@ export class ProcessesRepo {
       .delete()
       .from(db.Tables.PROCESSES)
       .where(db.Processes.PROCESS_ID, processId)
+  }
+
+  async findAllProcessesSimple(): Promise<ProcessSimple[]> {
+    return this.knex(db.Tables.PROCESSES)
+      .select(db.Processes.PROCESS_ID, db.Processes.PROCESS_TITLE)
+      .orderBy(db.Processes.PROCESS_TITLE, 'asc')
   }
 
   async findProcessQuantity(filters?: ProcessesFilter) {

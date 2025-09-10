@@ -8,11 +8,11 @@ import {
 @Injectable()
 export class BoolenOrUndefinedPipe implements PipeTransform {
   transform(value: any, metadata: ArgumentMetadata) {
-    if (value === 'true') {
+    if (value === 'true' || value === true) {
       return true
     }
 
-    if (value === 'false') {
+    if (value === 'false' || value === false) {
       return false
     }
 
