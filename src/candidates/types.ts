@@ -1,4 +1,3 @@
-
 export interface Candidate {
   candidateId: number
   processId: number
@@ -16,8 +15,6 @@ export interface Candidate {
   candidateZipCode: string
   candidateCountry: string
   interviewUserId?: number
-  createdAt: Date
-  updatedAt: Date
 }
 
 export interface CreateCandidate {
@@ -35,5 +32,4 @@ export interface CreateCandidate {
   candidateState: string
   candidateZipCode: string
   candidateCountry: string
-  interviewUserId?: number
 }
