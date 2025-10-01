@@ -13,7 +13,8 @@ export enum Tables {
   VALIDATIONS = 'validations',
   SUB_QUESTIONS = 'subQuestions',
   SUB_QUESTION_OPTIONS = 'subQuestionOptions',
-  SUB_VALIDATIONS = 'subValidations'
+  SUB_VALIDATIONS = 'subValidations',
+  CANDIDATES = 'candidates'
 }
 
 export enum Users {
@@ -146,4 +147,23 @@ export enum SubValidations {
   VALUE_TWO = 'valueTwo',
   VALUE_THREE = 'valueThree',
   VALUE_FOUR = 'valueFour'
+}
+
+export enum Candidates {
+  CANDIDATE_ID = 'candidateId',
+  PROCESS_ID = 'processId',
+  CANDIDATE_NAME = 'candidateName',
+  CANDIDATE_UNIQUE_DOCUMENT = 'candidateUniqueDocument',
+  CANDIDATE_EMAIL = 'candidateEmail',
+  CANDIDATE_PHONE = 'candidatePhone',
+  CANDIDATE_BIRTHDATE = 'candidateBirthdate',
+  CANDIDATE_FOREIGNER = 'candidateForeigner',
+  CANDIDATE_ADDRESS = 'candidateAddress',
+  CANDIDATE_ADDRESS_NUMBER = 'candidateAddressNumber',
+  CANDIDATE_DISTRICT = 'candidateDistrict',
+  CANDIDATE_CITY = 'candidateCity',
+  CANDIDATE_STATE = 'candidateState',
+  CANDIDATE_ZIP_CODE = 'candidateZipCode',
+  CANDIDATE_COUNTRY = 'candidateCountry',
+  INTERVIEW_USER_ID = 'interviewUserId',
 }
