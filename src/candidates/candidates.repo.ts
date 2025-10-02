@@ -29,6 +29,20 @@ export class CandidatesRepo {
       .orderBy(db.Processes.PROCESS_TITLE, 'asc')
   }
 
+  async findExistingCandidatesByProcessAndDocument(
+    processId: number,
+    uniqueDocuments: string[]
+  ): Promise<string[]> {
+    const existingCandidates = await this.knex(db.Tables.CANDIDATES)
+      .select(db.Candidates.CANDIDATE_UNIQUE_DOCUMENT)
+      .where(db.Candidates.PROCESS_ID, processId)
+      .whereIn(db.Candidates.CANDIDATE_UNIQUE_DOCUMENT, uniqueDocuments)
+
+    return existingCandidates.map(
+      (candidate) => candidate[db.Candidates.CANDIDATE_UNIQUE_DOCUMENT]
+    )
+  }
+
   async insertCandidatesInBatch(candidates: CreateCandidate[]): Promise<void> {
     if (candidates.length === 0) {
       return

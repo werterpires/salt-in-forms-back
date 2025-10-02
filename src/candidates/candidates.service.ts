@@ -69,10 +69,55 @@ export class CandidatesService {
     // Inserir todos os candidatos de uma única vez em uma transação
     if (allCandidates.length > 0) {
       try {
-        await this.candidatesRepo.insertCandidatesInBatch(allCandidates)
-        console.log(
-          `\n=== Total de ${allCandidates.length} candidatos inseridos com sucesso ===`
-        )
+        // Agrupar candidatos por processo para verificar duplicatas
+        const candidatesByProcess = new Map<number, CreateCandidate[]>()
+        allCandidates.forEach((candidate) => {
+          if (!candidatesByProcess.has(candidate.processId)) {
+            candidatesByProcess.set(candidate.processId, [])
+          }
+          candidatesByProcess.get(candidate.processId)!.push(candidate)
+        })
+
+        const candidatesToInsert: CreateCandidate[] = []
+        let duplicatesCount = 0
+
+        // Verificar duplicatas para cada processo
+        for (const [processId, candidates] of candidatesByProcess) {
+          const uniqueDocuments = candidates.map(
+            (c) => c.candidateUniqueDocument
+          )
+          const existingDocuments =
+            await this.candidatesRepo.findExistingCandidatesByProcessAndDocument(
+              processId,
+              uniqueDocuments
+            )
+
+          // Filtrar apenas os candidatos que não existem
+          const newCandidates = candidates.filter(
+            (candidate) =>
+              !existingDocuments.includes(candidate.candidateUniqueDocument)
+          )
+
+          duplicatesCount += candidates.length - newCandidates.length
+          candidatesToInsert.push(...newCandidates)
+        }
+
+        if (candidatesToInsert.length > 0) {
+          await this.candidatesRepo.insertCandidatesInBatch(candidatesToInsert)
+          console.log(
+            `\n=== Total de ${candidatesToInsert.length} candidatos inseridos com sucesso ===`
+          )
+        }
+
+        if (duplicatesCount > 0) {
+          console.log(
+            `\n=== ${duplicatesCount} candidatos duplicados foram ignorados ===`
+          )
+        }
+
+        if (candidatesToInsert.length === 0 && duplicatesCount === 0) {
+          console.log('\n=== Nenhum candidato encontrado para inserir ===')
+        }
       } catch (error) {
         console.error('Erro ao inserir candidatos em batch:', error.message)
       }
