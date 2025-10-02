@@ -7,6 +7,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { KnexModule } from 'nest-knexjs'
 import { toSnakeCase } from './shared/utils'
 import camelcaseKeys from 'camelcase-keys'
+import { ScheduleModule } from '@nestjs/schedule'
 
 import { config } from 'dotenv'
 import { AuthModule } from './shared/auth/auth.module'
@@ -83,6 +84,7 @@ const knex = KnexModule.forRoot(
     UtilsModuleModule,
     throttler,
     knex,
+    ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
     TermsModule,

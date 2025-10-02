@@ -1,12 +1,12 @@
-import { Module } from '@nestjs/common';
-import { CandidatesService } from './candidates.service';
-import { CandidatesController } from './candidates.controller';
-import { CandidatesRepo } from './candidates.repo';
+import { Module } from '@nestjs/common'
+import { CandidatesService } from './candidates.service'
+import { CandidatesController } from './candidates.controller'
+import { CandidatesRepo } from './candidates.repo'
 
-const services = [CandidatesService, CandidatesRepo];
+const services = [CandidatesService, CandidatesRepo]
 
 @Module({
   controllers: [CandidatesController],
-  providers: services,
+  providers: services
 })
 export class CandidatesModule {}
