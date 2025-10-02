@@ -2,13 +2,15 @@ import { Injectable } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import { CandidatesRepo } from './candidates.repo'
 import { ExternalApiService } from '../shared/utils-module/external-api/external-api.service'
+import { EncryptionService } from '../shared/utils-module/encryption/encryption.service'
 import { CreateCandidate } from './types'
 
 @Injectable()
 export class CandidatesService {
   constructor(
     private readonly candidatesRepo: CandidatesRepo,
-    private readonly externalApiService: ExternalApiService
+    private readonly externalApiService: ExternalApiService,
+    private readonly encryptionService: EncryptionService
   ) {}
 
   @Cron('00 11 * * *')
@@ -84,24 +86,25 @@ export class CandidatesService {
 
         const candidate: CreateCandidate = {
           processId: processId,
-          candidateName: fieldMap['nome completo'] || fieldMap['nome'] || '',
+          candidateName: this.encryptionService.encrypt(fieldMap['nome completo'] || fieldMap['nome'] || ''),
           candidateUniqueDocument: isForeigner
             ? fieldMap['n° passaporte'] || fieldMap['passaporte'] || ''
             : fieldMap['cpf'] || '',
-          candidateEmail: fieldMap['e-mail'] || fieldMap['email'] || '',
-          candidatePhone: fieldMap['telefone'] || fieldMap['phone'] || '',
-          candidateBirthdate: this.formatDate(
+          candidateEmail: this.encryptionService.encrypt(fieldMap['e-mail'] || fieldMap['email'] || ''),
+          candidatePhone: this.encryptionService.encrypt(fieldMap['telefone'] || fieldMap['phone'] || ''),
+          candidateBirthdate: this.encryptionService.encrypt(this.formatDate(
             fieldMap['data de nascimento'] || fieldMap['nascimento'] || ''
-          ),
+          )),
           candidateForeigner: isForeigner,
-          candidateAddress: fieldMap['endereço'] || fieldMap['endereco'] || '',
-          candidateAddressNumber:
-            fieldMap['número'] || fieldMap['numero'] || '',
-          candidateDistrict: fieldMap['bairro'] || '',
-          candidateCity: fieldMap['cidade'] || '',
-          candidateState: fieldMap['estado'] || '',
-          candidateZipCode: fieldMap['cep'] || '',
-          candidateCountry: ''
+          candidateAddress: this.encryptionService.encrypt(fieldMap['endereço'] || fieldMap['endereco'] || ''),
+          candidateAddressNumber: this.encryptionService.encrypt(
+            fieldMap['número'] || fieldMap['numero'] || ''
+          ),
+          candidateDistrict: this.encryptionService.encrypt(fieldMap['bairro'] || ''),
+          candidateCity: this.encryptionService.encrypt(fieldMap['cidade'] || ''),
+          candidateState: this.encryptionService.encrypt(fieldMap['estado'] || ''),
+          candidateZipCode: this.encryptionService.encrypt(fieldMap['cep'] || ''),
+          candidateCountry: this.encryptionService.encrypt('')
         }
 
         candidates.push(candidate)
