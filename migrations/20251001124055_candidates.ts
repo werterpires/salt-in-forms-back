@@ -8,19 +8,19 @@ export async function up(knex: Knex): Promise<void> {
 
     return knex.schema.createTable(db.Tables.CANDIDATES, (table) => {
         table.increments(db.Candidates.CANDIDATE_ID).primary();
-        table.string(db.Candidates.CANDIDATE_NAME, 255).notNullable();
-        table.string(db.Candidates.CANDIDATE_UNIQUE_DOCUMENT, 255).notNullable();
-        table.string(db.Candidates.CANDIDATE_EMAIL, 255).notNullable();
-        table.string(db.Candidates.CANDIDATE_PHONE, 255).notNullable();
-        table.string(db.Candidates.CANDIDATE_BIRTHDATE, 255).notNullable();
+        table.text(db.Candidates.CANDIDATE_NAME).notNullable();
+        table.text(db.Candidates.CANDIDATE_UNIQUE_DOCUMENT).notNullable();
+        table.text(db.Candidates.CANDIDATE_EMAIL).notNullable();
+        table.text(db.Candidates.CANDIDATE_PHONE).notNullable();
+        table.text(db.Candidates.CANDIDATE_BIRTHDATE).notNullable();
         table.boolean(db.Candidates.CANDIDATE_FOREIGNER).notNullable();
-        table.string(db.Candidates.CANDIDATE_ADDRESS, 255).notNullable();
-        table.string(db.Candidates.CANDIDATE_ADDRESS_NUMBER, 255).notNullable();
-        table.string(db.Candidates.CANDIDATE_DISTRICT, 255).notNullable();
-        table.string(db.Candidates.CANDIDATE_CITY, 255).notNullable();
-        table.string(db.Candidates.CANDIDATE_STATE, 255).notNullable();
-        table.string(db.Candidates.CANDIDATE_ZIP_CODE, 255).notNullable();
-        table.string(db.Candidates.CANDIDATE_COUNTRY, 255).notNullable();
+        table.text(db.Candidates.CANDIDATE_ADDRESS).notNullable();
+        table.text(db.Candidates.CANDIDATE_ADDRESS_NUMBER).notNullable();
+        table.text(db.Candidates.CANDIDATE_DISTRICT).notNullable();
+        table.text(db.Candidates.CANDIDATE_CITY).notNullable();
+        table.text(db.Candidates.CANDIDATE_STATE).notNullable();
+        table.text(db.Candidates.CANDIDATE_ZIP_CODE).notNullable();
+        table.text(db.Candidates.CANDIDATE_COUNTRY).notNullable();
         table.integer(db.Candidates.PROCESS_ID).unsigned().notNullable()
             .references(db.Processes.PROCESS_ID)
             .inTable(db.Tables.PROCESSES)

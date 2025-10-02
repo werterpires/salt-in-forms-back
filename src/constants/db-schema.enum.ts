@@ -55,7 +55,9 @@ export enum Processes {
   PROCESS_TITLE = 'processTitle',
   PROCESS_TOTVS_ID = 'processTotvsId',
   PROCESS_BEGIN_DATE = 'processBeginDate',
-  PROCESS_END_DATE = 'processEndDate'
+  PROCESS_END_DATE = 'processEndDate',
+  PROCESS_END_ANSWERS = 'processEndAnswers',
+  PROCESS_END_SUBSCRIPTION = 'processEndSubscription',
 }
 
 export enum SForms {

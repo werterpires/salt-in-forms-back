@@ -11,17 +11,39 @@ export function validateDto(createProcessDto: CreateProcessDto) {
     throw new BadRequestException('#Data de início inválida.')
   }
 
-  if (createProcessDto.processEndDate) {
-    const endDate = new Date(createProcessDto.processEndDate)
-    if (isNaN(endDate.getTime())) {
-      throw new BadRequestException('#Data de fim inválida.')
-    }
 
-    if (endDate < beginDate) {
-      throw new BadRequestException(
-        '#Data de fim deve ser maior ou igual que a data de início.'
-      )
-    }
+  const endDate = new Date(createProcessDto.processEndDate)
+  if (isNaN(endDate.getTime())) {
+    throw new BadRequestException('#Data de fim inválida.')
+  }
+
+  const endDateAnswers = new Date(createProcessDto.processEndAnswers)
+
+  if (isNaN(endDateAnswers.getTime())) {
+    throw new BadRequestException('#Data de fim para respostas inválida.')
+  }
+  const endDateSubscription = new Date(createProcessDto.processEndSubscription)
+
+  if (isNaN(endDateSubscription.getTime())) {
+    throw new BadRequestException('#Data de fim para inscrições inválida.')
+  }
+
+  if(endDateSubscription < beginDate) {
+    throw new BadRequestException(
+      '#Data de fim para inscrições deve ser maior ou igual que a data de início.'
+    )
+  }
+
+  if(endDateAnswers < endDateSubscription) {
+    throw new BadRequestException(
+      '#Data de fim para respostas deve ser maior ou igual que a data de fim para inscrições.'
+    )
+  }
+
+  if (endDate < endDateAnswers) {
+    throw new BadRequestException(
+      '#Data de fim deve ser maior ou igual que a data de fim para respostas.'
+    )
   }
 }
 
@@ -29,14 +51,19 @@ export function makeProcessData(
   createProcessDto: CreateProcessDto
 ): CreateProcess {
   const beginDate = new Date(createProcessDto.processBeginDate)
-  const endDate = createProcessDto.processEndDate
-    ? new Date(createProcessDto.processEndDate)
-    : undefined
+  const endDate = new Date(createProcessDto.processEndDate)
+  const endDateAnswers = new Date(createProcessDto.processEndAnswers)
+  const endDateSubscription = new Date(createProcessDto.processEndSubscription)
+
+
+
   const processData = {
     [db.Processes.PROCESS_TITLE]: createProcessDto.processTitle,
     processTotvsId: createProcessDto.processTotvsId,
     processBeginDate: beginDate,
-    processEndDate: endDate
+    processEndDate: endDate,
+    processEndAnswers: endDateAnswers,
+    processEndSubscription: endDateSubscription
   }
   return processData
 }
