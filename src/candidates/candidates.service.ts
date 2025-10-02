@@ -25,6 +25,8 @@ export class CandidatesService {
       return
     }
 
+    const allCandidates: CreateCandidate[] = []
+
     for (const process of processes) {
       try {
         const apiUrl = `${baseUrl}${process.processTotvsId}`
@@ -46,7 +48,7 @@ export class CandidatesService {
         )
 
         console.log(
-          `\n=== Candidatos criados para processo ${process.processTitle} ===`
+          `\n=== Candidatos coletados para processo ${process.processTitle} ===`
         )
         candidates.forEach((candidate, index) => {
           console.log(
@@ -54,12 +56,28 @@ export class CandidatesService {
             JSON.stringify(candidate, null, 2)
           )
         })
+
+        allCandidates.push(...candidates)
       } catch (error) {
         console.error(
           `Erro ao buscar candidatos do processo ${process.processTotvsId}:`,
           error.message
         )
       }
+    }
+
+    // Inserir todos os candidatos de uma única vez em uma transação
+    if (allCandidates.length > 0) {
+      try {
+        await this.candidatesRepo.insertCandidatesInBatch(allCandidates)
+        console.log(
+          `\n=== Total de ${allCandidates.length} candidatos inseridos com sucesso ===`
+        )
+      } catch (error) {
+        console.error('Erro ao inserir candidatos em batch:', error.message)
+      }
+    } else {
+      console.log('\n=== Nenhum candidato encontrado para inserir ===')
     }
   }
 
