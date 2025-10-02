@@ -1,4 +1,4 @@
-import { IsOptional, Length } from 'class-validator'
+import { Length } from 'class-validator'
 
 export class CreateProcessDto {
   @Length(5, 150, {
@@ -23,16 +23,15 @@ export class CreateProcessDto {
   })
   processEndDate: string
 
-
   @Length(10, 10, {
-    message: "#A data de fim para respostas do processo deve ter o formato 'YYYY-MM-DD'"
+    message:
+      "#A data de fim para respostas do processo deve ter o formato 'YYYY-MM-DD'"
   })
-  @IsOptional()
   processEndAnswers: string
 
   @Length(10, 10, {
-    message: "#A data de fim para inscrições do processo deve ter o formato 'YYYY-MM-DD'"
+    message:
+      "#A data de fim para inscrições do processo deve ter o formato 'YYYY-MM-DD'"
   })
-  @IsOptional()
   processEndSubscription: string
 }

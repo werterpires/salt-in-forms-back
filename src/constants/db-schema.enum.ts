@@ -57,7 +57,7 @@ export enum Processes {
   PROCESS_BEGIN_DATE = 'processBeginDate',
   PROCESS_END_DATE = 'processEndDate',
   PROCESS_END_ANSWERS = 'processEndAnswers',
-  PROCESS_END_SUBSCRIPTION = 'processEndSubscription',
+  PROCESS_END_SUBSCRIPTION = 'processEndSubscription'
 }
 
 export enum SForms {
@@ -167,5 +167,5 @@ export enum Candidates {
   CANDIDATE_STATE = 'candidateState',
   CANDIDATE_ZIP_CODE = 'candidateZipCode',
   CANDIDATE_COUNTRY = 'candidateCountry',
-  INTERVIEW_USER_ID = 'interviewUserId',
+  INTERVIEW_USER_ID = 'interviewUserId'
 }
