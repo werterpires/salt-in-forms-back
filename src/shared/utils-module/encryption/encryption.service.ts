@@ -1,12 +1,23 @@
+
 import { Injectable } from '@nestjs/common'
 import * as crypto from 'crypto'
 
 @Injectable()
 export class EncryptionService {
-  private readonly algorithm = 'aes-256-cbc'
-  private readonly key = crypto.scryptSync('minha-senha-secreta', 'salto', 32)
-  private readonly ivLength = 16
-  private readonly bufferFormat = 'hex'
+  private readonly algorithm: string
+  private readonly key: Buffer
+  private readonly ivLength: number
+  private readonly bufferFormat: BufferEncoding
+
+  constructor() {
+    this.algorithm = process.env.ENCRYPTION_ALGORITHM || 'aes-256-cbc'
+    const password = process.env.ENCRYPTION_PASSWORD || 'minha-senha-secreta'
+    const salt = process.env.ENCRYPTION_SALT || 'salto'
+    const keylen = parseInt(process.env.ENCRYPTION_KEYLEN || '32', 10)
+    this.key = crypto.scryptSync(password, salt, keylen)
+    this.ivLength = parseInt(process.env.ENCRYPTION_IV_LENGTH || '16', 10)
+    this.bufferFormat = (process.env.ENCRYPTION_BUFFER_FORMAT || 'hex') as BufferEncoding
+  }
 
   encrypt(text: string): string {
     const iv = crypto.randomBytes(this.ivLength)
