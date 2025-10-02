@@ -1,4 +1,3 @@
-
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common'
 import { CustomLoggerService } from '../custom-logger/custom-logger.service'
 
@@ -43,30 +42,35 @@ export class ExternalApiService {
       }
 
       const response = await fetch(url, config)
-      
+
       let data: T
       const contentType = response.headers.get('content-type')
-      
+
       if (contentType && contentType.includes('application/json')) {
         data = await response.json()
       } else {
-        data = await response.text() as T
+        data = (await response.text()) as T
       }
 
       if (!response.ok) {
-        this.logger.error(`API request failed: ${response.status} - ${response.statusText}`, JSON.stringify(data))
+        this.logger.error(
+          `API request failed: ${response.status} - ${response.statusText}`,
+          JSON.stringify(data)
+        )
         throw new HttpException(
           {
             message: 'External API request failed',
             status: response.status,
             response: data
           } as ApiError,
-          response.status >= 500 ? HttpStatus.BAD_GATEWAY : HttpStatus.BAD_REQUEST
+          response.status >= 500
+            ? HttpStatus.BAD_GATEWAY
+            : HttpStatus.BAD_REQUEST
         )
       }
 
       this.logger.log(`API request successful: ${response.status}`)
-      
+
       return {
         data,
         status: response.status,
@@ -90,23 +94,41 @@ export class ExternalApiService {
     }
   }
 
-  async get<T = any>(url: string, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  async get<T = any>(
+    url: string,
+    headers?: Record<string, string>
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(url, 'GET', undefined, headers)
   }
 
-  async post<T = any>(url: string, body?: any, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  async post<T = any>(
+    url: string,
+    body?: any,
+    headers?: Record<string, string>
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(url, 'POST', body, headers)
   }
 
-  async put<T = any>(url: string, body?: any, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  async put<T = any>(
+    url: string,
+    body?: any,
+    headers?: Record<string, string>
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(url, 'PUT', body, headers)
   }
 
-  async patch<T = any>(url: string, body?: any, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  async patch<T = any>(
+    url: string,
+    body?: any,
+    headers?: Record<string, string>
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(url, 'PATCH', body, headers)
   }
 
-  async delete<T = any>(url: string, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  async delete<T = any>(
+    url: string,
+    headers?: Record<string, string>
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(url, 'DELETE', undefined, headers)
   }
 }

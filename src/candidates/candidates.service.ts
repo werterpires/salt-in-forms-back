@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
-import { CreateCandidateDto } from './dto/create-candidate.dto'
-import { UpdateCandidateDto } from './dto/update-candidate.dto'
 import { CandidatesRepo } from './candidates.repo'
 import { ExternalApiService } from '../shared/utils-module/external-api/external-api.service'
+import { CreateCandidate } from './types'
 
 @Injectable()
 export class CandidatesService {
@@ -12,7 +11,7 @@ export class CandidatesService {
     private readonly externalApiService: ExternalApiService
   ) {}
 
-  @Cron('25 10 * * *')
+  @Cron('00 11 * * *')
   async handleProcessInSubscriptionCron() {
     const processes = await this.candidatesRepo.findProcessInSubscription()
     console.log('Processos em período de inscrição:', processes)
@@ -27,56 +26,77 @@ export class CandidatesService {
     for (const process of processes) {
       try {
         const apiUrl = `${baseUrl}${process.processTotvsId}`
-        console.log(`Buscando candidatos para processo ${process.processTitle} (${process.processTotvsId})`)
+        console.log(
+          `Buscando candidatos para processo ${process.processTitle} (${process.processTotvsId})`
+        )
 
         const response = await this.externalApiService.get(apiUrl)
 
-        console.log(`Resposta da API para processo ${process.processTotvsId}:`, response.data)
+        console.log(
+          `Resposta da API para processo ${process.processTotvsId}:`,
+          response.data
+        )
 
         // Parse e criar candidatos
-        const candidates = this.parseApiResponseToCandidates(response.data, process.processId)
-        
-        console.log(`\n=== Candidatos criados para processo ${process.processTitle} ===`)
+        const candidates = this.parseApiResponseToCandidates(
+          response.data,
+          process.processId
+        )
+
+        console.log(
+          `\n=== Candidatos criados para processo ${process.processTitle} ===`
+        )
         candidates.forEach((candidate, index) => {
-          console.log(`\nCandidato ${index + 1}:`, JSON.stringify(candidate, null, 2))
+          console.log(
+            `\nCandidato ${index + 1}:`,
+            JSON.stringify(candidate, null, 2)
+          )
         })
       } catch (error) {
-        console.error(`Erro ao buscar candidatos do processo ${process.processTotvsId}:`, error.message)
+        console.error(
+          `Erro ao buscar candidatos do processo ${process.processTotvsId}:`,
+          error.message
+        )
       }
     }
   }
 
   private parseApiResponseToCandidates(apiData: any[], processId: number) {
-    const candidates = []
+    const candidates: CreateCandidate[] = []
 
     for (const item of apiData) {
       try {
         const attributes = JSON.parse(item.attributes)
-        
+
         // Mapeamento dos campos
         const fieldMap = {}
-        attributes.forEach(attr => {
+        attributes.forEach((attr) => {
           const label = attr.Label.toLowerCase()
-          const value = attr.Values && attr.Values.length > 0 ? attr.Values[0].Caption : ''
+          const value =
+            attr.Values && attr.Values.length > 0 ? attr.Values[0].Caption : ''
           fieldMap[label] = value
         })
 
         // Determinar se é estrangeiro
-        const estrangeiroValue = fieldMap['estrangeiro ?'] || fieldMap['estrangeiro']
+        const estrangeiroValue =
+          fieldMap['estrangeiro ?'] || fieldMap['estrangeiro']
         const isForeigner = estrangeiroValue === 'Sim'
 
-        const candidate = {
+        const candidate: CreateCandidate = {
           processId: processId,
           candidateName: fieldMap['nome completo'] || fieldMap['nome'] || '',
-          candidateUniqueDocument: isForeigner 
-            ? (fieldMap['n° passaporte'] || fieldMap['passaporte'] || '')
-            : (fieldMap['cpf'] || ''),
+          candidateUniqueDocument: isForeigner
+            ? fieldMap['n° passaporte'] || fieldMap['passaporte'] || ''
+            : fieldMap['cpf'] || '',
           candidateEmail: fieldMap['e-mail'] || fieldMap['email'] || '',
           candidatePhone: fieldMap['telefone'] || fieldMap['phone'] || '',
-          candidateBirthdate: this.formatDate(fieldMap['data de nascimento'] || fieldMap['nascimento'] || ''),
+          candidateBirthdate: this.formatDate(
+            fieldMap['data de nascimento'] || fieldMap['nascimento'] || ''
+          ),
           candidateForeigner: isForeigner,
           candidateAddress: fieldMap['endereço'] || fieldMap['endereco'] || '',
-          candidateAddressNumber: fieldMap['número'] || fieldMap['numero'] || '',
+          candidateAddressNumber:
+            fieldMap['número'] || fieldMap['numero'] || '',
           candidateDistrict: fieldMap['bairro'] || '',
           candidateCity: fieldMap['cidade'] || '',
           candidateState: fieldMap['estado'] || '',
@@ -95,7 +115,7 @@ export class CandidatesService {
 
   private formatDate(dateString: string): string {
     if (!dateString) return ''
-    
+
     // Se já está no formato YYYY-MM-DD, retorna
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
       return dateString
@@ -108,25 +128,5 @@ export class CandidatesService {
     }
 
     return dateString
-  }
-
-  create(createCandidateDto: CreateCandidateDto) {
-    return 'This action adds a new candidate'
-  }
-
-  findAll() {
-    return `This action returns all candidates`
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} candidate`
-  }
-
-  update(id: number, updateCandidateDto: UpdateCandidateDto) {
-    return `This action updates a #${id} candidate`
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} candidate`
   }
 }
