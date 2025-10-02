@@ -149,24 +149,42 @@ export class CandidatesService {
 
         const candidate: CreateCandidate = {
           processId: processId,
-          candidateName: this.encryptionService.encrypt(fieldMap['nome completo'] || fieldMap['nome'] || ''),
+          candidateName: this.encryptionService.encrypt(
+            fieldMap['nome completo'] || fieldMap['nome'] || ''
+          ),
           candidateUniqueDocument: isForeigner
             ? fieldMap['n° passaporte'] || fieldMap['passaporte'] || ''
             : fieldMap['cpf'] || '',
-          candidateEmail: this.encryptionService.encrypt(fieldMap['e-mail'] || fieldMap['email'] || ''),
-          candidatePhone: this.encryptionService.encrypt(fieldMap['telefone'] || fieldMap['phone'] || ''),
-          candidateBirthdate: this.encryptionService.encrypt(this.formatDate(
-            fieldMap['data de nascimento'] || fieldMap['nascimento'] || ''
-          )),
+          candidateEmail: this.encryptionService.encrypt(
+            fieldMap['e-mail'] || fieldMap['email'] || ''
+          ),
+          candidatePhone: this.encryptionService.encrypt(
+            fieldMap['telefone'] || fieldMap['phone'] || ''
+          ),
+          candidateBirthdate: this.encryptionService.encrypt(
+            this.formatDate(
+              fieldMap['data de nascimento'] || fieldMap['nascimento'] || ''
+            )
+          ),
           candidateForeigner: isForeigner,
-          candidateAddress: this.encryptionService.encrypt(fieldMap['endereço'] || fieldMap['endereco'] || ''),
+          candidateAddress: this.encryptionService.encrypt(
+            fieldMap['endereço'] || fieldMap['endereco'] || ''
+          ),
           candidateAddressNumber: this.encryptionService.encrypt(
             fieldMap['número'] || fieldMap['numero'] || ''
           ),
-          candidateDistrict: this.encryptionService.encrypt(fieldMap['bairro'] || ''),
-          candidateCity: this.encryptionService.encrypt(fieldMap['cidade'] || ''),
-          candidateState: this.encryptionService.encrypt(fieldMap['estado'] || ''),
-          candidateZipCode: this.encryptionService.encrypt(fieldMap['cep'] || ''),
+          candidateDistrict: this.encryptionService.encrypt(
+            fieldMap['bairro'] || ''
+          ),
+          candidateCity: this.encryptionService.encrypt(
+            fieldMap['cidade'] || ''
+          ),
+          candidateState: this.encryptionService.encrypt(
+            fieldMap['estado'] || ''
+          ),
+          candidateZipCode: this.encryptionService.encrypt(
+            fieldMap['cep'] || ''
+          ),
           candidateCountry: this.encryptionService.encrypt('')
         }
 
