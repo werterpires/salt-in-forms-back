@@ -1,0 +1,128 @@
+SendPulse Service REST API
+Introduction
+Our API interface is used to integrate SendPulse’s distribution service capabilities with client’s personal projects. The API is designed for developers and is accompanied by detailed documentation.
+
+Description
+SendPulse’s REST API works over the HTTPS protocol and is essentially a set of methods used to perform requests and receive responses for each operation. All answers return in the form of JSON structures.
+
+Cross Domain Queries (jQuery Ajax Example) are not allowed. 
+
+SendPulse API libraries
+The latest versions of SendPulse API client libraries are available at GitHub.
+
+PHP wrapper
+Python wrapper
+Ruby wrapper
+Java wrapper
+Node.js wrapper
+C# wrapper 
+Go wrapper (third-party solution)
+You can also check other third-party solutions on Github.
+
+Base URL
+All references to API requests in this document include the root URL:
+
+https://api.sendpulse.com
+Authorization
+The authorization process requires a personal key for signing each further API request.
+
+The necessary parameters to obtain a key can be found in the private account settings page found on the following URL in the API tab.
+
+To get the key you have to send a POST request to:
+
+https://api.sendpulse.com/oauth/access_token
+Request parameters:
+
+Parameter	Type	Description	
+grant_type	string	Has to be equal to client_credentials	required
+client_id	string	Your ID	required
+client_secret	string	Your Secret	required
+Request example:
+
+{
+   "grant_type":"client_credentials",
+   "client_id":"237b4af9c99d0f89bdbd876dcd5a0000",
+   "client_secret":"a99e7d506d3701c5c04de3db1913eeee"
+}
+
+If request is successful, you will receive a response:
+
+{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjI5NTQ4NDVjZWJlZjg5Nzk0YmYzMzk4ZDdiNTQ3OTA2MWUzNDQ2N2I5NTUwMmFlNzE1YmViZmU4MDBmNTMxMjIxMTU2MTcyOWM2MjI5NGRjIn0.eyJhdWQiOiIyMzdiNGFmOWM5OWQwZjg5YmRiZDg3NmRjZDVhMDE3ZiIsImp0aSI6IjI5NTQ4NDVjZWJlZjg5Nzk0YmYzMzk4ZDdiNTQ3OTA2MWUzNDQ2N2I5NTUwMmFlNzE1YmViZmU4MDBmNTMxMjIxMTU2MTcyOWM2MjI5NGRjIiwiaWF0IjaaNjI0NTI0OTA0LCJuYmYiOjE2MjQ1MjQ5MDQsImV4cCI6MTYyNDUyODUwNCwic3ViIjoiIiwic2NvcGVzIjpbXSwidXNlciI6eyJpZCI6Njc0MTgwNCwiZ3JvdXBfaWQiOm51bGwsInBhcmVudF9pZCI6bnVsbCwiYXJlYSI6InJlc3QifX0.jiP3Sv7IF1mHGmW0oGIrPAw0oOiIEnC8Tb6wlWu5eVM2UrHL6RZsDlIslLSQNEvL_e50nDlgtgyfX5Qty4qlQ4XyW53FAgjwHbyQG7DJ6iVRAtVBtFNbkFVNbHvKw8zQy7WyxhICpAF8zdF8-gBHBnzuMhKSnASYEosJ9IAPqUkxQXrd8LpUSk-etzjEqcpMkbGj2M7Y0OxO4_BfRhVNU6ZcbiawD09m0A9uWoSnoZKxXw0o64PE3anJta6lFns5SDuyeGxanOtuZSS5I3umI2OOnUVzNG9_5WjCe6LPVQLAPAPt0m8S5WkI35_jCJ0A-gDBBdsgnUudGCvsDcgEog",
+  "token_type": "Bearer",
+  "expires_in": 3600
+}
+
+A sample key:
+
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjI5NTQ4NDVjZWJlZjg5Nzk0YmYzMzk4ZDdiNTQ3OTA2MWUzNDQ2N2I5NTUwMmFlNzE1YmViZmU4MDBmNTMxMjIxMTU2MTcyOWM2MjI5NGRjIn0.eyJhdWQiOiIyMzdiNGFmOWM5OWQwZjg5YmRiZDg3NmRjZDVhMDE3ZiIsImp0aSI6IjI5NTQ4NDVjZWJlZjg5Nzk0YmYzMzk4ZDdiNTQ3OTA2MWUzNDQ2N2I5NTUwMmFlNzE1YmViZmU4MDBmNTMxMjIxMTU2MTcyOWM2MjI5NGRjIiwiaWF0IjaaNjI0NTI0OTA0LCJuYmYiOjE2MjQ1MjQ5MDQsImV4cCI6MTYyNDUyODUwNCwic3ViIjoiIiwic2NvcGVzIjpbXSwidXNlciI6eyJpZCI6Njc0MTgwNCwiZ3JvdXBfaWQiOm51bGwsInBhcmVudF9pZCI6bnVsbCwiYXJlYSI6InJlc3QifX0.jiP3Sv7IF1mHGmW0oGIrPAw0oOiIEnC8Tb6wlWu5eVM2UrHL6RZsDlIslLSQNEvL_e50nDlgtgyfX5Qty4qlQ4XyW53FAgjwHbyQG7DJ6iVRAtVBtFNbkFVNbHvKw8zQy7WyxhICpAF8zdF8-gBHBnzuMhKSnASYEosJ9IAPqUkxQXrd8LpUSk-etzjEqcpMkbGj2M7Y0OxO4_BfRhVNU6ZcbiawD09m0A9uWoSnoZKxXw0o64PE3anJta6lFns5SDuyeGxanOtuZSS5I3umI2OOnUVzNG9_5WjCe6LPVQLAPAPt0m8S5WkI35_jCJ0A-gDBBdsgnUudGCvsDcgEog
+
+The resulting key is valid for 1 hour and does not require additional requests for each operation. A request for a new key must be sent before the current key expires.
+
+The key code (token) must be sent in the header of all requests except for requests for getting the token itself (when the key is not required).
+
+Request limits
+There are limits and quotas on SendPulse API requests to protect the system from receiving more data than it can handle and ensure an equitable distribution of the system resources. API limits per minute and per day depend on the category of your selected pricing plan
+
+General quota limits
+The following quotas apply to sending API requests:
+
+Pricing Plan Category	Requests Per Minute	Requests Per Day	Pricing Plan in Services
+Free	1,000	500,000	All free pricing plans in the SMTP, Landing Page, Push, and Chatbot services
+Standard	2,000	1 million	All pricing plans between "Free" and "Enterprise"
+Enterprise	3,000	3 millions	For Email and Landing Pages services with the “Enterprise” category and for the Push service with the “Pro” category and with more than 50,000 subscribers;
+for the Chatbot service with the “Pro” category with more than 5,000 subscribers;
+for the SMTP service with more than 100,000 emails.
+
+Exceeding quota limits
+If you exceed this quota, the API returns the following error:
+
+429 Too many requests
+
+To be able to send more requests, you need to upgrade your current pricing plan.
+
+Error codes and descriptions
+Error code	Description
+8	No data
+10	Sender email address missing
+11	Can’t find recipients addresses
+13	Empty email message content field
+14	Can’t find email address with the specified ID
+17	Can’t find the email address
+19	Email address already exists
+20	Using free email services (not allowed)
+21	No such email address awaiting activation
+97	Invalid email address type. Using free email services is not allowed.
+201	Empty mailing list name
+203	This mailing list name already exists
+211	Mailing list empty
+213	Mailing list not found
+303	Can’t find email addresses in the mailing list
+400	Specified SMTP user doesn’t exist. Create an SMTP account.
+502	Can’t find the email address
+602	Can’t find the campaign. Probably, it has already been sent.
+701	Sender email address or name not specified.
+703	Can’t find the mailing list
+704	Can’t find the sender
+707	Account balance depleted
+708	The number of campaign recipients exceeds your current pricing plan limits
+711	Wait 5 minutes before sending to the same list again
+720	Empty subject field
+721	Email message empty
+722	Mailing list ID not specified
+791	API-campaigns limit exceeded (5 per hour)
+799	Incorrect date format. Use YYYY-MM-DD hh:ii:ss that equals or greater than the current date
+800	Invalid operation
+802	Campaign not found
+901	Sender name not specified
+902	Selected email address already in use
+903	Sender email address not specified
+904	Email address blacklisted
+905	Sender address quota reached
+906	Email address syntax error
+1101	Email address not specified
+1003	The specified sender doesn’t exist
+1004	The activation code has been sent. Wait 15 minutes to retry
+1005	Error sending confirmation
+1104	Activation code not specified
+2020202020	More than 10 requests per second
