@@ -4,24 +4,25 @@ import { CandidatesRepo } from './candidates.repo'
 import { ExternalApiService } from '../shared/utils-module/external-api/external-api.service'
 import { EncryptionService } from '../shared/utils-module/encryption/encryption.service'
 import { CreateCandidate } from './types'
+import { CustomLoggerService } from 'src/shared/utils-module/custom-logger/custom-logger.service'
 
 @Injectable()
 export class CandidatesService {
   constructor(
     private readonly candidatesRepo: CandidatesRepo,
     private readonly externalApiService: ExternalApiService,
-    private readonly encryptionService: EncryptionService
+    private readonly encryptionService: EncryptionService,
+    private readonly loggger: CustomLoggerService
   ) {}
 
-  @Cron('00 11 * * *')
+  @Cron('48 11 * * *')
   async handleProcessInSubscriptionCron() {
     const processes = await this.candidatesRepo.findProcessInSubscription()
-    console.log('Processos em período de inscrição:', processes)
 
     const baseUrl = process.env.PROCESS_CANDIDATES_API
 
     if (!baseUrl) {
-      console.error('PROCESS_CANDIDATES_API não está definido no .env')
+      this.loggger.error('#PROCESS_CANDIDATES_API não está definido no .env')
       return
     }
 
@@ -30,13 +31,10 @@ export class CandidatesService {
     for (const process of processes) {
       try {
         const apiUrl = `${baseUrl}${process.processTotvsId}`
-        console.log(
-          `Buscando candidatos para processo ${process.processTitle} (${process.processTotvsId})`
-        )
 
         const response = await this.externalApiService.get(apiUrl)
 
-        console.log(
+        this.loggger.info(
           `Resposta da API para processo ${process.processTotvsId}:`,
           response.data
         )
@@ -47,21 +45,15 @@ export class CandidatesService {
           process.processId
         )
 
-        console.log(
+        this.loggger.info(
           `\n=== Candidatos coletados para processo ${process.processTitle} ===`
         )
-        candidates.forEach((candidate, index) => {
-          console.log(
-            `\nCandidato ${index + 1}:`,
-            JSON.stringify(candidate, null, 2)
-          )
-        })
 
         allCandidates.push(...candidates)
       } catch (error) {
-        console.error(
+        this.loggger.error(
           `Erro ao buscar candidatos do processo ${process.processTotvsId}:`,
-          error.message
+          error.stack
         )
       }
     }
@@ -104,25 +96,21 @@ export class CandidatesService {
 
         if (candidatesToInsert.length > 0) {
           await this.candidatesRepo.insertCandidatesInBatch(candidatesToInsert)
-          console.log(
+          this.loggger.info(
             `\n=== Total de ${candidatesToInsert.length} candidatos inseridos com sucesso ===`
           )
         }
 
         if (duplicatesCount > 0) {
-          console.log(
+          this.loggger.info(
             `\n=== ${duplicatesCount} candidatos duplicados foram ignorados ===`
           )
         }
-
-        if (candidatesToInsert.length === 0 && duplicatesCount === 0) {
-          console.log('\n=== Nenhum candidato encontrado para inserir ===')
-        }
       } catch (error) {
-        console.error('Erro ao inserir candidatos em batch:', error.message)
+        this.loggger.error('Erro ao inserir candidatos em batch:', error.stack)
       }
     } else {
-      console.log('\n=== Nenhum candidato encontrado para inserir ===')
+      this.loggger.info('\n=== Nenhum candidato encontrado para inserir ===')
     }
   }
 
