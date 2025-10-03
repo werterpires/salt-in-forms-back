@@ -1,4 +1,3 @@
-
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import { CustomLoggerService } from '../custom-logger/custom-logger.service'
@@ -52,10 +51,7 @@ export class SendPulseService {
       await this.refreshToken()
       this.logger.log('SendPulse token inicializado com sucesso')
     } catch (error) {
-      this.logger.error(
-        'Erro ao inicializar token do SendPulse',
-        error.stack
-      )
+      this.logger.error('Erro ao inicializar token do SendPulse', error.stack)
     }
   }
 
@@ -64,16 +60,18 @@ export class SendPulseService {
     try {
       this.logger.log('Renovando token do SendPulse...')
 
-      const response = await this.externalApiService.post<SendPulseTokenResponse>(
-        `${this.baseUrl}/oauth/access_token`,
-        {
-          grant_type: 'client_credentials',
-          client_id: this.clientId,
-          client_secret: this.clientSecret
-        }
-      )
+      const response =
+        await this.externalApiService.post<SendPulseTokenResponse>(
+          `${this.baseUrl}/oauth/access_token`,
+          {
+            grant_type: 'client_credentials',
+            client_id: this.clientId,
+            client_secret: this.clientSecret
+          }
+        )
 
       this.accessToken = response.data.access_token
+      console.log('New SendPulse Access Token:', this.accessToken) // Log do token
       this.logger.log('Token do SendPulse renovado com sucesso')
     } catch (error) {
       this.logger.error('Erro ao renovar token do SendPulse', error.stack)
