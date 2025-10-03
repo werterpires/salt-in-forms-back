@@ -37,9 +37,9 @@ export class SendPulseEmailService implements EmailSender {
     this.emailSubject = process.env.EMAIL_SUBJECT
   }
 
-  async sendEmail(recipient: string, body: string): Promise<void> {
+  async sendEmail(recipientEmail: string, recipientName: string, body: string): Promise<void> {
     try {
-      this.logger.log(`Enviando e-mail para ${recipient}`)
+      this.logger.log(`Enviando e-mail para ${recipientEmail}`)
 
       const emailData = {
         email: {
@@ -51,8 +51,8 @@ export class SendPulseEmailService implements EmailSender {
           },
           to: [
             {
-              name: recipient.split('@')[0],
-              email: recipient
+              name: recipientName,
+              email: recipientEmail
             }
           ]
         }
@@ -64,10 +64,10 @@ export class SendPulseEmailService implements EmailSender {
         emailData
       )
 
-      this.logger.log(`E-mail enviado com sucesso para ${recipient}`)
+      this.logger.log(`E-mail enviado com sucesso para ${recipientEmail}`)
     } catch (error) {
       this.logger.error(
-        `Erro ao enviar e-mail para ${recipient}`,
+        `Erro ao enviar e-mail para ${recipientEmail}`,
         error.stack
       )
       throw new InternalServerErrorException('Falha ao enviar e-mail')
