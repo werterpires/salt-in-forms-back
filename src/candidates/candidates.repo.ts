@@ -29,6 +29,24 @@ export class CandidatesRepo {
       .orderBy(db.Processes.PROCESS_TITLE, 'asc')
   }
 
+  async findProcessesInAnswerPeriod(): Promise<Process[]> {
+    const today = new Date()
+
+    return this.knex(db.Tables.PROCESSES)
+      .select(
+        db.Processes.PROCESS_ID,
+        db.Processes.PROCESS_TITLE,
+        db.Processes.PROCESS_TOTVS_ID,
+        db.Processes.PROCESS_BEGIN_DATE,
+        db.Processes.PROCESS_END_DATE,
+        db.Processes.PROCESS_END_ANSWERS,
+        db.Processes.PROCESS_END_SUBSCRIPTION
+      )
+      .where(db.Processes.PROCESS_BEGIN_DATE, '<=', today)
+      .where(db.Processes.PROCESS_END_ANSWERS, '>=', today)
+      .orderBy(db.Processes.PROCESS_TITLE, 'asc')
+  }
+
   async findExistingCandidatesByProcessAndDocument(
     processId: number,
     uniqueDocuments: string[]
