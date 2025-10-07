@@ -14,7 +14,9 @@ export enum Tables {
   SUB_QUESTIONS = 'subQuestions',
   SUB_QUESTION_OPTIONS = 'subQuestionOptions',
   SUB_VALIDATIONS = 'subValidations',
-  CANDIDATES = 'candidates'
+  CANDIDATES = 'candidates',
+  FORMS_CANDIDATES = 'formsCandidates',
+  ANSWERS = 'answers'
 }
 
 export enum Users {
@@ -168,4 +170,21 @@ export enum Candidates {
   CANDIDATE_ZIP_CODE = 'candidateZipCode',
   CANDIDATE_COUNTRY = 'candidateCountry',
   INTERVIEW_USER_ID = 'interviewUserId'
+}
+
+export enum FormsCandidates {
+  FORM_CANDIDATE_ID = 'formCandidateId',
+  CANDIDATE_ID = 'candidateId',
+  S_FORM_ID = 'sFormId',
+  FORM_CANDIDATE_STATUS = 'formCandidateStatus',
+  FORM_CANDIDATE_ACCESS_CODE = 'formCandidateAccessCode'
+}
+
+export enum Answers {
+  ANSWER_ID = 'answerId',
+  QUESTION_ID = 'questionId',
+  CANDIDATE_ID = 'candidateId',
+  ANSWER_VALUE = 'answerValue',
+  VALID_ANSWER = 'validAnswer',
+  ANSWER_COMMENT = 'answerComment'
 }

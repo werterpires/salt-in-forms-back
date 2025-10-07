@@ -17,7 +17,7 @@ export class CandidatesService {
     private readonly sendPulseEmailService: SendPulseEmailService
   ) {}
 
-  @Cron('48 11 * * *')
+  @Cron('15 11 * * *')
   async handleProcessInSubscriptionCron() {
     const processes = await this.candidatesRepo.findProcessInSubscription()
 
@@ -120,7 +120,7 @@ export class CandidatesService {
       }
     } else {
       this.loggger.info('\n=== Nenhum candidato encontrado para inserir ===')
-      
+
       // Enviar email mesmo quando não houver candidatos
       await this.sendImportSummaryEmail(0, 0, 0)
     }
