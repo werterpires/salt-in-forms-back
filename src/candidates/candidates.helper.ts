@@ -1,4 +1,3 @@
-
 import { randomBytes } from 'crypto'
 
 export function createAccessCode(): string {

@@ -18,7 +18,7 @@ export class CandidatesService {
     private readonly sendPulseEmailService: SendPulseEmailService
   ) {}
 
-  @Cron('30 11 * * *')
+  @Cron('47 11 * * *')
   async handleProcessesInAnswerPeriod() {
     this.loggger.info(
       '\n=== Executando cron: Buscar processos no período de respostas ==='
@@ -69,7 +69,7 @@ export class CandidatesService {
     this.loggger.info('\n=== Fim da execução do cron ===')
   }
 
-  @Cron('25 11 * * *')
+  @Cron('45 11 * * *')
   async handleProcessInSubscriptionCron() {
     const processes = await this.candidatesRepo.findProcessInSubscription()
 
