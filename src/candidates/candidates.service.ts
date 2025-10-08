@@ -25,9 +25,12 @@ export class CandidatesService {
     
     this.loggger.info(`\n=== Total de processos encontrados: ${processes.length} ===`)
     
-    processes.forEach((process) => {
+    for (const process of processes) {
       console.log(process)
-    })
+      
+      const sForms = await this.candidatesRepo.findSFormsByProcessId(process.processId)
+      console.log(sForms)
+    }
     
     this.loggger.info('\n=== Fim da execução do cron ===')
   }
