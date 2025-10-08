@@ -24,10 +24,7 @@ export async function up(knex: Knex): Promise<void> {
       .onDelete('RESTRICT')
       .onUpdate('CASCADE')
     table.integer(db.FormsCandidates.FORM_CANDIDATE_STATUS).notNullable()
-    table
-      .text(db.FormsCandidates.FORM_CANDIDATE_ACCESS_CODE)
-      .notNullable()
-      .unique()
+    table.text(db.FormsCandidates.FORM_CANDIDATE_ACCESS_CODE).notNullable()
     table.timestamps(true, true)
   })
 }
