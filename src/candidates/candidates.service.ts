@@ -6,6 +6,7 @@ import { EncryptionService } from '../shared/utils-module/encryption/encryption.
 import { CreateCandidate } from './types'
 import { CustomLoggerService } from 'src/shared/utils-module/custom-logger/custom-logger.service'
 import { SendPulseEmailService } from '../shared/utils-module/email-sender/sendpulse-email.service'
+import { createAccessCode } from './candidates.helper'
 
 @Injectable()
 export class CandidatesService {
@@ -30,6 +31,27 @@ export class CandidatesService {
       
       const sForms = await this.candidatesRepo.findSFormsByProcessId(process.processId)
       console.log(sForms)
+
+      // Buscar candidatos que não estão na tabela FormsCandidates
+      const candidatesNotInFormsCandidates = await this.candidatesRepo.findCandidatesNotInFormsCandidatesByProcessId(process.processId)
+
+      if (candidatesNotInFormsCandidates.length > 0 && sForms.length > 0) {
+        const formsCandidatesData = []
+
+        for (const candidateId of candidatesNotInFormsCandidates) {
+          for (const sForm of sForms) {
+            formsCandidatesData.push({
+              candidateId: candidateId,
+              sFormId: sForm.sFormId,
+              formCandidateStatus: 1,
+              formCandidateAccessCode: createAccessCode()
+            })
+          }
+        }
+
+        const insertedFormCandidateIds = await this.candidatesRepo.insertFormsCandidatesInBatch(formsCandidatesData)
+        console.log(insertedFormCandidateIds)
+      }
     }
     
     this.loggger.info('\n=== Fim da execução do cron ===')

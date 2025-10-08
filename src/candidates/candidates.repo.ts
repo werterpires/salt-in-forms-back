@@ -101,4 +101,67 @@ export class CandidatesRepo {
       await trx(db.Tables.CANDIDATES).insert(candidatesToInsert)
     })
   }
+
+  async findCandidatesNotInFormsCandidatesByProcessId(
+    processId: number
+  ): Promise<number[]> {
+    const candidatesInProcess = await this.knex(db.Tables.CANDIDATES)
+      .select(db.Candidates.CANDIDATE_ID)
+      .where(db.Candidates.PROCESS_ID, processId)
+
+    const candidateIds = candidatesInProcess.map(
+      (c) => c[db.Candidates.CANDIDATE_ID]
+    )
+
+    if (candidateIds.length === 0) {
+      return []
+    }
+
+    const candidatesInFormsCandidates = await this.knex(
+      db.Tables.FORMS_CANDIDATES
+    )
+      .select(db.FormsCandidates.CANDIDATE_ID)
+      .whereIn(db.FormsCandidates.CANDIDATE_ID, candidateIds)
+
+    const candidateIdsInFormsCandidates = candidatesInFormsCandidates.map(
+      (c) => c[db.FormsCandidates.CANDIDATE_ID]
+    )
+
+    return candidateIds.filter(
+      (id) => !candidateIdsInFormsCandidates.includes(id)
+    )
+  }
+
+  async insertFormsCandidatesInBatch(
+    formsCandidatesData: {
+      candidateId: number
+      sFormId: number
+      formCandidateStatus: number
+      formCandidateAccessCode: string
+    }[]
+  ): Promise<number[]> {
+    if (formsCandidatesData.length === 0) {
+      return []
+    }
+
+    return this.knex.transaction(async (trx) => {
+      const formsCandidatesToInsert = formsCandidatesData.map((fc) => ({
+        [db.FormsCandidates.CANDIDATE_ID]: fc.candidateId,
+        [db.FormsCandidates.S_FORM_ID]: fc.sFormId,
+        [db.FormsCandidates.FORM_CANDIDATE_STATUS]: fc.formCandidateStatus,
+        [db.FormsCandidates.FORM_CANDIDATE_ACCESS_CODE]:
+          fc.formCandidateAccessCode
+      }))
+
+      const insertedIds = await trx(db.Tables.FORMS_CANDIDATES)
+        .insert(formsCandidatesToInsert)
+        .returning(db.FormsCandidates.FORM_CANDIDATE_ID)
+
+      return insertedIds.map((row) =>
+        typeof row === 'object'
+          ? row[db.FormsCandidates.FORM_CANDIDATE_ID]
+          : row
+      )
+    })
+  }
 }
