@@ -1,6 +1,6 @@
 
 import { Knex } from 'knex'
-import { MinisterialsFilter, CreateMinisterial, Ministerial } from './type'
+import { MinisterialsFilter, CreateMinisterial, Ministerial, MinisterialQueryResult, MinisterialWithRelations } from './type'
 import * as db from '../constants/db-schema.enum'
 import { CreateMinisterialDto } from './dto/create-ministerial.dto'
 
@@ -61,8 +61,8 @@ export function compareMinisterialData(
   )
 }
 
-export function processMinisterialResults(results: any[]): any[] {
-  const fieldMap = new Map<number, any>()
+export function processMinisterialResults(results: MinisterialQueryResult[]): MinisterialWithRelations[] {
+  const fieldMap = new Map<number, MinisterialWithRelations>()
 
   for (const row of results) {
     const fieldId = row[db.Fields.FIELD_ID]

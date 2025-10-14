@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
-import { CreateUnion, CreateField, CreateMinisterial, Union, Field, Ministerial, CreateMinisterialsTransaction } from './type'
+import { CreateUnion, CreateField, CreateMinisterial, Union, Field, Ministerial, CreateMinisterialsTransaction, MinisterialsFilter, MinisterialQueryResult } from './type'
 import * as db from '../constants/db-schema.enum'
 import { compareMinisterialData } from './ministerials.helper'
+import { Paginator } from 'src/shared/types/types'
 
 @Injectable()
 export class MinisterialsRepo {
@@ -62,9 +63,9 @@ export class MinisterialsRepo {
   }
 
   async findAllMinisterials(
-    paginator: any,
-    filters: any
-  ): Promise<any[]> {
+    paginator: Paginator<typeof db.Ministerials>,
+    filters: MinisterialsFilter
+  ): Promise<MinisterialQueryResult[]> {
     const query = this.knex(db.Tables.MINISTERIALS)
       .select(
         `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ID}`,
@@ -119,7 +120,7 @@ export class MinisterialsRepo {
     return await query
   }
 
-  async findMinisterialsQuantity(filters: any): Promise<number> {
+  async findMinisterialsQuantity(filters: MinisterialsFilter): Promise<number> {
     const query = this.knex(db.Tables.MINISTERIALS)
       .innerJoin(
         db.Tables.FIELDS,

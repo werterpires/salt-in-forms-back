@@ -71,3 +71,21 @@ export interface CreateMinisterialsTransaction {
     }>
   }>
 }
+
+export interface MinisterialQueryResult {
+  ministerialId: number
+  ministerialName: string
+  ministerialPrimaryPhone?: string
+  ministerialSecondaryPhone?: string
+  ministerialLandlinePhone?: string
+  ministerialPrimaryEmail?: string
+  ministerialAlternativeEmail?: string
+  ministerialSecretaryName?: string
+  ministerialSecretaryPhone?: string
+  fieldId: number
+  fieldName: string
+  fieldAcronym: string
+  unionId: number
+  unionName: string
+  unionAcronym: string
+}
