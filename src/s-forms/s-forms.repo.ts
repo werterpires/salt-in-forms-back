@@ -8,11 +8,13 @@ import {
   SFormToValidate,
   UpdateSForm,
   CopySForm,
-  SFormSimple
+  SFormSimple,
+  SFormBasic
 } from './types'
 import * as db from '../constants/db-schema.enum'
 import { Paginator } from 'src/shared/types/types'
 import { applyFilters } from './s-forms.helper'
+import { EQuestionsTypes } from 'src/constants/questions-types.enum'
 
 @Injectable()
 export class SFormsRepo {
@@ -113,34 +115,38 @@ export class SFormsRepo {
       .orderBy(db.SForms.S_FORM_NAME, 'asc')
   }
 
-  async findAllBasicByProcessId(processId: number) {
-    const forms = await this.knex(db.Tables.S_FORMS)
-      .select(
-        `${db.SForms.S_FORM_ID} as sFormId`,
-        `${db.SForms.S_FORM_NAME} as sFormName`
-      )
+  async findAllBasicByProcessId(processId: number): Promise<SFormBasic[]> {
+    const forms: Array<{
+      [db.SForms.S_FORM_ID]: number
+      [db.SForms.S_FORM_NAME]: string
+    }> = await this.knex(db.Tables.S_FORMS)
+      .select(db.SForms.S_FORM_ID, db.SForms.S_FORM_NAME)
       .where(db.SForms.PROCESS_ID, processId)
       .orderBy(db.SForms.S_FORM_NAME, 'asc')
     
-    const results = await Promise.all(
-      forms.map(async (form) => {
-        const emailQuestions = await this.knex(db.Tables.QUESTIONS)
+    const results: SFormBasic[] = await Promise.all(
+      forms.map(async (form): Promise<SFormBasic> => {
+        const emailQuestions: Array<{
+          [db.Questions.QUESTION_ID]: number
+          [db.Questions.QUESTION_STATEMENT]: string
+        }> = await this.knex(db.Tables.QUESTIONS)
           .join(
             db.Tables.FORM_SECTIONS,
             `${db.Tables.FORM_SECTIONS}.${db.FormSections.FORM_SECTION_ID}`,
             `${db.Tables.QUESTIONS}.${db.Questions.FORM_SECTION_ID}`
           )
-          .select(
-            `${db.Questions.QUESTION_ID} as questionId`,
-            `${db.Questions.QUESTION_STATEMENT} as questionStatement`
-          )
-          .where(db.FormSections.S_FORM_ID, form.sFormId)
-          .andWhere(db.Questions.QUESTION_TYPE, 10)
+          .select(db.Questions.QUESTION_ID, db.Questions.QUESTION_STATEMENT)
+          .where(db.FormSections.S_FORM_ID, form[db.SForms.S_FORM_ID])
+          .andWhere(db.Questions.QUESTION_TYPE, EQuestionsTypes.EMAIL)
           .orderBy(db.Questions.QUESTION_ORDER, 'asc')
         
         return {
-          ...form,
-          emailQuestions
+          sFormId: form[db.SForms.S_FORM_ID],
+          sFormName: form[db.SForms.S_FORM_NAME],
+          emailQuestions: emailQuestions.map((question) => ({
+            questionId: question[db.Questions.QUESTION_ID],
+            questionStatement: question[db.Questions.QUESTION_STATEMENT]
+          }))
         }
       })
     )
