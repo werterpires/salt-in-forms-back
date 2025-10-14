@@ -57,7 +57,7 @@ export interface SFormSimple {
 export interface SFormBasic {
   sFormId: number
   sFormName: string
-  emailQuestions: BasicQuestion[]
+  emailQuestions?: BasicQuestion[]
 }
 
 export interface BasicQuestion {

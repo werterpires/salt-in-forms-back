@@ -9,7 +9,8 @@ import {
   UpdateSForm,
   CopySForm,
   SFormSimple,
-  SFormBasic
+  SFormBasic,
+  BasicQuestion
 } from './types'
 import * as db from '../constants/db-schema.enum'
 import { Paginator } from 'src/shared/types/types'
@@ -116,20 +117,16 @@ export class SFormsRepo {
   }
 
   async findAllBasicByProcessId(processId: number): Promise<SFormBasic[]> {
-    const forms: Array<{
-      [db.SForms.S_FORM_ID]: number
-      [db.SForms.S_FORM_NAME]: string
-    }> = await this.knex(db.Tables.S_FORMS)
+    const forms: SFormBasic[] = await this.knex(db.Tables.S_FORMS)
       .select(db.SForms.S_FORM_ID, db.SForms.S_FORM_NAME)
       .where(db.SForms.PROCESS_ID, processId)
       .orderBy(db.SForms.S_FORM_NAME, 'asc')
-    
+
     const results: SFormBasic[] = await Promise.all(
       forms.map(async (form): Promise<SFormBasic> => {
-        const emailQuestions: Array<{
-          [db.Questions.QUESTION_ID]: number
-          [db.Questions.QUESTION_STATEMENT]: string
-        }> = await this.knex(db.Tables.QUESTIONS)
+        const emailQuestions: BasicQuestion[] = await this.knex(
+          db.Tables.QUESTIONS
+        )
           .join(
             db.Tables.FORM_SECTIONS,
             `${db.Tables.FORM_SECTIONS}.${db.FormSections.FORM_SECTION_ID}`,
@@ -139,18 +136,14 @@ export class SFormsRepo {
           .where(db.FormSections.S_FORM_ID, form[db.SForms.S_FORM_ID])
           .andWhere(db.Questions.QUESTION_TYPE, EQuestionsTypes.EMAIL)
           .orderBy(db.Questions.QUESTION_ORDER, 'asc')
-        
+
         return {
-          sFormId: form[db.SForms.S_FORM_ID],
-          sFormName: form[db.SForms.S_FORM_NAME],
-          emailQuestions: emailQuestions.map((question) => ({
-            questionId: question[db.Questions.QUESTION_ID],
-            questionStatement: question[db.Questions.QUESTION_STATEMENT]
-          }))
+          ...form,
+          emailQuestions
         }
       })
     )
-    
+
     return results
   }
 
