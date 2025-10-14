@@ -1,6 +1,6 @@
 
 import { Knex } from 'knex'
-import { MinisterialsFilter, CreateMinisterial } from './type'
+import { MinisterialsFilter, CreateMinisterial, Ministerial } from './type'
 import * as db from '../constants/db-schema.enum'
 import { CreateMinisterialDto } from './dto/create-ministerial.dto'
 
@@ -41,7 +41,7 @@ export function buildMinisterialData(
 }
 
 export function compareMinisterialData(
-  existing: any,
+  existing: Ministerial,
   newData: CreateMinisterial
 ): boolean {
   return (
