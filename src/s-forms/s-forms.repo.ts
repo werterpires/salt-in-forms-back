@@ -74,19 +74,10 @@ export class SFormsRepo {
   }
 
   updateSForm(updateSFormDAta: UpdateSForm) {
-    const { sFormId, sFormName, sFormType, emailQuestionId } = updateSFormDAta
-
-    if (sFormType === 'normal') {
-      updateSFormDAta[db.SForms.EMAIL_QUESTION_ID] =
-        emailQuestionId !== undefined ? emailQuestionId : null
-    } else {
-      updateSFormDAta[db.SForms.EMAIL_QUESTION_ID] = null
-    }
-
     return this.knex(db.Tables.S_FORMS)
       .update(updateSFormDAta)
       .where({
-        [db.SForms.S_FORM_ID]: sFormId
+        [db.SForms.S_FORM_ID]: updateSFormDAta.sFormId
       })
   }
 

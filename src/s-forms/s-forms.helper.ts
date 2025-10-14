@@ -133,11 +133,15 @@ export function transformCreateDto(createSFormDto: CreateSFormDto): CreateSForm 
 }
 
 export function transformUpdateDto(updateSFormDto: UpdateSFormDto): UpdateSForm {
+  const sFormType = updateSFormDto.sFormType as SFormType
+  
   return {
     sFormId: updateSFormDto.sFormId,
     sFormName: updateSFormDto.sFormName,
-    sFormType: updateSFormDto.sFormType as SFormType,
-    emailQuestionId: updateSFormDto.emailQuestionId
+    sFormType: sFormType,
+    emailQuestionId: sFormType === 'normal' 
+      ? (updateSFormDto.emailQuestionId !== undefined ? updateSFormDto.emailQuestionId : null)
+      : null
   }
 }
 

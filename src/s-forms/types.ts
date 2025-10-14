@@ -11,7 +11,7 @@ export interface UpdateSForm {
   sFormId: number
   sFormName: string
   sFormType: SFormType
-  emailQuestionId?: number
+  emailQuestionId?: number | null
 }
 
 export interface SForm {

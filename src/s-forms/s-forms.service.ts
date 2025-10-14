@@ -101,6 +101,6 @@ export class SFormsService {
 
     const copyData = processCopyDto(copySFormDto)
 
-    return await this.sFormsRepo.copySForm(copyData, sourceForm.sFormType)
+    return await this.sFormsRepo.copySForm(copyData)
   }
 }
