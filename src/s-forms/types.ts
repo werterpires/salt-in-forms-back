@@ -53,3 +53,8 @@ export interface SFormSimple {
   [db.SForms.S_FORM_ID]: number
   [db.SForms.S_FORM_NAME]: string
 }
+
+export interface SFormBasic {
+  sFormId: number
+  sFormName: string
+}

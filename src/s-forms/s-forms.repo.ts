@@ -113,6 +113,18 @@ export class SFormsRepo {
       .orderBy(db.SForms.S_FORM_NAME, 'asc')
   }
 
+  async findAllBasicByProcessId(processId: number) {
+    const results = await this.knex(db.Tables.S_FORMS)
+      .select(
+        `${db.SForms.S_FORM_ID} as sFormId`,
+        `${db.SForms.S_FORM_NAME} as sFormName`
+      )
+      .where(db.SForms.PROCESS_ID, processId)
+      .orderBy(db.SForms.S_FORM_NAME, 'asc')
+    
+    return results
+  }
+
   async copySForm(copyData: CopySForm) {
     return this.knex.transaction(async (trx) => {
       // 2. Buscar e copiar seções

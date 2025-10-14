@@ -84,6 +84,12 @@ export class SFormsController {
   }
 
   @Roles(ERoles.ADMIN)
+  @Get('basic/:processId')
+  async findAllBasic(@Param('processId', ParseIntPipe) processId: number) {
+    return await this.sFormsService.findAllBasicByProcessId(processId)
+  }
+
+  @Roles(ERoles.ADMIN)
   @Post('copy')
   async copy(@Body() copySFormDto: CopySFormDto) {
     return await this.sFormsService.copySForm(copySFormDto)
