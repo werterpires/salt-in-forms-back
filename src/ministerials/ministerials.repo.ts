@@ -49,6 +49,12 @@ export class MinisterialsRepo {
       .where(db.Ministerials.MINISTERIAL_NAME, ministerialName)
   }
 
+  async deactivateMinisterialsByField(fieldId: number): Promise<void> {
+    await this.knex(db.Tables.MINISTERIALS)
+      .where('fieldId', fieldId)
+      .update({ [db.Ministerials.MINISTERIAL_ACTIVE]: false })
+  }
+
   async createMinisterial(ministerial: CreateMinisterial): Promise<number> {
     const [ministerialId] = await this.knex(db.Tables.MINISTERIALS).insert(ministerial)
     return ministerialId
@@ -86,6 +92,7 @@ export class MinisterialsRepo {
         `${db.Tables.FIELDS}.${db.Fields.UNION_ID}`,
         `${db.Tables.UNIONS}.${db.Unions.UNION_ID}`
       )
+      .where(`${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ACTIVE}`, true)
 
     if (filters.ministerialName) {
       query.where(
@@ -123,6 +130,7 @@ export class MinisterialsRepo {
         `${db.Tables.FIELDS}.${db.Fields.UNION_ID}`,
         `${db.Tables.UNIONS}.${db.Unions.UNION_ID}`
       )
+      .where(`${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ACTIVE}`, true)
 
     if (filters.ministerialName) {
       query.where(

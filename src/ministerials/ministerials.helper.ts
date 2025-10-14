@@ -36,6 +36,7 @@ export function buildMinisterialData(
     [db.Ministerials.MINISTERIAL_ALTERNATIVE_EMAIL]: ministerialDto.ministerialAlternativeEmail || undefined,
     [db.Ministerials.MINISTERIAL_SECRETARY_NAME]: ministerialDto.ministerialSecretaryName || undefined,
     [db.Ministerials.MINISTERIAL_SECRETARY_PHONE]: ministerialDto.ministerialSecretaryPhone || undefined,
+    [db.Ministerials.MINISTERIAL_ACTIVE]: true,
     fieldId: fieldId
   }
 }

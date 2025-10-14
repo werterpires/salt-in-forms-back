@@ -59,7 +59,8 @@ export class MinisterialsService {
         const ministerialData = buildMinisterialData(ministerialDto, fieldId)
 
         if (existingMinisterials.length === 0) {
-          // Case 1: Name doesn't exist, insert new record
+          // Case 1: Name doesn't exist, deactivate others from same field and insert new record
+          await this.ministerialsRepo.deactivateMinisterialsByField(fieldId)
           await this.ministerialsRepo.createMinisterial(ministerialData)
         } else {
           // Case 2: Name exists, compare data
@@ -68,7 +69,8 @@ export class MinisterialsService {
           )
 
           if (!hasSameData) {
-            // Data is different, insert new record
+            // Data is different, deactivate others from same field and insert new record
+            await this.ministerialsRepo.deactivateMinisterialsByField(fieldId)
             await this.ministerialsRepo.createMinisterial(ministerialData)
           }
           // else: Data is the same, ignore
