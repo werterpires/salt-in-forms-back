@@ -8,6 +8,7 @@ export interface CreateMinisterial {
   ministerialAlternativeEmail?: string
   ministerialSecretaryName?: string
   ministerialSecretaryPhone?: string
+  ministerialActive?: boolean
   fieldId?: number
 }
 

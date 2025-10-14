@@ -25,9 +25,9 @@ export function applyFilters(
 
 export function buildMinisterialData(
   ministerialDto: CreateMinisterialDto,
-  fieldId: number
+  fieldId?: number
 ): CreateMinisterial {
-  return {
+  const data: CreateMinisterial = {
     [db.Ministerials.MINISTERIAL_NAME]: ministerialDto.ministerialName,
     [db.Ministerials.MINISTERIAL_PRIMARY_PHONE]: ministerialDto.ministerialPrimaryPhone || undefined,
     [db.Ministerials.MINISTERIAL_SECONDARY_PHONE]: ministerialDto.ministerialSecondaryPhone || undefined,
@@ -36,9 +36,14 @@ export function buildMinisterialData(
     [db.Ministerials.MINISTERIAL_ALTERNATIVE_EMAIL]: ministerialDto.ministerialAlternativeEmail || undefined,
     [db.Ministerials.MINISTERIAL_SECRETARY_NAME]: ministerialDto.ministerialSecretaryName || undefined,
     [db.Ministerials.MINISTERIAL_SECRETARY_PHONE]: ministerialDto.ministerialSecretaryPhone || undefined,
-    [db.Ministerials.MINISTERIAL_ACTIVE]: true,
-    fieldId: fieldId
+    [db.Ministerials.MINISTERIAL_ACTIVE]: true
   }
+  
+  if (fieldId !== undefined) {
+    data.fieldId = fieldId
+  }
+  
+  return data
 }
 
 export function compareMinisterialData(

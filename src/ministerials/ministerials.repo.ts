@@ -154,4 +154,102 @@ export class MinisterialsRepo {
     const elementsPerPage = 20
     return Math.ceil(count / elementsPerPage) || 0
   }
+
+  async createMinisterialsWithTransaction(data: {
+    unions: Array<{
+      unionName: string
+      unionAcronym: string
+      fields: Array<{
+        fieldName: string
+        fieldAcronym: string
+        ministerial: CreateMinisterial
+      }>
+    }>
+  }): Promise<void> {
+    await this.knex.transaction(async (trx) => {
+      for (const unionDto of data.unions) {
+        // 1. Check if union exists, if not create it
+        let union = await trx(db.Tables.UNIONS)
+          .where(db.Unions.UNION_NAME, unionDto.unionName)
+          .orWhere(db.Unions.UNION_ACRONYM, unionDto.unionAcronym)
+          .first()
+
+        let unionId: number
+        if (union) {
+          unionId = union[db.Unions.UNION_ID]
+        } else {
+          const [id] = await trx(db.Tables.UNIONS).insert({
+            [db.Unions.UNION_NAME]: unionDto.unionName,
+            [db.Unions.UNION_ACRONYM]: unionDto.unionAcronym
+          })
+          unionId = id
+        }
+
+        // 2. Process fields
+        for (const fieldDto of unionDto.fields) {
+          // Check if field exists, if not create it
+          let field = await trx(db.Tables.FIELDS)
+            .where(db.Fields.FIELD_NAME, fieldDto.fieldName)
+            .orWhere(db.Fields.FIELD_ACRONYM, fieldDto.fieldAcronym)
+            .first()
+
+          let fieldId: number
+          if (field) {
+            fieldId = field[db.Fields.FIELD_ID]
+          } else {
+            const [id] = await trx(db.Tables.FIELDS).insert({
+              [db.Fields.FIELD_NAME]: fieldDto.fieldName,
+              [db.Fields.FIELD_ACRONYM]: fieldDto.fieldAcronym,
+              [db.Fields.UNION_ID]: unionId
+            })
+            fieldId = id
+          }
+
+          // 3. Process ministerial
+          const ministerialData = fieldDto.ministerial
+          
+          // Check if ministerial with this name exists
+          const existingMinisterials = await trx(db.Tables.MINISTERIALS)
+            .where(db.Ministerials.MINISTERIAL_NAME, ministerialData.ministerialName)
+
+          const ministerialToInsert = {
+            ...ministerialData,
+            fieldId
+          }
+
+          if (existingMinisterials.length === 0) {
+            // Case 1: Name doesn't exist, deactivate others from same field and insert new record
+            await trx(db.Tables.MINISTERIALS)
+              .where('fieldId', fieldId)
+              .update({ [db.Ministerials.MINISTERIAL_ACTIVE]: false })
+            
+            await trx(db.Tables.MINISTERIALS).insert(ministerialToInsert)
+          } else {
+            // Case 2: Name exists, compare data
+            const hasSameData = existingMinisterials.some((existing) => {
+              return (
+                (existing.ministerialPrimaryPhone || undefined) === (ministerialData.ministerialPrimaryPhone || undefined) &&
+                (existing.ministerialSecondaryPhone || undefined) === (ministerialData.ministerialSecondaryPhone || undefined) &&
+                (existing.ministerialLandlinePhone || undefined) === (ministerialData.ministerialLandlinePhone || undefined) &&
+                (existing.ministerialPrimaryEmail || undefined) === (ministerialData.ministerialPrimaryEmail || undefined) &&
+                (existing.ministerialAlternativeEmail || undefined) === (ministerialData.ministerialAlternativeEmail || undefined) &&
+                (existing.ministerialSecretaryName || undefined) === (ministerialData.ministerialSecretaryName || undefined) &&
+                (existing.ministerialSecretaryPhone || undefined) === (ministerialData.ministerialSecretaryPhone || undefined)
+              )
+            })
+
+            if (!hasSameData) {
+              // Data is different, deactivate others from same field and insert new record
+              await trx(db.Tables.MINISTERIALS)
+                .where('fieldId', fieldId)
+                .update({ [db.Ministerials.MINISTERIAL_ACTIVE]: false })
+              
+              await trx(db.Tables.MINISTERIALS).insert(ministerialToInsert)
+            }
+            // else: Data is the same, ignore
+          }
+        }
+      }
+    })
+  }
 }
