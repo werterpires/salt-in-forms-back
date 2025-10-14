@@ -2,11 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { CreateMinisterialsDto } from './dto/create-ministerials.dto'
 import { MinisterialsRepo } from './ministerials.repo'
 import * as db from 'src/constants/db-schema.enum'
-import {
-  buildMinisterialData,
-  compareMinisterialData,
-  processMinisterialResults
-} from './ministerials.helper'
+import { buildMinisterialData } from './ministerials.helper'
 import { FindAllResponse, Paginator } from 'src/shared/types/types'
 import { MinisterialsFilter, CreateMinisterialsTransaction } from './type'
 
