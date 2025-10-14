@@ -18,7 +18,6 @@ import { AnswersDisplayRules } from 'src/constants/answer_display_rule'
 import { EQuestionsTypes } from '../constants/questions-types.enum'
 import { EQuestionOptionsTypes } from '../constants/questions-options-types.enum'
 import { QuestionOptionDto } from './dto/optionsDto'
-import e from 'express'
 
 export class QuestionsHelper {
   static async transformCreateDto(
@@ -681,7 +680,8 @@ export class QuestionsHelper {
       questionType === EQuestionsTypes.OPEN_ANSWER ||
       questionType === EQuestionsTypes.DATE ||
       questionType === EQuestionsTypes.TIME ||
-      questionType === EQuestionsTypes.MULTIPLE_RESPONSES
+      questionType === EQuestionsTypes.MULTIPLE_RESPONSES ||
+      questionType === EQuestionsTypes.EMAIL
     ) {
       if (questionOptions && questionOptions.length > 0) {
         throw new BadRequestException(
