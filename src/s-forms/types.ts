@@ -4,12 +4,14 @@ export interface CreateSForm {
   processId: number
   sFormName: string
   sFormType: SFormType
+  emailQuestionId?: number
 }
 
 export interface UpdateSForm {
   sFormId: number
   sFormName: string
   sFormType: SFormType
+  emailQuestionId?: number
 }
 
 export interface SForm {
@@ -17,6 +19,7 @@ export interface SForm {
   sFormName: string
   sFormType: SFormType
   processId: number
+  emailQuestionId?: number
 }
 
 export const sFormTypesArray = ['candidate', 'ministerial', 'normal'] as const

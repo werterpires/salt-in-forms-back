@@ -25,7 +25,7 @@ export function validateUpdateDto(
   updateSFormDto: UpdateSFormDto,
   sForms: SFormToValidate[]
 ) {
-  const { sFormType } = updateSFormDto
+  const { sFormType, sFormId, emailQuestionId } = updateSFormDto
 
   if (!isValidFormType(sFormType)) {
     throw new BadRequestException(`#O tipo do formulário nâo existe.`)
@@ -58,13 +58,26 @@ export function validateUpdateDto(
       )
     }
   }
+
+  // Validar emailQuestionId baseado no tipo
+  if (sFormType === 'normal') {
+    // Para tipo "normal", emailQuestionId é opcional mas se fornecido deve ser válido
+    // A validação de existência da questão será feita no repositório
+  } else {
+    // Para tipos diferentes de "normal", emailQuestionId não pode existir
+    if (emailQuestionId !== undefined && emailQuestionId !== null) {
+      throw new BadRequestException(
+        '#O campo emailQuestionId só pode ser informado para formulários do tipo "normal".'
+      )
+    }
+  }
 }
 
 export function validateCreateDto(
   createSFormDto: CreateSFormDto,
   sForms: SFormToValidate[]
 ) {
-  const { sFormType } = createSFormDto
+  const { sFormType, emailQuestionId } = createSFormDto
 
   if (!isValidFormType(sFormType)) {
     throw new BadRequestException(`#O tipo do formulário nâo existe.`)
@@ -82,6 +95,19 @@ export function validateCreateDto(
     if (sForms.some((form) => form.sFormType === 'candidate')) {
       throw new BadRequestException(
         `#O processo já possui um formulário do tipo candidato.`
+      )
+    }
+  }
+
+  // Validar emailQuestionId baseado no tipo
+  if (sFormType === 'normal') {
+    // Para tipo "normal", emailQuestionId é opcional mas se fornecido deve ser válido
+    // A validação de existência da questão será feita no repositório
+  } else {
+    // Para tipos diferentes de "normal", emailQuestionId não pode existir
+    if (emailQuestionId !== undefined && emailQuestionId !== null) {
+      throw new BadRequestException(
+        '#O campo emailQuestionId só pode ser informado para formulários do tipo "normal".'
       )
     }
   }

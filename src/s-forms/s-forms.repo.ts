@@ -22,7 +22,17 @@ export class SFormsRepo {
   constructor(@InjectConnection('knexx') private readonly knex: Knex) {}
 
   async createSForm(createSFormData: CreateSForm) {
-    return this.knex(db.Tables.S_FORMS).insert(createSFormData)
+    const insertData: any = {
+      [db.SForms.PROCESS_ID]: createSFormData.processId,
+      [db.SForms.S_FORM_NAME]: createSFormData.sFormName,
+      [db.SForms.S_FORM_TYPE]: createSFormData.sFormType
+    }
+
+    if (createSFormData.sFormType === 'normal' && createSFormData.emailQuestionId) {
+      insertData[db.SForms.EMAIL_QUESTION_ID] = createSFormData.emailQuestionId
+    }
+
+    return this.knex(db.Tables.S_FORMS).insert(insertData)
   }
 
   async findAllAllFormsByProcessId(
@@ -35,7 +45,8 @@ export class SFormsRepo {
         db.SForms.S_FORM_ID,
         db.SForms.S_FORM_NAME,
         db.SForms.S_FORM_TYPE,
-        db.SForms.PROCESS_ID
+        db.SForms.PROCESS_ID,
+        db.SForms.EMAIL_QUESTION_ID
       )
       .where(db.SForms.PROCESS_ID, processId)
 
@@ -74,12 +85,21 @@ export class SFormsRepo {
   }
 
   updateSForm(updateSFormDAta: UpdateSForm) {
-    const { sFormId, sFormName, sFormType } = updateSFormDAta
+    const { sFormId, sFormName, sFormType, emailQuestionId } = updateSFormDAta
+    
+    const updateData: any = {
+      [db.SForms.S_FORM_NAME]: sFormName,
+      [db.SForms.S_FORM_TYPE]: sFormType
+    }
+
+    if (sFormType === 'normal') {
+      updateData[db.SForms.EMAIL_QUESTION_ID] = emailQuestionId || null
+    } else {
+      updateData[db.SForms.EMAIL_QUESTION_ID] = null
+    }
+
     return this.knex(db.Tables.S_FORMS)
-      .update({
-        [db.SForms.S_FORM_NAME]: sFormName,
-        [db.SForms.S_FORM_TYPE]: sFormType
-      })
+      .update(updateData)
       .where({
         [db.SForms.S_FORM_ID]: sFormId
       })
@@ -99,7 +119,8 @@ export class SFormsRepo {
         db.SForms.S_FORM_ID,
         db.SForms.S_FORM_NAME,
         db.SForms.S_FORM_TYPE,
-        db.SForms.PROCESS_ID
+        db.SForms.PROCESS_ID,
+        db.SForms.EMAIL_QUESTION_ID
       )
       .where(db.SForms.S_FORM_ID, sFormId)
       .first()) as SForm

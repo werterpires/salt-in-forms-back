@@ -32,7 +32,8 @@ export class SFormsService {
     const sFormCreateData: CreateSForm = {
       processId: createSFormDto.processId,
       sFormName: createSFormDto.sFormName,
-      sFormType: createSFormDto.sFormType as SFormType
+      sFormType: createSFormDto.sFormType as SFormType,
+      emailQuestionId: createSFormDto.sFormType === 'normal' ? createSFormDto.emailQuestionId : undefined
     }
 
     return await this.sFormsRepo.createSForm(sFormCreateData)
@@ -82,7 +83,8 @@ export class SFormsService {
     const updateFormDate: UpdateSForm = {
       sFormId: updateSFormDto.sFormId,
       sFormName: updateSFormDto.sFormName,
-      sFormType: updateSFormDto.sFormType as SFormType
+      sFormType: updateSFormDto.sFormType as SFormType,
+      emailQuestionId: updateSFormDto.sFormType === 'normal' ? updateSFormDto.emailQuestionId : null
     }
 
     return await this.sFormsRepo.updateSForm(updateFormDate)
