@@ -3,7 +3,7 @@ import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
 import * as db from '../constants/db-schema.enum'
 import { Process } from 'src/processes/types'
-import { CreateCandidate } from './types'
+import { CreateCandidate, FormCandidate, FormCandidateData } from './types'
 
 @Injectable()
 export class CandidatesRepo {
@@ -133,12 +133,7 @@ export class CandidatesRepo {
   }
 
   async insertFormsCandidatesInBatch(
-    formsCandidatesData: {
-      candidateId: number
-      sFormId: number
-      formCandidateStatus: number
-      formCandidateAccessCode: string
-    }[]
+    formsCandidatesData: FormCandidateData[]
   ): Promise<number[]> {
     if (formsCandidatesData.length === 0) {
       return []
@@ -165,7 +160,7 @@ export class CandidatesRepo {
     })
   }
 
-  async findFormCandidateByAccessCode(accessCode: string) {
+  async findFormCandidateByAccessCode(accessCode: string): Promise<FormCandidate | undefined> {
     const result = await this.knex(db.Tables.FORMS_CANDIDATES)
       .select('*')
       .where(db.FormsCandidates.FORM_CANDIDATE_ACCESS_CODE, accessCode)

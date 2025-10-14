@@ -33,3 +33,25 @@ export interface CreateCandidate {
   candidateZipCode: string
   candidateCountry: string
 }
+
+export interface FormCandidate {
+  formCandidateId: number
+  candidateId: number
+  sFormId: number
+  formCandidateStatus: number
+  formCandidateAccessCode: string
+  created_at: Date
+  updated_at: Date
+}
+
+export interface FormCandidateData {
+  candidateId: number
+  sFormId: number
+  formCandidateStatus: number
+  formCandidateAccessCode: string
+}
+
+export interface ValidateAccessCodeResponse {
+  message: string
+  formCandidateId: number
+}

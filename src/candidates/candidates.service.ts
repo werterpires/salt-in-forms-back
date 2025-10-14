@@ -3,7 +3,7 @@ import { Cron } from '@nestjs/schedule'
 import { CandidatesRepo } from './candidates.repo'
 import { ExternalApiService } from '../shared/utils-module/external-api/external-api.service'
 import { EncryptionService } from '../shared/utils-module/encryption/encryption.service'
-import { CreateCandidate } from './types'
+import { CreateCandidate, FormCandidateData, ValidateAccessCodeResponse } from './types'
 import { CustomLoggerService } from 'src/shared/utils-module/custom-logger/custom-logger.service'
 import { SendPulseEmailService } from '../shared/utils-module/email-sender/sendpulse-email.service'
 import { createAccessCode } from './candidates.helper'
@@ -36,12 +36,7 @@ export class CandidatesService {
       const candidatesNotInFormsCandidates = await this.candidatesRepo.findCandidatesNotInFormsCandidatesByProcessId(process.processId)
 
       if (candidatesNotInFormsCandidates.length > 0 && sForms.length > 0) {
-        const formsCandidatesData: {
-          candidateId: number
-          sFormId: number
-          formCandidateStatus: number
-          formCandidateAccessCode: string
-        }[] = []
+        const formsCandidatesData: FormCandidateData[] = []
 
         for (const candidateId of candidatesNotInFormsCandidates) {
           for (const sForm of sForms) {
@@ -379,7 +374,7 @@ export class CandidatesService {
     return dateString
   }
 
-  async validateAccessCode(accessCode: string) {
+  async validateAccessCode(accessCode: string): Promise<ValidateAccessCodeResponse> {
     const formCandidate =
       await this.candidatesRepo.findFormCandidateByAccessCode(accessCode)
 
