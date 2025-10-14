@@ -8,7 +8,9 @@ import { FindAllResponse, Paginator } from 'src/shared/types/types'
 import {
   validateCreateDto,
   validateUpdateDto,
-  processCopyDto
+  processCopyDto,
+  transformCreateDto,
+  transformUpdateDto
 } from './s-forms.helper'
 import {
   CreateSForm,
@@ -29,12 +31,7 @@ export class SFormsService {
 
     validateCreateDto(createSFormDto, sFormTypes)
 
-    const sFormCreateData: CreateSForm = {
-      processId: createSFormDto.processId,
-      sFormName: createSFormDto.sFormName,
-      sFormType: createSFormDto.sFormType as SFormType,
-      emailQuestionId: createSFormDto.sFormType === 'normal' ? createSFormDto.emailQuestionId : undefined
-    }
+    const sFormCreateData = transformCreateDto(createSFormDto)
 
     return await this.sFormsRepo.createSForm(sFormCreateData)
   }
@@ -80,14 +77,9 @@ export class SFormsService {
 
     validateUpdateDto(updateSFormDto, sForms)
 
-    const updateFormDate: UpdateSForm = {
-      sFormId: updateSFormDto.sFormId,
-      sFormName: updateSFormDto.sFormName,
-      sFormType: updateSFormDto.sFormType as SFormType,
-      emailQuestionId: updateSFormDto.sFormType === 'normal' ? updateSFormDto.emailQuestionId : null
-    }
+    const updateFormData = transformUpdateDto(updateSFormDto)
 
-    return await this.sFormsRepo.updateSForm(updateFormDate)
+    return await this.sFormsRepo.updateSForm(updateFormData)
   }
 
   async deleteSForm(sFormId: number) {

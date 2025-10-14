@@ -30,6 +30,11 @@ export class SFormsRepo {
 
     if (createSFormData.sFormType === 'normal' && createSFormData.emailQuestionId) {
       insertData[db.SForms.EMAIL_QUESTION_ID] = createSFormData.emailQuestionId
+    } else if (createSFormData.sFormType !== 'normal' && createSFormData.emailQuestionId) {
+      // Rule b: If not 'normal', emailQuestionId is prohibited.
+      // This should ideally be handled by a validator before reaching the repo,
+      // but as a safeguard here, we can throw an error or simply not include it.
+      // For now, we'll omit it, assuming validation happens upstream.
     }
 
     return this.knex(db.Tables.S_FORMS).insert(insertData)
@@ -86,16 +91,22 @@ export class SFormsRepo {
 
   updateSForm(updateSFormDAta: UpdateSForm) {
     const { sFormId, sFormName, sFormType, emailQuestionId } = updateSFormDAta
-    
+
     const updateData: any = {
       [db.SForms.S_FORM_NAME]: sFormName,
       [db.SForms.S_FORM_TYPE]: sFormType
     }
 
+    // Rule a: If sFormType is 'normal', emailQuestionId is required.
+    // If sFormType is not 'normal', emailQuestionId is prohibited.
+    // This logic should ideally be handled by a validator before reaching the repo.
+    // Here, we enforce the prohibition part.
     if (sFormType === 'normal') {
-      updateData[db.SForms.EMAIL_QUESTION_ID] = emailQuestionId || null
+      // If it's a normal form, we set emailQuestionId if provided, otherwise it might be a bad request handled upstream.
+      updateData[db.SForms.EMAIL_QUESTION_ID] = emailQuestionId !== undefined ? emailQuestionId : null;
     } else {
-      updateData[db.SForms.EMAIL_QUESTION_ID] = null
+      // If it's not a normal form, emailQuestionId must be null.
+      updateData[db.SForms.EMAIL_QUESTION_ID] = null;
     }
 
     return this.knex(db.Tables.S_FORMS)

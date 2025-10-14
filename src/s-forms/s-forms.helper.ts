@@ -25,10 +25,25 @@ export function validateUpdateDto(
   updateSFormDto: UpdateSFormDto,
   sForms: SFormToValidate[]
 ) {
-  const { sFormType, sFormId, emailQuestionId } = updateSFormDto
+  const { sFormType, emailQuestionId } = updateSFormDto
 
   if (!isValidFormType(sFormType)) {
     throw new BadRequestException(`#O tipo do formulário nâo existe.`)
+  }
+
+  // Validar emailQuestionId baseado no tipo
+  if (sFormType === 'normal') {
+    if (!emailQuestionId) {
+      throw new BadRequestException(
+        `#Formulários do tipo normal devem ter um emailQuestionId.`
+      )
+    }
+  } else {
+    if (emailQuestionId) {
+      throw new BadRequestException(
+        `#Formulários que não são do tipo normal não podem ter emailQuestionId.`
+      )
+    }
   }
 
   if (sFormType == 'ministerial') {
@@ -58,19 +73,6 @@ export function validateUpdateDto(
       )
     }
   }
-
-  // Validar emailQuestionId baseado no tipo
-  if (sFormType === 'normal') {
-    // Para tipo "normal", emailQuestionId é opcional mas se fornecido deve ser válido
-    // A validação de existência da questão será feita no repositório
-  } else {
-    // Para tipos diferentes de "normal", emailQuestionId não pode existir
-    if (emailQuestionId !== undefined && emailQuestionId !== null) {
-      throw new BadRequestException(
-        '#O campo emailQuestionId só pode ser informado para formulários do tipo "normal".'
-      )
-    }
-  }
 }
 
 export function validateCreateDto(
@@ -81,6 +83,21 @@ export function validateCreateDto(
 
   if (!isValidFormType(sFormType)) {
     throw new BadRequestException(`#O tipo do formulário nâo existe.`)
+  }
+
+  // Validar emailQuestionId baseado no tipo
+  if (sFormType === 'normal') {
+    if (!emailQuestionId) {
+      throw new BadRequestException(
+        `#Formulários do tipo normal devem ter um emailQuestionId.`
+      )
+    }
+  } else {
+    if (emailQuestionId) {
+      throw new BadRequestException(
+        `#Formulários que não são do tipo normal não podem ter emailQuestionId.`
+      )
+    }
   }
 
   if (sFormType == 'ministerial') {
@@ -98,23 +115,28 @@ export function validateCreateDto(
       )
     }
   }
-
-  // Validar emailQuestionId baseado no tipo
-  if (sFormType === 'normal') {
-    // Para tipo "normal", emailQuestionId é opcional mas se fornecido deve ser válido
-    // A validação de existência da questão será feita no repositório
-  } else {
-    // Para tipos diferentes de "normal", emailQuestionId não pode existir
-    if (emailQuestionId !== undefined && emailQuestionId !== null) {
-      throw new BadRequestException(
-        '#O campo emailQuestionId só pode ser informado para formulários do tipo "normal".'
-      )
-    }
-  }
 }
 
 function isValidFormType(value: string): value is SFormType {
   return sFormTypesArray.includes(value as SFormType)
+}
+
+export function transformCreateDto(createSFormDto: CreateSFormDto): CreateSForm {
+  return {
+    processId: createSFormDto.processId,
+    sFormName: createSFormDto.sFormName,
+    sFormType: createSFormDto.sFormType as SFormType,
+    emailQuestionId: createSFormDto.emailQuestionId
+  }
+}
+
+export function transformUpdateDto(updateSFormDto: UpdateSFormDto): UpdateSForm {
+  return {
+    sFormId: updateSFormDto.sFormId,
+    sFormName: updateSFormDto.sFormName,
+    sFormType: updateSFormDto.sFormType as SFormType,
+    emailQuestionId: updateSFormDto.emailQuestionId
+  }
 }
 
 export function processCopyDto(copySFormDto: CopySFormDto): CopySForm {
