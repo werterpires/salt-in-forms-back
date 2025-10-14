@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common'
 import { CreateMinisterialsDto } from './dto/create-ministerials.dto'
 import { MinisterialsRepo } from './ministerials.repo'
 import * as db from 'src/constants/db-schema.enum'
-import { buildMinisterialData } from './ministerials.helper'
+import { buildMinisterialData, compareMinisterialData } from './ministerials.helper'
 
 @Injectable()
 export class MinisterialsService {
@@ -62,7 +62,7 @@ export class MinisterialsService {
         } else {
           // Case 2: Name exists, compare data
           const hasSameData = existingMinisterials.some((existing) =>
-            this.ministerialsRepo.compareMinisterialData(existing, ministerialData)
+            compareMinisterialData(existing, ministerialData)
           )
 
           if (!hasSameData) {

@@ -53,19 +53,4 @@ export class MinisterialsRepo {
     const [ministerialId] = await this.knex(db.Tables.MINISTERIALS).insert(ministerial)
     return ministerialId
   }
-
-  compareMinisterialData(
-    existing: Ministerial,
-    newData: CreateMinisterial
-  ): boolean {
-    return (
-      (existing.ministerialPrimaryPhone || undefined) === (newData.ministerialPrimaryPhone || undefined) &&
-      (existing.ministerialSecondaryPhone || undefined) === (newData.ministerialSecondaryPhone || undefined) &&
-      (existing.ministerialLandlinePhone || undefined) === (newData.ministerialLandlinePhone || undefined) &&
-      (existing.ministerialPrimaryEmail || undefined) === (newData.ministerialPrimaryEmail || undefined) &&
-      (existing.ministerialAlternativeEmail || undefined) === (newData.ministerialAlternativeEmail || undefined) &&
-      (existing.ministerialSecretaryName || undefined) === (newData.ministerialSecretaryName || undefined) &&
-      (existing.ministerialSecretaryPhone || undefined) === (newData.ministerialSecretaryPhone || undefined)
-    )
-  }
 }
