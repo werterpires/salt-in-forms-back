@@ -123,7 +123,7 @@ export class SFormsRepo {
       .select(db.SForms.S_FORM_ID, db.SForms.S_FORM_NAME)
       .where(db.SForms.PROCESS_ID, processId)
       .orderBy(db.SForms.S_FORM_NAME, 'asc')
-    
+
     const results: SFormBasic[] = await Promise.all(
       forms.map(async (form): Promise<SFormBasic> => {
         const emailQuestions: Array<{
@@ -139,7 +139,7 @@ export class SFormsRepo {
           .where(db.FormSections.S_FORM_ID, form[db.SForms.S_FORM_ID])
           .andWhere(db.Questions.QUESTION_TYPE, EQuestionsTypes.EMAIL)
           .orderBy(db.Questions.QUESTION_ORDER, 'asc')
-        
+
         return {
           sFormId: form[db.SForms.S_FORM_ID],
           sFormName: form[db.SForms.S_FORM_NAME],
@@ -150,7 +150,7 @@ export class SFormsRepo {
         }
       })
     )
-    
+
     return results
   }
 
