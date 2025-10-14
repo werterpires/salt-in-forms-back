@@ -16,7 +16,9 @@ export enum Tables {
   SUB_VALIDATIONS = 'subValidations',
   CANDIDATES = 'candidates',
   FORMS_CANDIDATES = 'formsCandidates',
-  ANSWERS = 'answers'
+  ANSWERS = 'answers',
+  UNIONS = 'unions',
+  FIELDS = 'fields'
 }
 
 export enum Users {
@@ -80,9 +82,13 @@ export enum QuestionsAreas {
 export enum Ministerials {
   MINISTERIAL_ID = 'ministerialId',
   MINISTERIAL_NAME = 'ministerialName',
-  MINISTERIAL_FIELD = 'ministerialField',
-  MINISTERIAL_EMAIL = 'ministerialEmail',
-  MINISTERIAL_ACTIVE = 'ministerialActive'
+  MINISTERIAL_PRIMARY_PHONE = 'ministerialPrimaryPhone',
+  MINISTERIAL_SECONDARY_PHONE = 'ministerialSecondaryPhone',
+  MINISTERIAL_LANDLINE_PHONE = 'ministerialLandlinePhone',
+  MINISTERIAL_PRIMARY_EMAIL = 'ministerialPrimaryEmail',
+  MINISTERIAL_ALTERNATIVE_EMAIL = 'ministerialAlternativeEmail',
+  MINISTERIAL_SECRETARY_NAME = 'ministerialSecretaryName',
+  MINISTERIAL_SECRETARY_PHONE = 'ministerialSecretaryPhone'
 }
 
 export enum FormSections {
@@ -188,4 +194,17 @@ export enum Answers {
   ANSWER_VALUE = 'answerValue',
   VALID_ANSWER = 'validAnswer',
   ANSWER_COMMENT = 'answerComment'
+}
+
+export enum Unions {
+  UNION_ID = 'unionId',
+  UNION_NAME = 'unionName',
+  UNION_ACRONYM = 'unionAcronym'
+}
+
+export enum Fields {
+  FIELD_ID = 'fieldId',
+  FIELD_NAME = 'fieldName',
+  FIELD_ACRONYM = 'fieldAcronym',
+  UNION_ID = 'unionId'
 }
