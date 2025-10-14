@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
-import { CreateUnion, CreateField, CreateMinisterial, Union, Field, Ministerial } from './type'
+import { CreateUnion, CreateField, CreateMinisterial, Union, Field, Ministerial, CreateMinisterialsTransaction } from './type'
 import * as db from '../constants/db-schema.enum'
 
 @Injectable()
@@ -155,17 +155,7 @@ export class MinisterialsRepo {
     return Math.ceil(count / elementsPerPage) || 0
   }
 
-  async createMinisterialsWithTransaction(data: {
-    unions: Array<{
-      unionName: string
-      unionAcronym: string
-      fields: Array<{
-        fieldName: string
-        fieldAcronym: string
-        ministerial: CreateMinisterial
-      }>
-    }>
-  }): Promise<void> {
+  async createMinisterialsWithTransaction(data: CreateMinisterialsTransaction): Promise<void> {
     await this.knex.transaction(async (trx) => {
       for (const unionDto of data.unions) {
         // 1. Check if union exists, if not create it

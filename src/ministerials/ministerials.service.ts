@@ -5,7 +5,7 @@ import { MinisterialsRepo } from './ministerials.repo'
 import * as db from 'src/constants/db-schema.enum'
 import { buildMinisterialData, compareMinisterialData, processMinisterialResults } from './ministerials.helper'
 import { FindAllResponse, Paginator } from 'src/shared/types/types'
-import { MinisterialsFilter } from './type'
+import { MinisterialsFilter, CreateMinisterialsTransaction } from './type'
 
 @Injectable()
 export class MinisterialsService {
@@ -13,7 +13,7 @@ export class MinisterialsService {
 
   async createMinisterials(createMinisterialsDto: CreateMinisterialsDto) {
     // Transform DTO to repository format
-    const dataToCreate = {
+    const dataToCreate: CreateMinisterialsTransaction = {
       unions: createMinisterialsDto.unions.map(unionDto => ({
         unionName: unionDto.unionName,
         unionAcronym: unionDto.unionAcronym,

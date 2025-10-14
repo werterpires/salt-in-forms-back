@@ -55,3 +55,15 @@ export interface MinisterialWithRelations {
   field: Field
   union: Union
 }
+
+export interface CreateMinisterialsTransaction {
+  unions: Array<{
+    unionName: string
+    unionAcronym: string
+    fields: Array<{
+      fieldName: string
+      fieldAcronym: string
+      ministerial: CreateMinisterial
+    }>
+  }>
+}
