@@ -52,8 +52,12 @@ export interface MinisterialWithRelations {
   ministerialSecretaryName?: string
   ministerialSecretaryPhone?: string
   ministerialCreatedAt: Date
-  field: Field
-  union: Union
+  fieldId: number
+  fieldName: string
+  fieldAcronym: string
+  unionId: number
+  unionName: string
+  unionAcronym: string
 }
 
 export interface CreateMinisterialsTransaction {
