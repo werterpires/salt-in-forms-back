@@ -1,4 +1,3 @@
-
 import { Type } from 'class-transformer'
 import { ArrayMinSize, IsArray, ValidateNested } from 'class-validator'
 import { CreateUnionDto } from './create-union.dto'

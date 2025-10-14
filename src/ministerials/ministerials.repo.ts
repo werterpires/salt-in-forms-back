@@ -10,7 +10,6 @@ import {
   Ministerial,
   CreateMinisterialsTransaction,
   MinisterialsFilter,
-  MinisterialQueryResult,
   MinisterialWithRelations
 } from './type'
 import * as db from '../constants/db-schema.enum'
@@ -208,7 +207,7 @@ export class MinisterialsRepo {
     await this.knex.transaction(async (trx) => {
       for (const unionDto of data.unions) {
         // 1. Check if union exists, if not create it
-        let union = await trx(db.Tables.UNIONS)
+        const union = await trx(db.Tables.UNIONS)
           .where(db.Unions.UNION_NAME, unionDto.unionName)
           .orWhere(db.Unions.UNION_ACRONYM, unionDto.unionAcronym)
           .first()
@@ -227,7 +226,7 @@ export class MinisterialsRepo {
         // 2. Process fields
         for (const fieldDto of unionDto.fields) {
           // Check if field exists, if not create it
-          let field = await trx(db.Tables.FIELDS)
+          const field = await trx(db.Tables.FIELDS)
             .where(db.Fields.FIELD_NAME, fieldDto.fieldName)
             .orWhere(db.Fields.FIELD_ACRONYM, fieldDto.fieldAcronym)
             .first()
@@ -246,6 +245,10 @@ export class MinisterialsRepo {
 
           // 3. Process ministerial
           const ministerialData = fieldDto.ministerial
+
+          if (!ministerialData) {
+            continue // Skip if no ministerial data provided
+          }
 
           // Check if ministerial with this name exists
           const existingMinisterials = await trx(db.Tables.MINISTERIALS).where(

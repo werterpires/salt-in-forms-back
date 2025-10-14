@@ -67,7 +67,7 @@ export interface CreateMinisterialsTransaction {
     fields: Array<{
       fieldName: string
       fieldAcronym: string
-      ministerial: CreateMinisterial
+      ministerial?: CreateMinisterial
     }>
   }>
 }

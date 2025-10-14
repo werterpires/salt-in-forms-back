@@ -19,7 +19,9 @@ export class MinisterialsService {
         fields: unionDto.fields.map((fieldDto) => ({
           fieldName: fieldDto.fieldName,
           fieldAcronym: fieldDto.fieldAcronym,
-          ministerial: buildMinisterialData(fieldDto.ministerial, 0) // fieldId will be set in transaction
+          ministerial: fieldDto.ministerial
+            ? buildMinisterialData(fieldDto.ministerial, 0)
+            : undefined // fieldId will be set in transaction
         }))
       }))
     }

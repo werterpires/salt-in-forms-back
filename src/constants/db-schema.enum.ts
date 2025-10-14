@@ -89,7 +89,8 @@ export enum Ministerials {
   MINISTERIAL_ALTERNATIVE_EMAIL = 'ministerialAlternativeEmail',
   MINISTERIAL_SECRETARY_NAME = 'ministerialSecretaryName',
   MINISTERIAL_SECRETARY_PHONE = 'ministerialSecretaryPhone',
-  MINISTERIAL_ACTIVE = 'ministerialActive'
+  MINISTERIAL_ACTIVE = 'ministerialActive',
+  FIELD_ID = 'fieldId'
 }
 
 export enum FormSections {

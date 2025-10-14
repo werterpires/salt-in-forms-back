@@ -1,6 +1,11 @@
-
 import { Type } from 'class-transformer'
-import { ArrayMinSize, IsArray, IsString, Length, ValidateNested } from 'class-validator'
+import {
+  ArrayMinSize,
+  IsArray,
+  IsString,
+  Length,
+  ValidateNested
+} from 'class-validator'
 import { CreateFieldDto } from './create-field.dto'
 
 export class CreateUnionDto {

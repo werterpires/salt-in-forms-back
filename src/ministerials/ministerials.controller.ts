@@ -11,7 +11,6 @@ import { MinisterialsService } from './ministerials.service'
 import { CreateMinisterialsDto } from './dto/create-ministerials.dto'
 import { Paginator } from 'src/shared/types/types'
 import * as db from 'src/constants/db-schema.enum'
-import { BoolenOrUndefinedPipe } from 'src/shared/pipes/boolen-or-undefined/boolen-or-undefined.pipe'
 import { MinisterialsFilter } from './type'
 
 @Controller('ministerials')
@@ -29,8 +28,8 @@ export class MinisterialsController {
     @Query('direction') direction: string,
     @Query('column') column: string,
     @Query('ministerialName') ministerialName: string,
-    @Query('fieldId', ParseIntPipe) fieldId?: number,
-    @Query('unionId', ParseIntPipe) unionId?: number
+    @Query('fieldId') fieldId?: number,
+    @Query('unionId') unionId?: number
   ) {
     const paginator = new Paginator<typeof db.Ministerials>(
       page,
@@ -41,9 +40,9 @@ export class MinisterialsController {
     )
 
     const filters: MinisterialsFilter = {
-      ministerialName,
-      fieldId,
-      unionId
+      ministerialName: ministerialName || undefined,
+      fieldId: fieldId ? +fieldId : undefined,
+      unionId: unionId ? +unionId : undefined
     }
 
     return this.ministerialsService.findAllMinisterials(paginator, filters)

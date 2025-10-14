@@ -1,7 +1,7 @@
-
 import { Type } from 'class-transformer'
 import { IsString, Length, ValidateNested } from 'class-validator'
 import { CreateMinisterialDto } from './create-ministerial.dto'
+import { Optional } from '@nestjs/common'
 
 export class CreateFieldDto {
   @IsString({ message: '#O nome do campo deve ser uma string' })
@@ -16,7 +16,8 @@ export class CreateFieldDto {
   })
   fieldAcronym: string
 
+  @Optional()
   @ValidateNested()
   @Type(() => CreateMinisterialDto)
-  ministerial: CreateMinisterialDto
+  ministerial?: CreateMinisterialDto
 }

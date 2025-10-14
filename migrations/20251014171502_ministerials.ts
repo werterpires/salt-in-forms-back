@@ -15,7 +15,18 @@ export async function up(knex: Knex): Promise<void> {
     table.text(db.Ministerials.MINISTERIAL_ALTERNATIVE_EMAIL).nullable()
     table.text(db.Ministerials.MINISTERIAL_SECRETARY_NAME).nullable()
     table.text(db.Ministerials.MINISTERIAL_SECRETARY_PHONE).nullable()
-    table.boolean(db.Ministerials.MINISTERIAL_ACTIVE).defaultTo(true).notNullable()
+    table
+      .integer(db.Ministerials.FIELD_ID)
+      .unsigned()
+      .notNullable()
+      .references(db.Fields.FIELD_ID)
+      .inTable(db.Tables.FIELDS)
+      .onDelete('RESTRICT')
+      .onUpdate('CASCADE')
+    table
+      .boolean(db.Ministerials.MINISTERIAL_ACTIVE)
+      .defaultTo(true)
+      .notNullable()
     table.timestamps(true, true)
   })
 }
