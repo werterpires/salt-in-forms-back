@@ -57,4 +57,10 @@ export interface SFormSimple {
 export interface SFormBasic {
   sFormId: number
   sFormName: string
+  emailQuestions: BasicQuestion[]
+}
+
+export interface BasicQuestion {
+  questionId: number
+  questionStatement: string
 }

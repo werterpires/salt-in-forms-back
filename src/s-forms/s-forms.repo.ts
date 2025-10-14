@@ -114,13 +114,36 @@ export class SFormsRepo {
   }
 
   async findAllBasicByProcessId(processId: number) {
-    const results = await this.knex(db.Tables.S_FORMS)
+    const forms = await this.knex(db.Tables.S_FORMS)
       .select(
         `${db.SForms.S_FORM_ID} as sFormId`,
         `${db.SForms.S_FORM_NAME} as sFormName`
       )
       .where(db.SForms.PROCESS_ID, processId)
       .orderBy(db.SForms.S_FORM_NAME, 'asc')
+    
+    const results = await Promise.all(
+      forms.map(async (form) => {
+        const emailQuestions = await this.knex(db.Tables.QUESTIONS)
+          .join(
+            db.Tables.FORM_SECTIONS,
+            `${db.Tables.FORM_SECTIONS}.${db.FormSections.FORM_SECTION_ID}`,
+            `${db.Tables.QUESTIONS}.${db.Questions.FORM_SECTION_ID}`
+          )
+          .select(
+            `${db.Questions.QUESTION_ID} as questionId`,
+            `${db.Questions.QUESTION_STATEMENT} as questionStatement`
+          )
+          .where(db.FormSections.S_FORM_ID, form.sFormId)
+          .andWhere(db.Questions.QUESTION_TYPE, 10)
+          .orderBy(db.Questions.QUESTION_ORDER, 'asc')
+        
+        return {
+          ...form,
+          emailQuestions
+        }
+      })
+    )
     
     return results
   }
