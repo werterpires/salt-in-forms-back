@@ -1,43 +1,86 @@
+
 import { Injectable } from '@nestjs/common'
 import { CreateMinisterialsDto } from './dto/create-ministerials.dto'
-import { CreateMinisterial, Ministerial, MinisterialsFiltar } from './type'
 import { MinisterialsRepo } from './ministerials.repo'
 import * as db from 'src/constants/db-schema.enum'
-import { FindAllResponse, Paginator } from 'src/shared/types/types'
 
 @Injectable()
 export class MinisterialsService {
   constructor(private readonly ministerialsRepo: MinisterialsRepo) {}
-  async mergeMinisterials(createMinisterialsDto: CreateMinisterialsDto) {
-    const ministerials: CreateMinisterial[] =
-      createMinisterialsDto.ministerials.map((m) => {
-        return {
-          ministerialName: m.ministerialName,
-          ministerialField: m.ministerialField,
-          ministerialEmail: m.ministerialEmail
+
+  async createMinisterials(createMinisterialsDto: CreateMinisterialsDto) {
+    for (const unionDto of createMinisterialsDto.unions) {
+      // 1. Check if union exists, if not create it
+      let union = await this.ministerialsRepo.findUnionByNameOrAcronym(
+        unionDto.unionName,
+        unionDto.unionAcronym
+      )
+
+      let unionId: number
+      if (union) {
+        unionId = union[db.Unions.UNION_ID]
+      } else {
+        unionId = await this.ministerialsRepo.createUnion({
+          [db.Unions.UNION_NAME]: unionDto.unionName,
+          [db.Unions.UNION_ACRONYM]: unionDto.unionAcronym
+        })
+      }
+
+      // 2. Process fields
+      for (const fieldDto of unionDto.fields) {
+        // Check if field exists, if not create it
+        let field = await this.ministerialsRepo.findFieldByNameOrAcronym(
+          fieldDto.fieldName,
+          fieldDto.fieldAcronym
+        )
+
+        let fieldId: number
+        if (field) {
+          fieldId = field[db.Fields.FIELD_ID]
+        } else {
+          fieldId = await this.ministerialsRepo.createField({
+            [db.Fields.FIELD_NAME]: fieldDto.fieldName,
+            [db.Fields.FIELD_ACRONYM]: fieldDto.fieldAcronym,
+            [db.Fields.UNION_ID]: unionId
+          })
         }
-      })
 
-    await this.ministerialsRepo.mergeMinisterials(ministerials)
-  }
+        // 3. Process ministerials
+        for (const ministerialDto of fieldDto.ministerials) {
+          // Check if ministerial with this name exists
+          const existingMinisterials = await this.ministerialsRepo.findAllMinisterialsByName(
+            ministerialDto.ministerialName
+          )
 
-  async findAllMinisterials(
-    orderBy: Paginator<typeof db.Ministerials>,
-    filters: MinisterialsFiltar
-  ): Promise<FindAllResponse<Ministerial>> {
-    const ministerials = await this.ministerialsRepo.findAllMinisterials(
-      orderBy,
-      filters
-    )
+          const ministerialData = {
+            [db.Ministerials.MINISTERIAL_NAME]: ministerialDto.ministerialName,
+            [db.Ministerials.MINISTERIAL_PRIMARY_PHONE]: ministerialDto.ministerialPrimaryPhone || null,
+            [db.Ministerials.MINISTERIAL_SECONDARY_PHONE]: ministerialDto.ministerialSecondaryPhone || null,
+            [db.Ministerials.MINISTERIAL_LANDLINE_PHONE]: ministerialDto.ministerialLandlinePhone || null,
+            [db.Ministerials.MINISTERIAL_PRIMARY_EMAIL]: ministerialDto.ministerialPrimaryEmail || null,
+            [db.Ministerials.MINISTERIAL_ALTERNATIVE_EMAIL]: ministerialDto.ministerialAlternativeEmail || null,
+            [db.Ministerials.MINISTERIAL_SECRETARY_NAME]: ministerialDto.ministerialSecretaryName || null,
+            [db.Ministerials.MINISTERIAL_SECRETARY_PHONE]: ministerialDto.ministerialSecretaryPhone || null,
+            fieldId: fieldId
+          }
 
-    const ministerialsQuantity =
-      await this.ministerialsRepo.findMinisterialsQuantity(filters)
+          if (existingMinisterials.length === 0) {
+            // Case 1: Name doesn't exist, insert new record
+            await this.ministerialsRepo.createMinisterial(ministerialData)
+          } else {
+            // Case 2: Name exists, compare data
+            const hasSameData = existingMinisterials.some((existing) =>
+              this.ministerialsRepo.compareMinisterialData(existing, ministerialData)
+            )
 
-    const ministerialsResponse: FindAllResponse<Ministerial> = {
-      data: ministerials,
-      pagesQuantity: ministerialsQuantity
+            if (!hasSameData) {
+              // Data is different, insert new record
+              await this.ministerialsRepo.createMinisterial(ministerialData)
+            }
+            // else: Data is the same, ignore
+          }
+        }
+      }
     }
-
-    return ministerialsResponse
   }
 }

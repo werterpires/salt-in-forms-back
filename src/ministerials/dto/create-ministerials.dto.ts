@@ -1,11 +1,12 @@
+
 import { Type } from 'class-transformer'
 import { ArrayMinSize, IsArray, ValidateNested } from 'class-validator'
-import { CreateMinisterialDto } from './create-ministerial.dto'
+import { CreateUnionDto } from './create-union.dto'
 
 export class CreateMinisterialsDto {
-  @IsArray()
-  @ArrayMinSize(1, { message: '#Ao menos um ministerial deve ser informado' })
+  @IsArray({ message: '#As uniões devem ser um array' })
+  @ArrayMinSize(1, { message: '#Ao menos uma união deve ser informada' })
   @ValidateNested({ each: true })
-  @Type(() => CreateMinisterialDto)
-  ministerials: CreateMinisterialDto[]
+  @Type(() => CreateUnionDto)
+  unions: CreateUnionDto[]
 }

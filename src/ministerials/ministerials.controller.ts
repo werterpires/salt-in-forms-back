@@ -19,8 +19,8 @@ export class MinisterialsController {
   constructor(private readonly ministerialsService: MinisterialsService) {}
 
   @Post()
-  create(@Body() createMinisterialDto: CreateMinisterialsDto) {
-    return this.ministerialsService.mergeMinisterials(createMinisterialDto)
+  create(@Body() createMinisterialsDto: CreateMinisterialsDto) {
+    return this.ministerialsService.createMinisterials(createMinisterialsDto)
   }
 
   @Get()
