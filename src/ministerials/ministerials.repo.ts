@@ -1,7 +1,18 @@
 import { Injectable } from '@nestjs/common'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
-import { CreateUnion, CreateField, CreateMinisterial, Union, Field, Ministerial, CreateMinisterialsTransaction, MinisterialsFilter, MinisterialQueryResult } from './type'
+import {
+  CreateUnion,
+  CreateField,
+  CreateMinisterial,
+  Union,
+  Field,
+  Ministerial,
+  CreateMinisterialsTransaction,
+  MinisterialsFilter,
+  MinisterialQueryResult,
+  MinisterialWithRelations
+} from './type'
 import * as db from '../constants/db-schema.enum'
 import { compareMinisterialData } from './ministerials.helper'
 import { Paginator } from 'src/shared/types/types'
@@ -40,15 +51,21 @@ export class MinisterialsRepo {
     return fieldId
   }
 
-  async findMinisterialByName(ministerialName: string): Promise<Ministerial | undefined> {
+  async findMinisterialByName(
+    ministerialName: string
+  ): Promise<Ministerial | undefined> {
     return this.knex(db.Tables.MINISTERIALS)
       .where(db.Ministerials.MINISTERIAL_NAME, ministerialName)
       .first()
   }
 
-  async findAllMinisterialsByName(ministerialName: string): Promise<Ministerial[]> {
-    return this.knex(db.Tables.MINISTERIALS)
-      .where(db.Ministerials.MINISTERIAL_NAME, ministerialName)
+  async findAllMinisterialsByName(
+    ministerialName: string
+  ): Promise<Ministerial[]> {
+    return this.knex(db.Tables.MINISTERIALS).where(
+      db.Ministerials.MINISTERIAL_NAME,
+      ministerialName
+    )
   }
 
   async deactivateMinisterialsByField(fieldId: number): Promise<void> {
@@ -58,14 +75,16 @@ export class MinisterialsRepo {
   }
 
   async createMinisterial(ministerial: CreateMinisterial): Promise<number> {
-    const [ministerialId] = await this.knex(db.Tables.MINISTERIALS).insert(ministerial)
+    const [ministerialId] = await this.knex(db.Tables.MINISTERIALS).insert(
+      ministerial
+    )
     return ministerialId
   }
 
   async findAllMinisterials(
     paginator: Paginator<typeof db.Ministerials>,
     filters: MinisterialsFilter
-  ): Promise<MinisterialQueryResult[]> {
+  ): Promise<MinisterialWithRelations[]> {
     const query = this.knex(db.Tables.MINISTERIALS)
       .select(
         `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ID}`,
@@ -94,7 +113,17 @@ export class MinisterialsRepo {
         `${db.Tables.FIELDS}.${db.Fields.UNION_ID}`,
         `${db.Tables.UNIONS}.${db.Unions.UNION_ID}`
       )
-      .where(`${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ACTIVE}`, true)
+
+    if (
+      filters.ministerialActive == undefined ||
+      filters.ministerialActive == null ||
+      filters.ministerialActive == true
+    ) {
+      query.where(
+        `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ACTIVE}`,
+        true
+      )
+    }
 
     if (filters.ministerialName) {
       query.where(
@@ -132,7 +161,10 @@ export class MinisterialsRepo {
         `${db.Tables.FIELDS}.${db.Fields.UNION_ID}`,
         `${db.Tables.UNIONS}.${db.Unions.UNION_ID}`
       )
-      .where(`${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ACTIVE}`, true)
+      .where(
+        `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ACTIVE}`,
+        true
+      )
 
     if (filters.ministerialName) {
       query.where(
@@ -148,7 +180,20 @@ export class MinisterialsRepo {
       query.where(`${db.Tables.UNIONS}.${db.Unions.UNION_ID}`, filters.unionId)
     }
 
-    query.countDistinct(`${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ID}`)
+    if (
+      filters.ministerialActive == undefined ||
+      filters.ministerialActive == null ||
+      filters.ministerialActive == true
+    ) {
+      query.where(
+        `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ACTIVE}`,
+        true
+      )
+    }
+
+    query.countDistinct(
+      `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ID}`
+    )
     const [results] = await query
 
     const countKey = Object.keys(results)[0]
@@ -157,7 +202,9 @@ export class MinisterialsRepo {
     return Math.ceil(count / elementsPerPage) || 0
   }
 
-  async createMinisterialsWithTransaction(data: CreateMinisterialsTransaction): Promise<void> {
+  async createMinisterialsWithTransaction(
+    data: CreateMinisterialsTransaction
+  ): Promise<void> {
     await this.knex.transaction(async (trx) => {
       for (const unionDto of data.unions) {
         // 1. Check if union exists, if not create it
@@ -199,10 +246,12 @@ export class MinisterialsRepo {
 
           // 3. Process ministerial
           const ministerialData = fieldDto.ministerial
-          
+
           // Check if ministerial with this name exists
-          const existingMinisterials = await trx(db.Tables.MINISTERIALS)
-            .where(db.Ministerials.MINISTERIAL_NAME, ministerialData.ministerialName)
+          const existingMinisterials = await trx(db.Tables.MINISTERIALS).where(
+            db.Ministerials.MINISTERIAL_NAME,
+            ministerialData.ministerialName
+          )
 
           const ministerialToInsert = {
             ...ministerialData,
@@ -214,11 +263,11 @@ export class MinisterialsRepo {
             await trx(db.Tables.MINISTERIALS)
               .where('fieldId', fieldId)
               .update({ [db.Ministerials.MINISTERIAL_ACTIVE]: false })
-            
+
             await trx(db.Tables.MINISTERIALS).insert(ministerialToInsert)
           } else {
             // Case 2: Name exists, compare data using helper function
-            const hasSameData = existingMinisterials.some((existing) => 
+            const hasSameData = existingMinisterials.some((existing) =>
               compareMinisterialData(existing, ministerialData)
             )
 
@@ -227,7 +276,7 @@ export class MinisterialsRepo {
               await trx(db.Tables.MINISTERIALS)
                 .where('fieldId', fieldId)
                 .update({ [db.Ministerials.MINISTERIAL_ACTIVE]: false })
-              
+
               await trx(db.Tables.MINISTERIALS).insert(ministerialToInsert)
             }
             // else: Data is the same, ignore

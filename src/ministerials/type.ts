@@ -1,4 +1,3 @@
-
 export interface CreateMinisterial {
   ministerialName: string
   ministerialPrimaryPhone?: string
@@ -39,6 +38,7 @@ export interface MinisterialsFilter {
   ministerialName?: string
   fieldId?: number
   unionId?: number
+  ministerialActive?: boolean
 }
 
 export interface MinisterialWithRelations {
