@@ -8,7 +8,6 @@ import {
   SFormToValidate,
   UpdateSForm,
   CopySForm,
-  SFormType,
   SFormSimple
 } from './types'
 import * as db from '../constants/db-schema.enum'
@@ -22,17 +21,7 @@ export class SFormsRepo {
   constructor(@InjectConnection('knexx') private readonly knex: Knex) {}
 
   async createSForm(createSFormData: CreateSForm) {
-    const insertData: Partial<Record<keyof typeof db.SForms, number | string>> = {
-      [db.SForms.PROCESS_ID]: createSFormData.processId,
-      [db.SForms.S_FORM_NAME]: createSFormData.sFormName,
-      [db.SForms.S_FORM_TYPE]: createSFormData.sFormType
-    }
-
-    if (createSFormData.sFormType === 'normal' && createSFormData.emailQuestionId) {
-      insertData[db.SForms.EMAIL_QUESTION_ID] = createSFormData.emailQuestionId
-    }
-
-    return this.knex(db.Tables.S_FORMS).insert(insertData)
+    return this.knex(db.Tables.S_FORMS).insert(createSFormData)
   }
 
   async findAllAllFormsByProcessId(
@@ -87,19 +76,15 @@ export class SFormsRepo {
   updateSForm(updateSFormDAta: UpdateSForm) {
     const { sFormId, sFormName, sFormType, emailQuestionId } = updateSFormDAta
 
-    const updateData: Partial<Record<keyof typeof db.SForms, number | string | null>> = {
-      [db.SForms.S_FORM_NAME]: sFormName,
-      [db.SForms.S_FORM_TYPE]: sFormType
-    }
-
     if (sFormType === 'normal') {
-      updateData[db.SForms.EMAIL_QUESTION_ID] = emailQuestionId !== undefined ? emailQuestionId : null
+      updateSFormDAta[db.SForms.EMAIL_QUESTION_ID] =
+        emailQuestionId !== undefined ? emailQuestionId : null
     } else {
-      updateData[db.SForms.EMAIL_QUESTION_ID] = null
+      updateSFormDAta[db.SForms.EMAIL_QUESTION_ID] = null
     }
 
     return this.knex(db.Tables.S_FORMS)
-      .update(updateData)
+      .update(updateSFormDAta)
       .where({
         [db.SForms.S_FORM_ID]: sFormId
       })
@@ -137,7 +122,7 @@ export class SFormsRepo {
       .orderBy(db.SForms.S_FORM_NAME, 'asc')
   }
 
-  async copySForm(copyData: CopySForm, sourceFormType: SFormType) {
+  async copySForm(copyData: CopySForm) {
     return this.knex.transaction(async (trx) => {
       // 2. Buscar e copiar seções
       const sections = await trx(db.Tables.FORM_SECTIONS)
@@ -149,7 +134,7 @@ export class SFormsRepo {
 
       // Primeiro passo: copiar seções sem as referências (para ter os IDs)
       for (const section of sections) {
-        const newSection: Partial<Record<keyof typeof db.FormSections, number | string | null>> = {
+        const newSection = {
           [db.FormSections.S_FORM_ID]: copyData.targetFormId,
           [db.FormSections.FORM_SECTION_NAME]:
             section[db.FormSections.FORM_SECTION_NAME],
@@ -355,7 +340,9 @@ export class SFormsRepo {
           section[db.FormSections.FORM_SECTION_ID]
         )
 
-        const updates: Partial<Record<keyof typeof db.FormSections, number | string | null>> = {}
+        const updates: Partial<
+          Record<keyof typeof db.FormSections, number | string | null>
+        > = {}
 
         // Mapear formSectionDisplayLink
         if (section[db.FormSections.FORM_SECTION_DISPLAY_LINK]) {
@@ -402,7 +389,9 @@ export class SFormsRepo {
           .where(db.Questions.QUESTION_ID, oldQuestionId)
           .first()
 
-        const updates: Partial<Record<keyof typeof db.Questions, number | string | null>> = {}
+        const updates: Partial<
+          Record<keyof typeof db.Questions, number | string | null>
+        > = {}
 
         // Mapear formSectionDisplayLink
         if (originalQuestion[db.Questions.FORM_SECTION_DISPLAY_LINK]) {
