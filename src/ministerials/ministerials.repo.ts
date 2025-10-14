@@ -59,13 +59,13 @@ export class MinisterialsRepo {
     newData: CreateMinisterial
   ): boolean {
     return (
-      (existing.ministerialPrimaryPhone || null) === (newData.ministerialPrimaryPhone || null) &&
-      (existing.ministerialSecondaryPhone || null) === (newData.ministerialSecondaryPhone || null) &&
-      (existing.ministerialLandlinePhone || null) === (newData.ministerialLandlinePhone || null) &&
-      (existing.ministerialPrimaryEmail || null) === (newData.ministerialPrimaryEmail || null) &&
-      (existing.ministerialAlternativeEmail || null) === (newData.ministerialAlternativeEmail || null) &&
-      (existing.ministerialSecretaryName || null) === (newData.ministerialSecretaryName || null) &&
-      (existing.ministerialSecretaryPhone || null) === (newData.ministerialSecretaryPhone || null)
+      (existing.ministerialPrimaryPhone || undefined) === (newData.ministerialPrimaryPhone || undefined) &&
+      (existing.ministerialSecondaryPhone || undefined) === (newData.ministerialSecondaryPhone || undefined) &&
+      (existing.ministerialLandlinePhone || undefined) === (newData.ministerialLandlinePhone || undefined) &&
+      (existing.ministerialPrimaryEmail || undefined) === (newData.ministerialPrimaryEmail || undefined) &&
+      (existing.ministerialAlternativeEmail || undefined) === (newData.ministerialAlternativeEmail || undefined) &&
+      (existing.ministerialSecretaryName || undefined) === (newData.ministerialSecretaryName || undefined) &&
+      (existing.ministerialSecretaryPhone || undefined) === (newData.ministerialSecretaryPhone || undefined)
     )
   }
 }

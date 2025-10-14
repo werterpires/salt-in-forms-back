@@ -1,6 +1,6 @@
 
 import { Type } from 'class-transformer'
-import { ArrayMinSize, IsArray, IsString, Length, ValidateNested } from 'class-validator'
+import { IsString, Length, ValidateNested } from 'class-validator'
 import { CreateMinisterialDto } from './create-ministerial.dto'
 
 export class CreateFieldDto {
@@ -16,9 +16,7 @@ export class CreateFieldDto {
   })
   fieldAcronym: string
 
-  @IsArray({ message: '#Os ministeriais devem ser um array' })
-  @ArrayMinSize(1, { message: '#Ao menos um ministerial deve ser informado' })
-  @ValidateNested({ each: true })
+  @ValidateNested()
   @Type(() => CreateMinisterialDto)
-  ministerials: CreateMinisterialDto[]
+  ministerial: CreateMinisterialDto
 }

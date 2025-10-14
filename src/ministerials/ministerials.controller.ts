@@ -12,7 +12,7 @@ import { CreateMinisterialsDto } from './dto/create-ministerials.dto'
 import { Paginator } from 'src/shared/types/types'
 import * as db from 'src/constants/db-schema.enum'
 import { BoolenOrUndefinedPipe } from 'src/shared/pipes/boolen-or-undefined/boolen-or-undefined.pipe'
-import { MinisterialsFiltar } from './type'
+import { MinisterialsFilter } from './type'
 
 @Controller('ministerials')
 export class MinisterialsController {
@@ -41,7 +41,7 @@ export class MinisterialsController {
       db.Ministerials
     )
 
-    const filters: MinisterialsFiltar = {
+    const filters: MinisterialsFilter = {
       ministerialField,
       ministerialActive,
       ministerialName

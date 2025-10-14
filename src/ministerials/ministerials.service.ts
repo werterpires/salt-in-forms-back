@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common'
 import { CreateMinisterialsDto } from './dto/create-ministerials.dto'
 import { MinisterialsRepo } from './ministerials.repo'
 import * as db from 'src/constants/db-schema.enum'
+import { buildMinisterialData } from './ministerials.helper'
 
 @Injectable()
 export class MinisterialsService {
@@ -45,40 +46,30 @@ export class MinisterialsService {
           })
         }
 
-        // 3. Process ministerials
-        for (const ministerialDto of fieldDto.ministerials) {
-          // Check if ministerial with this name exists
-          const existingMinisterials = await this.ministerialsRepo.findAllMinisterialsByName(
-            ministerialDto.ministerialName
+        // 3. Process ministerial
+        const ministerialDto = fieldDto.ministerial
+        
+        // Check if ministerial with this name exists
+        const existingMinisterials = await this.ministerialsRepo.findAllMinisterialsByName(
+          ministerialDto.ministerialName
+        )
+
+        const ministerialData = buildMinisterialData(ministerialDto, fieldId)
+
+        if (existingMinisterials.length === 0) {
+          // Case 1: Name doesn't exist, insert new record
+          await this.ministerialsRepo.createMinisterial(ministerialData)
+        } else {
+          // Case 2: Name exists, compare data
+          const hasSameData = existingMinisterials.some((existing) =>
+            this.ministerialsRepo.compareMinisterialData(existing, ministerialData)
           )
 
-          const ministerialData = {
-            [db.Ministerials.MINISTERIAL_NAME]: ministerialDto.ministerialName,
-            [db.Ministerials.MINISTERIAL_PRIMARY_PHONE]: ministerialDto.ministerialPrimaryPhone || null,
-            [db.Ministerials.MINISTERIAL_SECONDARY_PHONE]: ministerialDto.ministerialSecondaryPhone || null,
-            [db.Ministerials.MINISTERIAL_LANDLINE_PHONE]: ministerialDto.ministerialLandlinePhone || null,
-            [db.Ministerials.MINISTERIAL_PRIMARY_EMAIL]: ministerialDto.ministerialPrimaryEmail || null,
-            [db.Ministerials.MINISTERIAL_ALTERNATIVE_EMAIL]: ministerialDto.ministerialAlternativeEmail || null,
-            [db.Ministerials.MINISTERIAL_SECRETARY_NAME]: ministerialDto.ministerialSecretaryName || null,
-            [db.Ministerials.MINISTERIAL_SECRETARY_PHONE]: ministerialDto.ministerialSecretaryPhone || null,
-            fieldId: fieldId
-          }
-
-          if (existingMinisterials.length === 0) {
-            // Case 1: Name doesn't exist, insert new record
+          if (!hasSameData) {
+            // Data is different, insert new record
             await this.ministerialsRepo.createMinisterial(ministerialData)
-          } else {
-            // Case 2: Name exists, compare data
-            const hasSameData = existingMinisterials.some((existing) =>
-              this.ministerialsRepo.compareMinisterialData(existing, ministerialData)
-            )
-
-            if (!hasSameData) {
-              // Data is different, insert new record
-              await this.ministerialsRepo.createMinisterial(ministerialData)
-            }
-            // else: Data is the same, ignore
           }
+          // else: Data is the same, ignore
         }
       }
     }
