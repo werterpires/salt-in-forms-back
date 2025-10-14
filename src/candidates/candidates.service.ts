@@ -3,7 +3,12 @@ import { Cron } from '@nestjs/schedule'
 import { CandidatesRepo } from './candidates.repo'
 import { ExternalApiService } from '../shared/utils-module/external-api/external-api.service'
 import { EncryptionService } from '../shared/utils-module/encryption/encryption.service'
-import { CreateCandidate, FormCandidateData, ValidateAccessCodeResponse } from './types'
+import {
+  CreateCandidate,
+  CreateFormCandidate,
+  FormCandidateData,
+  ValidateAccessCodeResponse
+} from './types'
 import { CustomLoggerService } from 'src/shared/utils-module/custom-logger/custom-logger.service'
 import { SendPulseEmailService } from '../shared/utils-module/email-sender/sendpulse-email.service'
 import { createAccessCode } from './candidates.helper'
@@ -18,25 +23,34 @@ export class CandidatesService {
     private readonly sendPulseEmailService: SendPulseEmailService
   ) {}
 
-  @Cron('0 8,14,20 * * *')
+  @Cron('47 11 * * *')
   async handleProcessesInAnswerPeriod() {
-    this.loggger.info('\n=== Executando cron: Buscar processos no período de respostas ===')
-    
+    this.loggger.info(
+      '\n=== Executando cron: Buscar processos no período de respostas ==='
+    )
+
     const processes = await this.candidatesRepo.findProcessesInAnswerPeriod()
-    
-    this.loggger.info(`\n=== Total de processos encontrados: ${processes.length} ===`)
-    
+
+    this.loggger.info(
+      `\n=== Total de processos encontrados: ${processes.length} ===`
+    )
+
     for (const process of processes) {
       console.log(process)
-      
-      const sForms = await this.candidatesRepo.findSFormsByProcessId(process.processId)
+
+      const sForms = await this.candidatesRepo.findSFormsByProcessId(
+        process.processId
+      )
       console.log(sForms)
 
       // Buscar candidatos que não estão na tabela FormsCandidates
-      const candidatesNotInFormsCandidates = await this.candidatesRepo.findCandidatesNotInFormsCandidatesByProcessId(process.processId)
+      const candidatesNotInFormsCandidates =
+        await this.candidatesRepo.findCandidatesNotInFormsCandidatesByProcessId(
+          process.processId
+        )
 
       if (candidatesNotInFormsCandidates.length > 0 && sForms.length > 0) {
-        const formsCandidatesData: FormCandidateData[] = []
+        const formsCandidatesData: CreateFormCandidate[] = []
 
         for (const candidateId of candidatesNotInFormsCandidates) {
           for (const sForm of sForms) {
@@ -49,15 +63,18 @@ export class CandidatesService {
           }
         }
 
-        const insertedFormCandidateIds = await this.candidatesRepo.insertFormsCandidatesInBatch(formsCandidatesData)
+        const insertedFormCandidateIds =
+          await this.candidatesRepo.insertFormsCandidatesInBatch(
+            formsCandidatesData
+          )
         console.log(insertedFormCandidateIds)
       }
     }
-    
+
     this.loggger.info('\n=== Fim da execução do cron ===')
   }
 
-  @Cron('15 11 * * *')
+  @Cron('45 11 * * *')
   async handleProcessInSubscriptionCron() {
     const processes = await this.candidatesRepo.findProcessInSubscription()
 
@@ -374,7 +391,9 @@ export class CandidatesService {
     return dateString
   }
 
-  async validateAccessCode(accessCode: string): Promise<ValidateAccessCodeResponse> {
+  async validateAccessCode(
+    accessCode: string
+  ): Promise<ValidateAccessCodeResponse> {
     const formCandidate =
       await this.candidatesRepo.findFormCandidateByAccessCode(accessCode)
 
@@ -393,7 +412,9 @@ export class CandidatesService {
         formCandidate.formCandidateId,
         newAccessCode
       )
-      throw new Error('#O período de acesso expirou. Um novo código foi gerado.')
+      throw new Error(
+        '#O período de acesso expirou. Um novo código foi gerado.'
+      )
     }
 
     return {

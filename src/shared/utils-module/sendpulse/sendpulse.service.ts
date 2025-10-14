@@ -1,5 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
-import { Cron } from '@nestjs/schedule'
+import { Interval } from '@nestjs/schedule'
 import { CustomLoggerService } from '../custom-logger/custom-logger.service'
 import { ExternalApiService } from '../external-api/external-api.service'
 
@@ -55,7 +55,7 @@ export class SendPulseService {
     }
   }
 
-  @Cron('*/50 * * * *') // A cada 50 minutos
+  @Interval(50 * 60 * 1000)
   async refreshToken() {
     try {
       this.logger.log('Renovando token do SendPulse...')
