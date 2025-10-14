@@ -3,6 +3,7 @@ import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
 import { CreateUnion, CreateField, CreateMinisterial, Union, Field, Ministerial, CreateMinisterialsTransaction } from './type'
 import * as db from '../constants/db-schema.enum'
+import { compareMinisterialData } from './ministerials.helper'
 
 @Injectable()
 export class MinisterialsRepo {
@@ -215,18 +216,10 @@ export class MinisterialsRepo {
             
             await trx(db.Tables.MINISTERIALS).insert(ministerialToInsert)
           } else {
-            // Case 2: Name exists, compare data
-            const hasSameData = existingMinisterials.some((existing) => {
-              return (
-                (existing.ministerialPrimaryPhone || undefined) === (ministerialData.ministerialPrimaryPhone || undefined) &&
-                (existing.ministerialSecondaryPhone || undefined) === (ministerialData.ministerialSecondaryPhone || undefined) &&
-                (existing.ministerialLandlinePhone || undefined) === (ministerialData.ministerialLandlinePhone || undefined) &&
-                (existing.ministerialPrimaryEmail || undefined) === (ministerialData.ministerialPrimaryEmail || undefined) &&
-                (existing.ministerialAlternativeEmail || undefined) === (ministerialData.ministerialAlternativeEmail || undefined) &&
-                (existing.ministerialSecretaryName || undefined) === (ministerialData.ministerialSecretaryName || undefined) &&
-                (existing.ministerialSecretaryPhone || undefined) === (ministerialData.ministerialSecretaryPhone || undefined)
-              )
-            })
+            // Case 2: Name exists, compare data using helper function
+            const hasSameData = existingMinisterials.some((existing) => 
+              compareMinisterialData(existing, ministerialData)
+            )
 
             if (!hasSameData) {
               // Data is different, deactivate others from same field and insert new record
