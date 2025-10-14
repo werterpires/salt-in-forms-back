@@ -4,7 +4,11 @@ import { MinisterialsRepo } from './ministerials.repo'
 import * as db from 'src/constants/db-schema.enum'
 import { buildMinisterialData } from './ministerials.helper'
 import { FindAllResponse, Paginator } from 'src/shared/types/types'
-import { MinisterialsFilter, CreateMinisterialsTransaction } from './type'
+import {
+  MinisterialsFilter,
+  CreateMinisterialsTransaction,
+  MinisterialWithRelations
+} from './type'
 
 @Injectable()
 export class MinisterialsService {
@@ -32,16 +36,14 @@ export class MinisterialsService {
   async findAllMinisterials(
     paginator: Paginator<typeof db.Ministerials>,
     filters: MinisterialsFilter
-  ): Promise<FindAllResponse<any>> {
-    const results = await this.ministerialsRepo.findAllMinisterials(
-      paginator,
-      filters
-    )
+  ): Promise<FindAllResponse<MinisterialWithRelations>> {
+    const results: MinisterialWithRelations[] =
+      await this.ministerialsRepo.findAllMinisterials(paginator, filters)
 
     const ministerialsQuantity =
       await this.ministerialsRepo.findMinisterialsQuantity(filters)
 
-    const response: FindAllResponse<any> = {
+    const response: FindAllResponse<MinisterialWithRelations> = {
       data: results,
       pagesQuantity: ministerialsQuantity
     }
