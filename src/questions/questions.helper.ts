@@ -174,6 +174,23 @@ export class QuestionsHelper {
     if (!existingQuestion) {
       throw new BadRequestException('#Pergunta não encontrada')
     }
+
+    // Verificar se a questão está sendo usada como emailQuestionId e se o tipo está mudando
+    if (
+      existingQuestion.questionType === EQuestionsTypes.EMAIL &&
+      updateQuestionDto.questionType !== EQuestionsTypes.EMAIL
+    ) {
+      const isUsedAsEmailQuestion =
+        await questionsRepo.isQuestionUsedAsEmailQuestionId(
+          updateQuestionDto.questionId
+        )
+      if (isUsedAsEmailQuestion) {
+        throw new BadRequestException(
+          '#Esta questão não pode ter seu tipo alterado porque está sendo utilizada como questão de email em um ou mais formulários.'
+        )
+      }
+    }
+
     // Validar opções da pergunta
     this.validateQuestionOptions(
       updateQuestionDto.questionType,

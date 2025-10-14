@@ -726,6 +726,14 @@ export class QuestionsRepo {
     return sections
   }
 
+  async isQuestionUsedAsEmailQuestionId(questionId: number): Promise<boolean> {
+    const forms = await this.knex(db.Tables.S_FORMS)
+      .where(db.SForms.EMAIL_QUESTION_ID, questionId)
+      .first()
+
+    return !!forms
+  }
+
   // Método auxiliar para tratar regras de exibição em updates de questões
   private processQuestionDisplayRuleUpdate(updateData: any): any {
     // Se a regra de exibição for ALWAYS_SHOW (1), definir campos relacionados como null
