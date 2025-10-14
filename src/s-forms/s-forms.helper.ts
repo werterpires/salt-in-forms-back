@@ -23,9 +23,10 @@ export function applyFilters(filters: SFormFilter, query: Knex.QueryBuilder) {
   }
 }
 
-export function validateUpdateDto(
+export async function validateUpdateDto(
   updateSFormDto: UpdateSFormDto,
-  sForms: SFormToValidate[]
+  sForms: SFormToValidate[],
+  questionsRepo: any
 ) {
   const { sFormType, emailQuestionId } = updateSFormDto
 
@@ -38,6 +39,20 @@ export function validateUpdateDto(
     if (!emailQuestionId) {
       throw new BadRequestException(
         `#Formulários do tipo normal devem ter um emailQuestionId.`
+      )
+    }
+    
+    // Validar se a questão é do tipo email
+    const question = await questionsRepo.findById(emailQuestionId)
+    if (!question) {
+      throw new BadRequestException(
+        `#A questão informada como emailQuestionId não foi encontrada.`
+      )
+    }
+    
+    if (question.questionType !== 10) { // EQuestionsTypes.EMAIL
+      throw new BadRequestException(
+        `#O emailQuestionId deve ser de uma questão do tipo Email.`
       )
     }
   } else {
@@ -77,9 +92,10 @@ export function validateUpdateDto(
   }
 }
 
-export function validateCreateDto(
+export async function validateCreateDto(
   createSFormDto: CreateSFormDto,
-  sForms: SFormToValidate[]
+  sForms: SFormToValidate[],
+  questionsRepo: any
 ) {
   const { sFormType, emailQuestionId } = createSFormDto
 
@@ -92,6 +108,20 @@ export function validateCreateDto(
     if (!emailQuestionId) {
       throw new BadRequestException(
         `#Formulários do tipo normal devem ter um emailQuestionId.`
+      )
+    }
+    
+    // Validar se a questão é do tipo email
+    const question = await questionsRepo.findById(emailQuestionId)
+    if (!question) {
+      throw new BadRequestException(
+        `#A questão informada como emailQuestionId não foi encontrada.`
+      )
+    }
+    
+    if (question.questionType !== 10) { // EQuestionsTypes.EMAIL
+      throw new BadRequestException(
+        `#O emailQuestionId deve ser de uma questão do tipo Email.`
       )
     }
   } else {

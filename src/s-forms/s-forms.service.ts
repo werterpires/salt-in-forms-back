@@ -3,6 +3,7 @@ import { CreateSFormDto } from './dto/create-s-form.dto'
 import { UpdateSFormDto } from './dto/update-s-form.dto'
 import { CopySFormDto } from './dto/copy-s-form.dto'
 import { SFormsRepo } from './s-forms.repo'
+import { QuestionsRepo } from '../questions/questions.repo'
 import * as db from 'src/constants/db-schema.enum'
 import { FindAllResponse, Paginator } from 'src/shared/types/types'
 import {
@@ -23,13 +24,16 @@ import {
 
 @Injectable()
 export class SFormsService {
-  constructor(private readonly sFormsRepo: SFormsRepo) {}
+  constructor(
+    private readonly sFormsRepo: SFormsRepo,
+    private readonly questionsRepo: QuestionsRepo
+  ) {}
   async createSForm(createSFormDto: CreateSFormDto) {
     const sFormTypes = await this.sFormsRepo.findAllFormTypesByProcessId(
       createSFormDto.processId
     )
 
-    validateCreateDto(createSFormDto, sFormTypes)
+    await validateCreateDto(createSFormDto, sFormTypes, this.questionsRepo)
 
     const sFormCreateData = transformCreateDto(createSFormDto)
 
@@ -75,7 +79,7 @@ export class SFormsService {
       updateSFormDto.sFormId
     )
 
-    validateUpdateDto(updateSFormDto, sForms)
+    await validateUpdateDto(updateSFormDto, sForms, this.questionsRepo)
 
     const updateFormData = transformUpdateDto(updateSFormDto)
 
