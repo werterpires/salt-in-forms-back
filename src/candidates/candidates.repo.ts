@@ -164,4 +164,24 @@ export class CandidatesRepo {
       )
     })
   }
+
+  async findFormCandidateByAccessCode(accessCode: string) {
+    const result = await this.knex(db.Tables.FORMS_CANDIDATES)
+      .select('*')
+      .where(db.FormsCandidates.FORM_CANDIDATE_ACCESS_CODE, accessCode)
+      .first()
+
+    return result
+  }
+
+  async updateAccessCode(
+    formCandidateId: number,
+    newAccessCode: string
+  ): Promise<void> {
+    await this.knex(db.Tables.FORMS_CANDIDATES)
+      .where(db.FormsCandidates.FORM_CANDIDATE_ID, formCandidateId)
+      .update({
+        [db.FormsCandidates.FORM_CANDIDATE_ACCESS_CODE]: newAccessCode
+      })
+  }
 }

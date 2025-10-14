@@ -36,7 +36,12 @@ export class CandidatesService {
       const candidatesNotInFormsCandidates = await this.candidatesRepo.findCandidatesNotInFormsCandidatesByProcessId(process.processId)
 
       if (candidatesNotInFormsCandidates.length > 0 && sForms.length > 0) {
-        const formsCandidatesData = []
+        const formsCandidatesData: {
+          candidateId: number
+          sFormId: number
+          formCandidateStatus: number
+          formCandidateAccessCode: string
+        }[] = []
 
         for (const candidateId of candidatesNotInFormsCandidates) {
           for (const sForm of sForms) {
@@ -372,5 +377,33 @@ export class CandidatesService {
     }
 
     return dateString
+  }
+
+  async validateAccessCode(accessCode: string) {
+    const formCandidate =
+      await this.candidatesRepo.findFormCandidateByAccessCode(accessCode)
+
+    if (!formCandidate) {
+      throw new Error('#Código de acesso não encontrado.')
+    }
+
+    const createdAt = new Date(formCandidate.created_at)
+    const now = new Date()
+    const hoursDifference =
+      (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60)
+
+    if (hoursDifference > 24) {
+      const newAccessCode = createAccessCode()
+      await this.candidatesRepo.updateAccessCode(
+        formCandidate.formCandidateId,
+        newAccessCode
+      )
+      throw new Error('#O período de acesso expirou. Um novo código foi gerado.')
+    }
+
+    return {
+      message: 'Código válido',
+      formCandidateId: formCandidate.formCandidateId
+    }
   }
 }
