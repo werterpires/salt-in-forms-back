@@ -3,7 +3,9 @@ import {
   SFormToValidate,
   SFormType,
   sFormTypesArray,
-  CopySForm
+  CopySForm,
+  CreateSForm,
+  UpdateSForm
 } from './types'
 import { Knex } from 'knex'
 import * as db from '../constants/db-schema.enum'

@@ -22,7 +22,7 @@ export class SFormsRepo {
   constructor(@InjectConnection('knexx') private readonly knex: Knex) {}
 
   async createSForm(createSFormData: CreateSForm) {
-    const insertData: any = {
+    const insertData: Partial<Record<keyof typeof db.SForms, number | string>> = {
       [db.SForms.PROCESS_ID]: createSFormData.processId,
       [db.SForms.S_FORM_NAME]: createSFormData.sFormName,
       [db.SForms.S_FORM_TYPE]: createSFormData.sFormType
@@ -30,11 +30,6 @@ export class SFormsRepo {
 
     if (createSFormData.sFormType === 'normal' && createSFormData.emailQuestionId) {
       insertData[db.SForms.EMAIL_QUESTION_ID] = createSFormData.emailQuestionId
-    } else if (createSFormData.sFormType !== 'normal' && createSFormData.emailQuestionId) {
-      // Rule b: If not 'normal', emailQuestionId is prohibited.
-      // This should ideally be handled by a validator before reaching the repo,
-      // but as a safeguard here, we can throw an error or simply not include it.
-      // For now, we'll omit it, assuming validation happens upstream.
     }
 
     return this.knex(db.Tables.S_FORMS).insert(insertData)
@@ -92,21 +87,15 @@ export class SFormsRepo {
   updateSForm(updateSFormDAta: UpdateSForm) {
     const { sFormId, sFormName, sFormType, emailQuestionId } = updateSFormDAta
 
-    const updateData: any = {
+    const updateData: Partial<Record<keyof typeof db.SForms, number | string | null>> = {
       [db.SForms.S_FORM_NAME]: sFormName,
       [db.SForms.S_FORM_TYPE]: sFormType
     }
 
-    // Rule a: If sFormType is 'normal', emailQuestionId is required.
-    // If sFormType is not 'normal', emailQuestionId is prohibited.
-    // This logic should ideally be handled by a validator before reaching the repo.
-    // Here, we enforce the prohibition part.
     if (sFormType === 'normal') {
-      // If it's a normal form, we set emailQuestionId if provided, otherwise it might be a bad request handled upstream.
-      updateData[db.SForms.EMAIL_QUESTION_ID] = emailQuestionId !== undefined ? emailQuestionId : null;
+      updateData[db.SForms.EMAIL_QUESTION_ID] = emailQuestionId !== undefined ? emailQuestionId : null
     } else {
-      // If it's not a normal form, emailQuestionId must be null.
-      updateData[db.SForms.EMAIL_QUESTION_ID] = null;
+      updateData[db.SForms.EMAIL_QUESTION_ID] = null
     }
 
     return this.knex(db.Tables.S_FORMS)
@@ -160,7 +149,7 @@ export class SFormsRepo {
 
       // Primeiro passo: copiar seções sem as referências (para ter os IDs)
       for (const section of sections) {
-        const newSection = {
+        const newSection: Partial<Record<keyof typeof db.FormSections, number | string | null>> = {
           [db.FormSections.S_FORM_ID]: copyData.targetFormId,
           [db.FormSections.FORM_SECTION_NAME]:
             section[db.FormSections.FORM_SECTION_NAME],
@@ -168,12 +157,12 @@ export class SFormsRepo {
             section[db.FormSections.FORM_SECTION_ORDER],
           [db.FormSections.FORM_SECTION_DISPLAY_RULE]:
             section[db.FormSections.FORM_SECTION_DISPLAY_RULE],
-          [db.FormSections.FORM_SECTION_DISPLAY_LINK]: null, // Será atualizado depois
-          [db.FormSections.QUESTION_DISPLAY_LINK]: null, // Será atualizado depois
+          [db.FormSections.FORM_SECTION_DISPLAY_LINK]: null,
+          [db.FormSections.QUESTION_DISPLAY_LINK]: null,
           [db.FormSections.ANSWER_DISPLEY_RULE]:
             section[db.FormSections.ANSWER_DISPLEY_RULE],
           [db.FormSections.ANSWER_DISPLAY_VALUE]:
-            section[db.FormSections.ANSWER_DISPLAY_VALUE] // Também deveria ser atualizado depois
+            section[db.FormSections.ANSWER_DISPLAY_VALUE]
         }
 
         const [newSectionId] = await trx(db.Tables.FORM_SECTIONS).insert(
@@ -366,7 +355,7 @@ export class SFormsRepo {
           section[db.FormSections.FORM_SECTION_ID]
         )
 
-        const updates: any = {}
+        const updates: Partial<Record<keyof typeof db.FormSections, number | string | null>> = {}
 
         // Mapear formSectionDisplayLink
         if (section[db.FormSections.FORM_SECTION_DISPLAY_LINK]) {
@@ -413,7 +402,7 @@ export class SFormsRepo {
           .where(db.Questions.QUESTION_ID, oldQuestionId)
           .first()
 
-        const updates: any = {}
+        const updates: Partial<Record<keyof typeof db.Questions, number | string | null>> = {}
 
         // Mapear formSectionDisplayLink
         if (originalQuestion[db.Questions.FORM_SECTION_DISPLAY_LINK]) {
