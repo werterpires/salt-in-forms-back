@@ -34,7 +34,6 @@ export interface CreateCandidate {
   candidateCountry: string
 }
 
-
 export interface FormCandidate {
   formCandidateId: number
   candidateId: number
@@ -45,7 +44,6 @@ export interface FormCandidate {
   updated_at: Date
 }
 
-
 export interface CreateFormCandidate {
   candidateId: number
   sFormId: number
@@ -53,9 +51,7 @@ export interface CreateFormCandidate {
   formCandidateAccessCode: string
 }
 
-
 export interface ValidateAccessCodeResponse {
   message: string
   formCandidateId: number
 }
-

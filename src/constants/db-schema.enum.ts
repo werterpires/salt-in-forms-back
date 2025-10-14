@@ -66,7 +66,8 @@ export enum SForms {
   S_FORM_ID = 'sFormId',
   PROCESS_ID = 'processId',
   S_FORM_NAME = 'sFormName',
-  S_FORM_TYPE = 'sFormType'
+  S_FORM_TYPE = 'sFormType',
+  EMAIL_QUESTION_ID = 'emailQuestionId'
 }
 
 export enum QuestionsAreas {

@@ -6,7 +6,6 @@ import { EncryptionService } from '../shared/utils-module/encryption/encryption.
 import {
   CreateCandidate,
   CreateFormCandidate,
-  FormCandidateData,
   ValidateAccessCodeResponse
 } from './types'
 import { CustomLoggerService } from 'src/shared/utils-module/custom-logger/custom-logger.service'
