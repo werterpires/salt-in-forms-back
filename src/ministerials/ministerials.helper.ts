@@ -54,3 +54,40 @@ export function compareMinisterialData(
     (existing.ministerialSecretaryPhone || undefined) === (newData.ministerialSecretaryPhone || undefined)
   )
 }
+
+export function processMinisterialResults(results: any[]): any[] {
+  const fieldMap = new Map<number, any>()
+
+  for (const row of results) {
+    const fieldId = row[db.Fields.FIELD_ID]
+    const ministerialId = row[db.Ministerials.MINISTERIAL_ID]
+
+    const existing = fieldMap.get(fieldId)
+    
+    if (!existing || ministerialId > existing.ministerialId) {
+      fieldMap.set(fieldId, {
+        ministerialId: row[db.Ministerials.MINISTERIAL_ID],
+        ministerialName: row[db.Ministerials.MINISTERIAL_NAME],
+        ministerialPrimaryPhone: row[db.Ministerials.MINISTERIAL_PRIMARY_PHONE],
+        ministerialSecondaryPhone: row[db.Ministerials.MINISTERIAL_SECONDARY_PHONE],
+        ministerialLandlinePhone: row[db.Ministerials.MINISTERIAL_LANDLINE_PHONE],
+        ministerialPrimaryEmail: row[db.Ministerials.MINISTERIAL_PRIMARY_EMAIL],
+        ministerialAlternativeEmail: row[db.Ministerials.MINISTERIAL_ALTERNATIVE_EMAIL],
+        ministerialSecretaryName: row[db.Ministerials.MINISTERIAL_SECRETARY_NAME],
+        ministerialSecretaryPhone: row[db.Ministerials.MINISTERIAL_SECRETARY_PHONE],
+        field: {
+          fieldId: row[db.Fields.FIELD_ID],
+          fieldName: row[db.Fields.FIELD_NAME],
+          fieldAcronym: row[db.Fields.FIELD_ACRONYM]
+        },
+        union: {
+          unionId: row[db.Unions.UNION_ID],
+          unionName: row[db.Unions.UNION_NAME],
+          unionAcronym: row[db.Unions.UNION_ACRONYM]
+        }
+      })
+    }
+  }
+
+  return Array.from(fieldMap.values())
+}

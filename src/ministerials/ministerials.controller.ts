@@ -28,23 +28,22 @@ export class MinisterialsController {
     @Query('page', ParseIntPipe) page: number,
     @Query('direction') direction: string,
     @Query('column') column: string,
-    @Query('ministerialField') ministerialField: string,
-    @Query('ministerialActive', BoolenOrUndefinedPipe)
-    ministerialActive: boolean,
-    @Query('ministerialName') ministerialName: string
+    @Query('ministerialName') ministerialName: string,
+    @Query('fieldId', ParseIntPipe) fieldId?: number,
+    @Query('unionId', ParseIntPipe) unionId?: number
   ) {
     const paginator = new Paginator<typeof db.Ministerials>(
       page,
       direction,
       column,
-      db.Ministerials.MINISTERIAL_FIELD,
+      db.Ministerials.MINISTERIAL_NAME,
       db.Ministerials
     )
 
     const filters: MinisterialsFilter = {
-      ministerialField,
-      ministerialActive,
-      ministerialName
+      ministerialName,
+      fieldId,
+      unionId
     }
 
     return this.ministerialsService.findAllMinisterials(paginator, filters)

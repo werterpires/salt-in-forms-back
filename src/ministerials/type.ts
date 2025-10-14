@@ -39,3 +39,18 @@ export interface MinisterialsFilter {
   fieldId?: number
   unionId?: number
 }
+
+export interface MinisterialWithRelations {
+  ministerialId: number
+  ministerialName: string
+  ministerialPrimaryPhone?: string
+  ministerialSecondaryPhone?: string
+  ministerialLandlinePhone?: string
+  ministerialPrimaryEmail?: string
+  ministerialAlternativeEmail?: string
+  ministerialSecretaryName?: string
+  ministerialSecretaryPhone?: string
+  ministerialCreatedAt: Date
+  field: Field
+  union: Union
+}

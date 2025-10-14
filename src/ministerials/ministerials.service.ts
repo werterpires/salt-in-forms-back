@@ -3,7 +3,9 @@ import { Injectable } from '@nestjs/common'
 import { CreateMinisterialsDto } from './dto/create-ministerials.dto'
 import { MinisterialsRepo } from './ministerials.repo'
 import * as db from 'src/constants/db-schema.enum'
-import { buildMinisterialData, compareMinisterialData } from './ministerials.helper'
+import { buildMinisterialData, compareMinisterialData, processMinisterialResults } from './ministerials.helper'
+import { FindAllResponse, Paginator } from 'src/shared/types/types'
+import { MinisterialsFilter } from './type'
 
 @Injectable()
 export class MinisterialsService {
@@ -73,5 +75,26 @@ export class MinisterialsService {
         }
       }
     }
+  }
+
+  async findAllMinisterials(
+    paginator: Paginator<typeof db.Ministerials>,
+    filters: MinisterialsFilter
+  ): Promise<FindAllResponse<any>> {
+    const results = await this.ministerialsRepo.findAllMinisterials(
+      paginator,
+      filters
+    )
+    
+    const ministerials = processMinisterialResults(results)
+    
+    const ministerialsQuantity = await this.ministerialsRepo.findMinisterialsQuantity(filters)
+
+    const response: FindAllResponse<any> = {
+      data: ministerials,
+      pagesQuantity: ministerialsQuantity
+    }
+
+    return response
   }
 }
