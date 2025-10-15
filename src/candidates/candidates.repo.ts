@@ -181,4 +181,11 @@ export class CandidatesRepo {
         [db.FormsCandidates.FORM_CANDIDATE_ACCESS_CODE]: newAccessCode
       })
   }
+
+  async findCandidateById(candidateId: number) {
+    return this.knex(db.Tables.CANDIDATES)
+      .select('*')
+      .where(db.Candidates.CANDIDATE_ID, candidateId)
+      .first()
+  }
 }
