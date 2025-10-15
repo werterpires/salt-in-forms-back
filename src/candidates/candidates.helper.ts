@@ -3,7 +3,7 @@ import { CreateCandidate } from './types'
 
 /**
  * Gera um código de acesso único para formulário
- * 
+ *
  * @returns Código de acesso de 45 caracteres
  */
 export function createAccessCode(): string {
@@ -16,7 +16,7 @@ export function createAccessCode(): string {
 /**
  * Formata uma data string para o formato YYYY-MM-DD
  * Aceita formatos: DD/MM/YYYY ou YYYY-MM-DD
- * 
+ *
  * @param dateString - String com a data a ser formatada
  * @returns Data no formato YYYY-MM-DD ou string vazia se inválida
  */
@@ -39,7 +39,7 @@ export function formatDateString(dateString: string): string {
 
 /**
  * Verifica se um candidato é estrangeiro baseado no valor do campo
- * 
+ *
  * @param estrangeiroValue - Valor do campo "estrangeiro" da API
  * @returns true se for estrangeiro, false caso contrário
  */
@@ -49,25 +49,28 @@ export function isForeignerCandidate(estrangeiroValue: string): boolean {
 
 /**
  * Extrai e mapeia os campos da API para um objeto chave-valor
- * 
+ *
  * @param attributes - Array de atributos da API
  * @returns Objeto com os campos mapeados
  */
-export function extractFieldsFromApiResponse(attributes: any[]): Record<string, string> {
+export function extractFieldsFromApiResponse(
+  attributes: any[]
+): Record<string, string> {
   const fieldMap: Record<string, string> = {}
-  
+
   attributes.forEach((attr) => {
     const label = attr.Label.toLowerCase()
-    const value = attr.Values && attr.Values.length > 0 ? attr.Values[0].Caption : ''
+    const value =
+      attr.Values && attr.Values.length > 0 ? attr.Values[0].Caption : ''
     fieldMap[label] = value
   })
-  
+
   return fieldMap
 }
 
 /**
  * Transforma um item da resposta da API em um objeto CreateCandidate
- * 
+ *
  * @param apiItem - Item da API contendo dados do candidato
  * @param processId - ID do processo
  * @param encryptionService - Serviço de criptografia para dados sensíveis
@@ -83,7 +86,8 @@ export function transformApiItemToCandidate(
     const fieldMap = extractFieldsFromApiResponse(attributes)
 
     // Determinar se é estrangeiro
-    const estrangeiroValue = fieldMap['estrangeiro ?'] || fieldMap['estrangeiro']
+    const estrangeiroValue =
+      fieldMap['estrangeiro ?'] || fieldMap['estrangeiro']
     const isForeigner = isForeignerCandidate(estrangeiroValue)
 
     const candidate: CreateCandidate = {
@@ -112,18 +116,10 @@ export function transformApiItemToCandidate(
       candidateAddressNumber: encryptionService.encrypt(
         fieldMap['número'] || fieldMap['numero'] || ''
       ),
-      candidateDistrict: encryptionService.encrypt(
-        fieldMap['bairro'] || ''
-      ),
-      candidateCity: encryptionService.encrypt(
-        fieldMap['cidade'] || ''
-      ),
-      candidateState: encryptionService.encrypt(
-        fieldMap['estado'] || ''
-      ),
-      candidateZipCode: encryptionService.encrypt(
-        fieldMap['cep'] || ''
-      ),
+      candidateDistrict: encryptionService.encrypt(fieldMap['bairro'] || ''),
+      candidateCity: encryptionService.encrypt(fieldMap['cidade'] || ''),
+      candidateState: encryptionService.encrypt(fieldMap['estado'] || ''),
+      candidateZipCode: encryptionService.encrypt(fieldMap['cep'] || ''),
       candidateCountry: encryptionService.encrypt('')
     }
 
@@ -136,7 +132,7 @@ export function transformApiItemToCandidate(
 
 /**
  * Calcula a diferença em horas entre duas datas
- * 
+ *
  * @param date1 - Primeira data
  * @param date2 - Segunda data
  * @returns Diferença em horas
@@ -147,11 +143,14 @@ export function getHoursDifference(date1: Date, date2: Date): number {
 
 /**
  * Gera o link de acesso ao formulário
- * 
+ *
  * @param frontendUrl - URL base do frontend
  * @param accessCode - Código de acesso
  * @returns URL completa para acesso ao formulário
  */
-export function generateFormAccessLink(frontendUrl: string, accessCode: string): string {
-  return `${frontendUrl}/formulario/${accessCode}`
+export function generateFormAccessLink(
+  frontendUrl: string,
+  accessCode: string
+): string {
+  return `${frontendUrl}/${accessCode}`
 }

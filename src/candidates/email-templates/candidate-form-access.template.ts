@@ -1,6 +1,6 @@
 /**
  * Template de email para acesso ao formulário do tipo "candidate"
- * 
+ *
  * @param candidateName - Nome do candidato
  * @param accessLink - Link de acesso ao formulário
  * @param accessCode - Código de acesso

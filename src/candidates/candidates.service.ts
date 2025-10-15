@@ -52,7 +52,6 @@ export class CandidatesService {
       const sForms = await this.candidatesRepo.findSFormsByProcessId(
         process.processId
       )
-      console.log(sForms)
 
       // Buscar candidatos que não estão na tabela FormsCandidates
       const candidatesNotInFormsCandidates =
@@ -153,7 +152,7 @@ export class CandidatesService {
   /**
    * Cron para processar formulários do tipo "normal" e "ministerial"
    * TODO: Implementar quando a tabela de respostas estiver disponível
-   * 
+   *
    * Lógica necessária:
    * 1. Buscar candidatos que completaram formulário "candidate"
    * 2. Para formulários "normal": buscar resposta da pergunta vinculada (emailQuestionId)
@@ -161,25 +160,21 @@ export class CandidatesService {
    * 4. Para formulários "ministerial": implementar lógica específica
    */
   @Cron('0 */2 * * *') // A cada 2 horas
-  async handleNormalAndMinisterialForms() {
+  handleNormalAndMinisterialForms() {
     this.loggger.info(
       '\n=== ATENÇÃO: Cron de formulários "normal" e "ministerial" não implementado ==='
     )
     this.loggger.info(
       'Motivo: Tabela de respostas das questions ainda não está disponível'
     )
-    this.loggger.info(
-      'Quando implementar, este cron deve:'
-    )
+    this.loggger.info('Quando implementar, este cron deve:')
     this.loggger.info(
       '1. Buscar candidatos que completaram o formulário "candidate"'
     )
     this.loggger.info(
       '2. Para formulários "normal": buscar resposta da pergunta vinculada (emailQuestionId)'
     )
-    this.loggger.info(
-      '3. Enviar email para o endereço encontrado na resposta'
-    )
+    this.loggger.info('3. Enviar email para o endereço encontrado na resposta')
     this.loggger.info(
       '4. Para formulários "ministerial": implementar lógica específica'
     )
@@ -241,9 +236,7 @@ export class CandidatesService {
 
       // Verificar duplicatas para cada processo
       for (const [processId, candidates] of candidatesByProcess) {
-        const uniqueDocuments = candidates.map(
-          (c) => c.candidateUniqueDocument
-        )
+        const uniqueDocuments = candidates.map((c) => c.candidateUniqueDocument)
         const existingDocuments =
           await this.candidatesRepo.findExistingCandidatesByProcessAndDocument(
             processId,

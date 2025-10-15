@@ -1,6 +1,6 @@
 /**
  * Template de email para resumo de importação de candidatos
- * 
+ *
  * @param totalFound - Total de candidatos encontrados
  * @param totalDuplicated - Total de candidatos duplicados
  * @param totalInserted - Total de candidatos inseridos
