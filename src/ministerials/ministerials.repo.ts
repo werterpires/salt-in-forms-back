@@ -95,6 +95,7 @@ export class MinisterialsRepo {
         `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ALTERNATIVE_EMAIL}`,
         `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_SECRETARY_NAME}`,
         `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_SECRETARY_PHONE}`,
+        `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ACTIVE}`,
         `${db.Tables.FIELDS}.${db.Fields.FIELD_ID}`,
         `${db.Tables.FIELDS}.${db.Fields.FIELD_NAME}`,
         `${db.Tables.FIELDS}.${db.Fields.FIELD_ACRONYM}`,

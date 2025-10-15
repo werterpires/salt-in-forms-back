@@ -51,6 +51,7 @@ export interface MinisterialWithRelations {
   ministerialAlternativeEmail?: string
   ministerialSecretaryName?: string
   ministerialSecretaryPhone?: string
+  ministerialActive: boolean
   ministerialCreatedAt: Date
   fieldId: number
   fieldName: string
