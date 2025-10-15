@@ -102,6 +102,12 @@ export class CandidatesRepo {
     })
   }
 
+  /**
+   * Busca candidatos que ainda não têm registro na tabela FormsCandidates
+   * 
+   * @param processId - ID do processo
+   * @returns Array de IDs dos candidatos sem FormsCandidates
+   */
   async findCandidatesNotInFormsCandidatesByProcessId(
     processId: number
   ): Promise<number[]> {
@@ -130,6 +136,43 @@ export class CandidatesRepo {
     return candidateIds.filter(
       (id) => !candidateIdsInFormsCandidates.includes(id)
     )
+  }
+
+  /**
+   * Busca candidatos completos com seus FormsCandidates para envio de emails
+   * Otimizado para evitar N+1 queries
+   * 
+   * @param formsCandidatesIds - Array de IDs dos FormsCandidates
+   * @returns Array com dados completos para envio de email
+   */
+  async findCandidatesWithFormsCandidatesByIds(
+    formsCandidatesIds: number[]
+  ): Promise<any[]> {
+    if (formsCandidatesIds.length === 0) {
+      return []
+    }
+
+    return this.knex(db.Tables.FORMS_CANDIDATES)
+      .select(
+        `${db.Tables.FORMS_CANDIDATES}.*`,
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_NAME} as candidateName`,
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_EMAIL} as candidateEmail`,
+        `${db.Tables.S_FORMS}.${db.SForms.S_FORM_TYPE} as sFormType`
+      )
+      .innerJoin(
+        db.Tables.CANDIDATES,
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_ID}`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID}`
+      )
+      .innerJoin(
+        db.Tables.S_FORMS,
+        `${db.Tables.S_FORMS}.${db.SForms.S_FORM_ID}`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID}`
+      )
+      .whereIn(
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ID}`,
+        formsCandidatesIds
+      )
   }
 
   async insertFormsCandidatesInBatch(
