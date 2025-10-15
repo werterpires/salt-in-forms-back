@@ -581,8 +581,15 @@ export class CandidatesService {
             html
           )
 
+          // Atualizar status para MAILED após envio bem-sucedido
+          await this.candidatesRepo.updateFormCandidateStatus(
+            formCandidate.candidateId,
+            formCandidate.sFormId,
+            FormCandidateStatus.MAILED
+          )
+
           this.loggger.info(
-            `Email enviado para ${candidateName} (${candidateEmail})`
+            `Email enviado para ${candidateName} (${candidateEmail}) - Status atualizado para MAILED`
           )
         } else if (
           sForm.sFormType === 'ministerial' ||

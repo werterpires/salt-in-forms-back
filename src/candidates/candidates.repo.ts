@@ -188,4 +188,17 @@ export class CandidatesRepo {
       .where(db.Candidates.CANDIDATE_ID, candidateId)
       .first()
   }
+
+  async updateFormCandidateStatus(
+    candidateId: number,
+    sFormId: number,
+    status: number
+  ): Promise<void> {
+    await this.knex(db.Tables.FORMS_CANDIDATES)
+      .where(db.FormsCandidates.CANDIDATE_ID, candidateId)
+      .where(db.FormsCandidates.S_FORM_ID, sFormId)
+      .update({
+        [db.FormsCandidates.FORM_CANDIDATE_STATUS]: status
+      })
+  }
 }
