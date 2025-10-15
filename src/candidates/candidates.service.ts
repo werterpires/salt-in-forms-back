@@ -6,7 +6,8 @@ import { EncryptionService } from '../shared/utils-module/encryption/encryption.
 import {
   CreateCandidate,
   CreateFormCandidate,
-  ValidateAccessCodeResponse
+  ValidateAccessCodeResponse,
+  AccessCodeMapEntry
 } from './types'
 import { CustomLoggerService } from 'src/shared/utils-module/custom-logger/custom-logger.service'
 import { SendPulseEmailService } from '../shared/utils-module/email-sender/sendpulse-email.service'
@@ -15,10 +16,7 @@ import { FormCandidateStatus } from 'src/constants/form-candidate-status.const'
 
 @Injectable()
 export class CandidatesService {
-  private accessCodeMap: Map<
-    string,
-    { candidateId: number; sFormId: number }
-  > = new Map()
+  private accessCodeMap: Map<string, AccessCodeMapEntry> = new Map()
 
   constructor(
     private readonly candidatesRepo: CandidatesRepo,

@@ -55,3 +55,8 @@ export interface ValidateAccessCodeResponse {
   message: string
   formCandidateId: number
 }
+
+export interface AccessCodeMapEntry {
+  candidateId: number
+  sFormId: number
+}
