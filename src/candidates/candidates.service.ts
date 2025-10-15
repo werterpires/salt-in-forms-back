@@ -11,6 +11,7 @@ import {
 import { CustomLoggerService } from 'src/shared/utils-module/custom-logger/custom-logger.service'
 import { SendPulseEmailService } from '../shared/utils-module/email-sender/sendpulse-email.service'
 import { createAccessCode } from './candidates.helper'
+import { FormCandidateStatus } from 'src/constants/form-candidate-status.const'
 
 @Injectable()
 export class CandidatesService {
@@ -22,7 +23,6 @@ export class CandidatesService {
     private readonly sendPulseEmailService: SendPulseEmailService
   ) {}
 
-  @Cron('47 11 * * *')
   async handleProcessesInAnswerPeriod() {
     this.loggger.info(
       '\n=== Executando cron: Buscar processos no período de respostas ==='
@@ -56,21 +56,17 @@ export class CandidatesService {
             formsCandidatesData.push({
               candidateId: candidateId,
               sFormId: sForm.sFormId,
-              formCandidateStatus: 1,
+              formCandidateStatus: FormCandidateStatus.GENERATED,
               formCandidateAccessCode: createAccessCode()
             })
           }
         }
 
-        const insertedFormCandidateIds =
-          await this.candidatesRepo.insertFormsCandidatesInBatch(
-            formsCandidatesData
-          )
-        console.log(insertedFormCandidateIds)
+        await this.candidatesRepo.insertFormsCandidatesInBatch(
+          formsCandidatesData
+        )
       }
     }
-
-    this.loggger.info('\n=== Fim da execução do cron ===')
   }
 
   @Cron('45 11 * * *')
@@ -180,6 +176,8 @@ export class CandidatesService {
       // Enviar email mesmo quando não houver candidatos
       await this.sendImportSummaryEmail(0, 0, 0)
     }
+
+    await this.handleProcessesInAnswerPeriod()
   }
 
   private async sendImportSummaryEmail(

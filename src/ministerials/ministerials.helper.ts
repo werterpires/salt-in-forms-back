@@ -74,19 +74,17 @@ export function compareMinisterialData(
   )
 }
 
-export function buildUpdateMinisterialData(
-  ministerialData: {
-    ministerialName: string
-    ministerialPrimaryPhone?: string | null
-    ministerialSecondaryPhone?: string | null
-    ministerialLandlinePhone?: string | null
-    ministerialPrimaryEmail?: string | null
-    ministerialAlternativeEmail?: string | null
-    ministerialSecretaryName?: string | null
-    ministerialSecretaryPhone?: string | null
-    ministerialActive?: boolean | null
-  }
-): Record<string, any> {
+export function buildUpdateMinisterialData(ministerialData: {
+  ministerialName: string
+  ministerialPrimaryPhone?: string | null
+  ministerialSecondaryPhone?: string | null
+  ministerialLandlinePhone?: string | null
+  ministerialPrimaryEmail?: string | null
+  ministerialAlternativeEmail?: string | null
+  ministerialSecretaryName?: string | null
+  ministerialSecretaryPhone?: string | null
+  ministerialActive?: boolean | null
+}): Record<string, any> {
   return {
     [db.Ministerials.MINISTERIAL_NAME]: ministerialData.ministerialName,
     [db.Ministerials.MINISTERIAL_PRIMARY_PHONE]:
