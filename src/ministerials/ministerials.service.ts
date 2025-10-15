@@ -3,7 +3,10 @@ import { CreateMinisterialsDto } from './dto/create-ministerials.dto'
 import { UpdateMinisterialDto } from './dto/update-ministerial.dto'
 import { MinisterialsRepo } from './ministerials.repo'
 import * as db from 'src/constants/db-schema.enum'
-import { buildMinisterialData } from './ministerials.helper'
+import {
+  buildMinisterialData,
+  buildUpdateMinisterialData
+} from './ministerials.helper'
 import { FindAllResponse, Paginator } from 'src/shared/types/types'
 import {
   MinisterialsFilter,
@@ -57,25 +60,7 @@ export class MinisterialsService {
   ): Promise<void> {
     const { ministerialId, ...ministerialData } = updateMinisterialDto
 
-    const dataToUpdate = {
-      [db.Ministerials.MINISTERIAL_NAME]: ministerialData.ministerialName,
-      [db.Ministerials.MINISTERIAL_PRIMARY_PHONE]:
-        ministerialData.ministerialPrimaryPhone ?? null,
-      [db.Ministerials.MINISTERIAL_SECONDARY_PHONE]:
-        ministerialData.ministerialSecondaryPhone ?? null,
-      [db.Ministerials.MINISTERIAL_LANDLINE_PHONE]:
-        ministerialData.ministerialLandlinePhone ?? null,
-      [db.Ministerials.MINISTERIAL_PRIMARY_EMAIL]:
-        ministerialData.ministerialPrimaryEmail ?? null,
-      [db.Ministerials.MINISTERIAL_ALTERNATIVE_EMAIL]:
-        ministerialData.ministerialAlternativeEmail ?? null,
-      [db.Ministerials.MINISTERIAL_SECRETARY_NAME]:
-        ministerialData.ministerialSecretaryName ?? null,
-      [db.Ministerials.MINISTERIAL_SECRETARY_PHONE]:
-        ministerialData.ministerialSecretaryPhone ?? null,
-      [db.Ministerials.MINISTERIAL_ACTIVE]:
-        ministerialData.ministerialActive ?? null
-    }
+    const dataToUpdate = buildUpdateMinisterialData(ministerialData)
 
     await this.ministerialsRepo.updateMinisterial(ministerialId, dataToUpdate)
   }

@@ -90,3 +90,15 @@ export interface MinisterialQueryResult {
   unionName: string
   unionAcronym: string
 }
+
+export interface UpdateMinisterialData {
+  ministerialName: string
+  ministerialPrimaryPhone?: string
+  ministerialSecondaryPhone?: string
+  ministerialLandlinePhone?: string
+  ministerialPrimaryEmail?: string
+  ministerialAlternativeEmail?: string
+  ministerialSecretaryName?: string
+  ministerialSecretaryPhone?: string
+  ministerialActive?: boolean
+}

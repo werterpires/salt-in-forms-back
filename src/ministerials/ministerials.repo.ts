@@ -82,7 +82,7 @@ export class MinisterialsRepo {
 
   async updateMinisterial(
     ministerialId: number,
-    ministerialData: Partial<Ministerial>
+    ministerialData: Record<string, any>
   ): Promise<void> {
     await this.knex(db.Tables.MINISTERIALS)
       .where(db.Ministerials.MINISTERIAL_ID, ministerialId)
