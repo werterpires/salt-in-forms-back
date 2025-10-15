@@ -15,6 +15,11 @@ import { FormCandidateStatus } from 'src/constants/form-candidate-status.const'
 
 @Injectable()
 export class CandidatesService {
+  private accessCodeMap: Map<
+    string,
+    { candidateId: number; sFormId: number }
+  > = new Map()
+
   constructor(
     private readonly candidatesRepo: CandidatesRepo,
     private readonly externalApiService: ExternalApiService,
@@ -64,6 +69,18 @@ export class CandidatesService {
 
         await this.candidatesRepo.insertFormsCandidatesInBatch(
           formsCandidatesData
+        )
+
+        // Armazenar códigos de acesso em memória
+        for (const formCandidate of formsCandidatesData) {
+          this.accessCodeMap.set(formCandidate.formCandidateAccessCode, {
+            candidateId: formCandidate.candidateId,
+            sFormId: formCandidate.sFormId
+          })
+        }
+
+        this.loggger.info(
+          `\n=== ${formsCandidatesData.length} códigos de acesso armazenados em memória ===`
         )
       }
     }
@@ -409,6 +426,14 @@ export class CandidatesService {
         formCandidate.formCandidateId,
         newAccessCode
       )
+
+      // Remover código antigo e adicionar novo código em memória
+      this.accessCodeMap.delete(accessCode)
+      this.accessCodeMap.set(newAccessCode, {
+        candidateId: formCandidate.candidateId,
+        sFormId: formCandidate.sFormId
+      })
+
       throw new Error(
         '#O período de acesso expirou. Um novo código foi gerado.'
       )
