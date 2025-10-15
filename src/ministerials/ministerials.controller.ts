@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
   Query,
   ParseIntPipe
@@ -9,6 +10,7 @@ import {
 import { MinisterialsService } from './ministerials.service'
 
 import { CreateMinisterialsDto } from './dto/create-ministerials.dto'
+import { UpdateMinisterialDto } from './dto/update-ministerial.dto'
 import { Paginator } from 'src/shared/types/types'
 import * as db from 'src/constants/db-schema.enum'
 import { MinisterialsFilter } from './type'
@@ -46,5 +48,10 @@ export class MinisterialsController {
     }
 
     return this.ministerialsService.findAllMinisterials(paginator, filters)
+  }
+
+  @Put()
+  update(@Body() updateMinisterialDto: UpdateMinisterialDto) {
+    return this.ministerialsService.updateMinisterial(updateMinisterialDto)
   }
 }

@@ -80,6 +80,15 @@ export class MinisterialsRepo {
     return ministerialId
   }
 
+  async updateMinisterial(
+    ministerialId: number,
+    ministerialData: Partial<Ministerial>
+  ): Promise<void> {
+    await this.knex(db.Tables.MINISTERIALS)
+      .where(db.Ministerials.MINISTERIAL_ID, ministerialId)
+      .update(ministerialData)
+  }
+
   async findAllMinisterials(
     paginator: Paginator<typeof db.Ministerials>,
     filters: MinisterialsFilter
