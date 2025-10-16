@@ -4,6 +4,7 @@ import { InjectConnection } from 'nest-knexjs'
 import * as db from '../constants/db-schema.enum'
 import { Process } from 'src/processes/types'
 import { CreateCandidate, CreateFormCandidate, FormCandidate } from './types'
+import { ERoles } from '../constants/roles.const'
 
 @Injectable()
 export class CandidatesRepo {
@@ -275,10 +276,9 @@ export class CandidatesRepo {
   }
 
   /**
-   * Busca termos ativos para o papel de candidato (roleId = 4)
+   * Busca termos ativos para o papel de candidato
    */
   async findActiveTermsForCandidate(): Promise<any[]> {
-    const candidateRoleId = 4 // ERoles.CANDIDATE
     const today = new Date()
 
     return this.knex(db.Tables.TERMS)
@@ -290,7 +290,7 @@ export class CandidatesRepo {
         db.Terms.BEGIN_DATE,
         db.Terms.END_DATE
       )
-      .where(db.Terms.ROLE_ID, candidateRoleId)
+      .where(db.Terms.ROLE_ID, ERoles.CANDIDATE)
       .where(db.Terms.BEGIN_DATE, '<=', today)
       .where(function () {
         this.where(db.Terms.END_DATE, '>=', today).orWhereNull(db.Terms.END_DATE)
