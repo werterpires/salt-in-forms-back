@@ -5,8 +5,7 @@ import { ExternalApiService } from '../shared/utils-module/external-api/external
 import { EncryptionService } from '../shared/utils-module/encryption/encryption.service'
 import {
   CreateCandidate,
-  CreateFormCandidate,
-  ValidateAccessCodeResponse
+  CreateFormCandidate
 } from './types'
 import { CustomLoggerService } from 'src/shared/utils-module/custom-logger/custom-logger.service'
 import { SendPulseEmailService } from '../shared/utils-module/email-sender/sendpulse-email.service'
@@ -187,8 +186,9 @@ export class CandidatesService {
    * Valida um código de acesso
    * Se expirado (>24h), gera novo código e reenvia email conforme tipo do formulário
    * Se válido, verifica termos ativos não assinados para o candidato
+   * Retorna Terms[] se houver termos pendentes, ou FormToAnswer se não houver
    */
-  async validateAccessCode(accessCode: string): Promise<any[]> {
+  async validateAccessCode(accessCode: string): Promise<any[] | any> {
     const formCandidate =
       await this.candidatesRepo.findFormCandidateByAccessCode(accessCode)
 
@@ -222,17 +222,107 @@ export class CandidatesService {
     // Buscar termos ativos para candidatos
     const activeTerms = await this.candidatesRepo.findActiveTermsForCandidate()
     
-    if (activeTerms.length === 0) {
-      return []
+    if (activeTerms.length > 0) {
+      const activeTermIds = activeTerms.map((term) => term.termId)
+
+      // Buscar termos não assinados para este formCandidate
+      const unsignedTerms = await this.candidatesRepo.findUnsignedTermsForFormCandidate(
+        formCandidate.formCandidateId,
+        activeTermIds
+      )
+
+      // Se há termos não assinados, retorna eles
+      if (unsignedTerms.length > 0) {
+        return unsignedTerms
+      }
     }
 
-    const activeTermIds = activeTerms.map((term) => term.termId)
+    // Se não há termos pendentes, montar o FormToAnswer
+    return await this.buildFormToAnswer(formCandidate.sFormId)
+  }
 
-    // Buscar termos não assinados para este formCandidate
-    return await this.candidatesRepo.findUnsignedTermsForFormCandidate(
-      formCandidate.formCandidateId,
-      activeTermIds
-    )
+  /**
+   * Monta o FormToAnswer buscando cada parte separadamente
+   */
+  private async buildFormToAnswer(sFormId: number): Promise<any> {
+    // 1. Buscar o formulário
+    const form = await this.candidatesRepo.findFormById(sFormId)
+
+    if (!form) {
+      throw new Error('#Formulário não encontrado.')
+    }
+
+    // 2. Buscar as seções do formulário
+    const sections = await this.candidatesRepo.findSectionsByFormId(sFormId)
+
+    // 3. Para cada seção, buscar as questões
+    const sectionsWithQuestions = []
+
+    for (const section of sections) {
+      const questions = await this.candidatesRepo.findQuestionsBySectionId(
+        section.formSectionId
+      )
+
+      // 4. Para cada questão, buscar options, validations e subquestions
+      const questionsComplete = []
+
+      for (const question of questions) {
+        const options = await this.candidatesRepo.findOptionsByQuestionId(
+          question.questionId
+        )
+
+        const validations = await this.candidatesRepo.findValidationsByQuestionId(
+          question.questionId
+        )
+
+        const subQuestions = await this.candidatesRepo.findSubQuestionsByQuestionId(
+          question.questionId
+        )
+
+        // Para cada subquestão, buscar suas options e validations
+        const subQuestionsComplete = []
+
+        for (const subQuestion of subQuestions) {
+          const subQuestionOptions = await this.candidatesRepo.findSubQuestionOptions(
+            subQuestion.subQuestionId
+          )
+
+          const subValidations = await this.candidatesRepo.findSubValidations(
+            subQuestion.subQuestionId
+          )
+
+          subQuestionsComplete.push({
+            ...subQuestion,
+            subQuestionOptions,
+            subValidations
+          })
+        }
+
+        questionsComplete.push({
+          questionId: question.questionId,
+          questionOrder: question.questionOrder,
+          questionType: question.questionType,
+          questionStatement: question.questionStatement,
+          questionDescription: question.questionDescription,
+          options,
+          validations,
+          subQuestions: subQuestionsComplete
+        })
+      }
+
+      sectionsWithQuestions.push({
+        formSectionId: section.formSectionId,
+        formSectionName: section.formSectionName,
+        formSectionOrder: section.formSectionOrder,
+        questions: questionsComplete
+      })
+    }
+
+    return {
+      sFormId: form.sFormId,
+      sFormName: form.sFormName,
+      sections: sectionsWithQuestions
+    }
   }
 
   /**

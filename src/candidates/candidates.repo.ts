@@ -330,4 +330,115 @@ export class CandidatesRepo {
       .whereIn(db.Terms.TERM_ID, activeTermIds)
       .whereNotIn(db.Terms.TERM_ID, signedIds)
   }
+
+  /**
+   * Busca dados básicos de um formulário por sFormId
+   */
+  async findFormById(sFormId: number): Promise<any> {
+    return this.knex(db.Tables.S_FORMS)
+      .select(db.SForms.S_FORM_ID, db.SForms.S_FORM_NAME)
+      .where(db.SForms.S_FORM_ID, sFormId)
+      .first()
+  }
+
+  /**
+   * Busca seções de um formulário
+   */
+  async findSectionsByFormId(sFormId: number): Promise<any[]> {
+    return this.knex(db.Tables.FORM_SECTIONS)
+      .select(
+        db.FormSections.FORM_SECTION_ID,
+        db.FormSections.FORM_SECTION_NAME,
+        db.FormSections.FORM_SECTION_ORDER
+      )
+      .where(db.FormSections.S_FORM_ID, sFormId)
+      .orderBy(db.FormSections.FORM_SECTION_ORDER, 'asc')
+  }
+
+  /**
+   * Busca questões de uma seção
+   */
+  async findQuestionsBySectionId(formSectionId: number): Promise<any[]> {
+    return this.knex(db.Tables.QUESTIONS)
+      .select(
+        db.Questions.QUESTION_ID,
+        db.Questions.QUESTION_ORDER,
+        db.Questions.QUESTION_TYPE,
+        db.Questions.QUESTION_STATEMENT,
+        db.Questions.QUESTION_DESCRIPTION
+      )
+      .where(db.Questions.FORM_SECTION_ID, formSectionId)
+      .orderBy(db.Questions.QUESTION_ORDER, 'asc')
+  }
+
+  /**
+   * Busca opções de uma questão
+   */
+  async findOptionsByQuestionId(questionId: number): Promise<any[]> {
+    return this.knex(db.Tables.QUESTION_OPTIONS)
+      .select(
+        db.QuestionOptions.QUESTION_OPTION_ID,
+        db.QuestionOptions.QUESTION_OPTION_TYPE,
+        db.QuestionOptions.QUESTION_OPTION_VALUE
+      )
+      .where(db.QuestionOptions.QUESTION_ID, questionId)
+  }
+
+  /**
+   * Busca validações de uma questão
+   */
+  async findValidationsByQuestionId(questionId: number): Promise<any[]> {
+    return this.knex(db.Tables.VALIDATIONS)
+      .select(
+        db.Validations.VALIDATION_TYPE,
+        db.Validations.VALUE_ONE,
+        db.Validations.VALUE_TWO,
+        db.Validations.VALUE_THREE,
+        db.Validations.VALUE_FOUR
+      )
+      .where(db.Validations.QUESTION_ID, questionId)
+  }
+
+  /**
+   * Busca subquestões de uma questão
+   */
+  async findSubQuestionsByQuestionId(questionId: number): Promise<any[]> {
+    return this.knex(db.Tables.SUB_QUESTIONS)
+      .select(
+        db.SubQuestions.SUB_QUESTION_ID,
+        db.SubQuestions.SUB_QUESTION_POSITION,
+        db.SubQuestions.SUB_QUESTION_TYPE,
+        db.SubQuestions.SUB_QUESTION_STATEMENT
+      )
+      .where(db.SubQuestions.QUESTION_ID, questionId)
+      .orderBy(db.SubQuestions.SUB_QUESTION_POSITION, 'asc')
+  }
+
+  /**
+   * Busca opções de uma subquestão
+   */
+  async findSubQuestionOptions(subQuestionId: number): Promise<any[]> {
+    return this.knex(db.Tables.SUB_QUESTION_OPTIONS)
+      .select(
+        db.SubQuestionOptions.QUESTION_OPTION_ID,
+        db.SubQuestionOptions.QUESTION_OPTION_TYPE,
+        db.SubQuestionOptions.QUESTION_OPTION_VALUE
+      )
+      .where(db.SubQuestionOptions.QUESTION_ID, subQuestionId)
+  }
+
+  /**
+   * Busca validações de uma subquestão
+   */
+  async findSubValidations(subQuestionId: number): Promise<any[]> {
+    return this.knex(db.Tables.SUB_VALIDATIONS)
+      .select(
+        db.SubValidations.VALIDATION_TYPE,
+        db.SubValidations.VALUE_ONE,
+        db.SubValidations.VALUE_TWO,
+        db.SubValidations.VALUE_THREE,
+        db.SubValidations.VALUE_FOUR
+      )
+      .where(db.SubValidations.QUESTION_ID, subQuestionId)
+  }
 }

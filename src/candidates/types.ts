@@ -55,3 +55,27 @@ export interface AccessCodeMapEntry {
   candidateId: number
   sFormId: number
 }
+
+export interface QuestionToAnswer {
+  questionId: number
+  questionOrder: number
+  questionType: number
+  questionStatement: string
+  questionDescription: string
+  options: any[]
+  validations: any[]
+  subQuestions: any[]
+}
+
+export interface SectionToAnswer {
+  formSectionId: number
+  formSectionName: string
+  formSectionOrder: number
+  questions: QuestionToAnswer[]
+}
+
+export interface FormToAnswer {
+  sFormId: number
+  sFormName: string
+  sections: SectionToAnswer[]
+}
