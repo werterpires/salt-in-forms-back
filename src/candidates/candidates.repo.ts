@@ -338,17 +338,10 @@ export class CandidatesRepo {
     sFormId: number
     sFormName: string
   } | undefined> {
-    const result = await this.knex(db.Tables.S_FORMS)
+    return this.knex(db.Tables.S_FORMS)
       .select(db.SForms.S_FORM_ID, db.SForms.S_FORM_NAME)
       .where(db.SForms.S_FORM_ID, sFormId)
       .first()
-
-    if (!result) return undefined
-
-    return {
-      sFormId: result[db.SForms.S_FORM_ID],
-      sFormName: result[db.SForms.S_FORM_NAME]
-    }
   }
 
   /**
@@ -361,7 +354,7 @@ export class CandidatesRepo {
       formSectionOrder: number
     }>
   > {
-    const sections = await this.knex(db.Tables.FORM_SECTIONS)
+    return this.knex(db.Tables.FORM_SECTIONS)
       .select(
         db.FormSections.FORM_SECTION_ID,
         db.FormSections.FORM_SECTION_NAME,
@@ -369,12 +362,6 @@ export class CandidatesRepo {
       )
       .where(db.FormSections.S_FORM_ID, sFormId)
       .orderBy(db.FormSections.FORM_SECTION_ORDER, 'asc')
-
-    return sections.map((section) => ({
-      formSectionId: section[db.FormSections.FORM_SECTION_ID],
-      formSectionName: section[db.FormSections.FORM_SECTION_NAME],
-      formSectionOrder: section[db.FormSections.FORM_SECTION_ORDER]
-    }))
   }
 
   /**
@@ -389,7 +376,7 @@ export class CandidatesRepo {
       questionDescription: string
     }>
   > {
-    const questions = await this.knex(db.Tables.QUESTIONS)
+    return this.knex(db.Tables.QUESTIONS)
       .select(
         db.Questions.QUESTION_ID,
         db.Questions.QUESTION_ORDER,
@@ -399,14 +386,6 @@ export class CandidatesRepo {
       )
       .where(db.Questions.FORM_SECTION_ID, formSectionId)
       .orderBy(db.Questions.QUESTION_ORDER, 'asc')
-
-    return questions.map((question) => ({
-      questionId: question[db.Questions.QUESTION_ID],
-      questionOrder: question[db.Questions.QUESTION_ORDER],
-      questionType: question[db.Questions.QUESTION_TYPE],
-      questionStatement: question[db.Questions.QUESTION_STATEMENT],
-      questionDescription: question[db.Questions.QUESTION_DESCRIPTION]
-    }))
   }
 
   /**
@@ -419,19 +398,13 @@ export class CandidatesRepo {
       questionOptionValue: string
     }>
   > {
-    const options = await this.knex(db.Tables.QUESTION_OPTIONS)
+    return this.knex(db.Tables.QUESTION_OPTIONS)
       .select(
         db.QuestionOptions.QUESTION_OPTION_ID,
         db.QuestionOptions.QUESTION_OPTION_TYPE,
         db.QuestionOptions.QUESTION_OPTION_VALUE
       )
       .where(db.QuestionOptions.QUESTION_ID, questionId)
-
-    return options.map((option) => ({
-      questionOptionId: option[db.QuestionOptions.QUESTION_OPTION_ID],
-      questionOptionType: option[db.QuestionOptions.QUESTION_OPTION_TYPE],
-      questionOptionValue: option[db.QuestionOptions.QUESTION_OPTION_VALUE]
-    }))
   }
 
   /**
@@ -446,7 +419,7 @@ export class CandidatesRepo {
       valueFour: string | null
     }>
   > {
-    const validations = await this.knex(db.Tables.VALIDATIONS)
+    return this.knex(db.Tables.VALIDATIONS)
       .select(
         db.Validations.VALIDATION_TYPE,
         db.Validations.VALUE_ONE,
@@ -455,14 +428,6 @@ export class CandidatesRepo {
         db.Validations.VALUE_FOUR
       )
       .where(db.Validations.QUESTION_ID, questionId)
-
-    return validations.map((validation) => ({
-      validationType: validation[db.Validations.VALIDATION_TYPE],
-      valueOne: validation[db.Validations.VALUE_ONE] ?? null,
-      valueTwo: validation[db.Validations.VALUE_TWO] ?? null,
-      valueThree: validation[db.Validations.VALUE_THREE] ?? null,
-      valueFour: validation[db.Validations.VALUE_FOUR] ?? null
-    }))
   }
 
   /**
@@ -476,7 +441,7 @@ export class CandidatesRepo {
       subQuestionStatement: string
     }>
   > {
-    const subQuestions = await this.knex(db.Tables.SUB_QUESTIONS)
+    return this.knex(db.Tables.SUB_QUESTIONS)
       .select(
         db.SubQuestions.SUB_QUESTION_ID,
         db.SubQuestions.SUB_QUESTION_POSITION,
@@ -485,13 +450,6 @@ export class CandidatesRepo {
       )
       .where(db.SubQuestions.QUESTION_ID, questionId)
       .orderBy(db.SubQuestions.SUB_QUESTION_POSITION, 'asc')
-
-    return subQuestions.map((subQuestion) => ({
-      subQuestionId: subQuestion[db.SubQuestions.SUB_QUESTION_ID],
-      subQuestionPosition: subQuestion[db.SubQuestions.SUB_QUESTION_POSITION],
-      subQuestionType: subQuestion[db.SubQuestions.SUB_QUESTION_TYPE],
-      subQuestionStatement: subQuestion[db.SubQuestions.SUB_QUESTION_STATEMENT]
-    }))
   }
 
   /**
@@ -504,19 +462,13 @@ export class CandidatesRepo {
       questionOptionValue: string
     }>
   > {
-    const options = await this.knex(db.Tables.SUB_QUESTION_OPTIONS)
+    return this.knex(db.Tables.SUB_QUESTION_OPTIONS)
       .select(
         db.SubQuestionOptions.QUESTION_OPTION_ID,
         db.SubQuestionOptions.QUESTION_OPTION_TYPE,
         db.SubQuestionOptions.QUESTION_OPTION_VALUE
       )
       .where(db.SubQuestionOptions.QUESTION_ID, subQuestionId)
-
-    return options.map((option) => ({
-      questionOptionId: option[db.SubQuestionOptions.QUESTION_OPTION_ID],
-      questionOptionType: option[db.SubQuestionOptions.QUESTION_OPTION_TYPE],
-      questionOptionValue: option[db.SubQuestionOptions.QUESTION_OPTION_VALUE]
-    }))
   }
 
   /**
@@ -531,7 +483,7 @@ export class CandidatesRepo {
       valueFour: string | null
     }>
   > {
-    const validations = await this.knex(db.Tables.SUB_VALIDATIONS)
+    return this.knex(db.Tables.SUB_VALIDATIONS)
       .select(
         db.SubValidations.VALIDATION_TYPE,
         db.SubValidations.VALUE_ONE,
@@ -540,13 +492,5 @@ export class CandidatesRepo {
         db.SubValidations.VALUE_FOUR
       )
       .where(db.SubValidations.QUESTION_ID, subQuestionId)
-
-    return validations.map((validation) => ({
-      validationType: validation[db.SubValidations.VALIDATION_TYPE],
-      valueOne: validation[db.SubValidations.VALUE_ONE] ?? null,
-      valueTwo: validation[db.SubValidations.VALUE_TWO] ?? null,
-      valueThree: validation[db.SubValidations.VALUE_THREE] ?? null,
-      valueFour: validation[db.SubValidations.VALUE_FOUR] ?? null
-    }))
   }
 }
