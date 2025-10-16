@@ -154,3 +154,56 @@ export function generateFormAccessLink(
 ): string {
   return `${frontendUrl}/${accessCode}`
 }
+
+/**
+ * Descriptografa dados do candidato
+ *
+ * @param candidateName - Nome criptografado
+ * @param candidateEmail - Email criptografado
+ * @param encryptionService - Serviço de criptografia
+ * @returns Objeto com nome e email descriptografados
+ */
+export function decryptCandidateData(
+  candidateName: string,
+  candidateEmail: string,
+  encryptionService: { decrypt: (value: string) => string }
+): { name: string; email: string } {
+  return {
+    name: encryptionService.decrypt(candidateName),
+    email: encryptionService.decrypt(candidateEmail)
+  }
+}
+
+/**
+ * Prepara dados de email para candidato do tipo "candidate"
+ *
+ * @param candidateName - Nome criptografado
+ * @param candidateEmail - Email criptografado
+ * @param accessCode - Código de acesso
+ * @param frontendUrl - URL do frontend
+ * @param encryptionService - Serviço de criptografia
+ * @param emailTemplate - Função que gera o template (first-access ou resend)
+ * @returns Objeto com dados prontos para envio
+ */
+export function prepareCandidateEmailData(
+  candidateName: string,
+  candidateEmail: string,
+  accessCode: string,
+  frontendUrl: string,
+  encryptionService: { decrypt: (value: string) => string },
+  emailTemplate: (name: string, link: string, code: string) => string
+): { recipientName: string; recipientEmail: string; html: string } {
+  const { name, email } = decryptCandidateData(
+    candidateName,
+    candidateEmail,
+    encryptionService
+  )
+  const accessLink = generateFormAccessLink(frontendUrl, accessCode)
+  const html = emailTemplate(name, accessLink, accessCode)
+
+  return {
+    recipientName: name,
+    recipientEmail: email,
+    html
+  }
+}

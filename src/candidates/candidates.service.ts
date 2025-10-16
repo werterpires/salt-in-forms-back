@@ -14,7 +14,8 @@ import {
   createAccessCode,
   transformApiItemToCandidate,
   getHoursDifference,
-  generateFormAccessLink
+  generateFormAccessLink,
+  prepareCandidateEmailData
 } from './candidates.helper'
 import { FormCandidateStatus } from 'src/constants/form-candidate-status.const'
 import { getCandidateFormAccessEmailTemplate } from './email-templates/candidate-form-access.template'
@@ -256,43 +257,60 @@ export class CandidatesService {
     const { sFormType, candidateName, candidateEmail } = formData
 
     if (sFormType === 'candidate') {
-      try {
-        // Descriptografar dados
-        const decryptedName = this.encryptionService.decrypt(candidateName)
-        const decryptedEmail = this.encryptionService.decrypt(candidateEmail)
-
-        // Gerar link de acesso
-        const accessLink = generateFormAccessLink(frontendUrl, accessCode)
-
-        // Obter template de reenvio
-        const html = getResendAccessCodeEmailTemplate(
-          decryptedName,
-          accessLink,
-          accessCode
-        )
-
-        // Enviar email
-        await this.sendPulseEmailService.sendEmail(
-          decryptedEmail,
-          decryptedName,
-          html
-        )
-
-        this.loggger.info(
-          `Email de reenvio enviado para ${decryptedName} (${decryptedEmail})`
-        )
-      } catch (error) {
-        this.loggger.error(
-          `Erro ao reenviar email para candidateId ${candidateId}:`,
-          error.stack
-        )
-      }
+      await this.sendCandidateFormEmail(
+        candidateName,
+        candidateEmail,
+        accessCode,
+        frontendUrl,
+        getResendAccessCodeEmailTemplate,
+        'reenvio'
+      )
     } else if (sFormType === 'normal' || sFormType === 'ministerial') {
       this.loggger.info(
         `\n=== ATENÇÃO: Reenvio de código para formulário tipo "${sFormType}" ainda não implementado ===`
       )
       this.loggger.info(
         'Quando implementar, buscar email da resposta da question vinculada (emailQuestionId)'
+      )
+    }
+  }
+
+  /**
+   * Envia email para candidato do tipo "candidate"
+   * Método unificado usado tanto no primeiro envio quanto no reenvio
+   */
+  private async sendCandidateFormEmail(
+    candidateName: string,
+    candidateEmail: string,
+    accessCode: string,
+    frontendUrl: string,
+    emailTemplate: (name: string, link: string, code: string) => string,
+    emailType: 'primeiro acesso' | 'reenvio'
+  ): Promise<void> {
+    try {
+      const { recipientName, recipientEmail, html } =
+        prepareCandidateEmailData(
+          candidateName,
+          candidateEmail,
+          accessCode,
+          frontendUrl,
+          this.encryptionService,
+          emailTemplate
+        )
+
+      await this.sendPulseEmailService.sendEmail(
+        recipientEmail,
+        recipientName,
+        html
+      )
+
+      this.loggger.info(
+        `Email de ${emailType} enviado para ${recipientName} (${recipientEmail})`
+      )
+    } catch (error) {
+      this.loggger.error(
+        `Erro ao enviar email de ${emailType}:`,
+        error.stack
       )
     }
   }
@@ -432,56 +450,28 @@ export class CandidatesService {
       )
 
     for (const formCandidateData of formsCandidatesData) {
-      try {
-        // Processar apenas formulários do tipo "candidate"
-        if (formCandidateData.sFormType === 'candidate') {
-          // Descriptografar dados sensíveis
-          const candidateName = this.encryptionService.decrypt(
-            formCandidateData.candidateName
-          )
-          const candidateEmail = this.encryptionService.decrypt(
-            formCandidateData.candidateEmail
-          )
-
-          // Gerar link de acesso
-          const accessLink = generateFormAccessLink(
-            frontendUrl,
-            formCandidateData.formCandidateAccessCode
-          )
-
-          // Obter template de email
-          const html = getCandidateFormAccessEmailTemplate(
-            candidateName,
-            accessLink,
-            formCandidateData.formCandidateAccessCode
-          )
-
-          // Enviar email
-          await this.sendPulseEmailService.sendEmail(
-            candidateEmail,
-            candidateName,
-            html
-          )
-
-          // Atualizar status para MAILED após envio bem-sucedido
-          await this.candidatesRepo.updateFormCandidateStatus(
-            formCandidateData.candidateId,
-            formCandidateData.sFormId,
-            FormCandidateStatus.MAILED
-          )
-
-          this.loggger.info(
-            `Email enviado para ${candidateName} (${candidateEmail}) - Status atualizado para MAILED`
-          )
-        }
-        // Formulários "normal" e "ministerial" serão processados em outro cron
-        // quando a tabela de respostas estiver disponível
-      } catch (error) {
-        this.loggger.error(
-          `Erro ao enviar email para formCandidate ${formCandidateData.candidateId}:`,
-          error.stack
+      // Processar apenas formulários do tipo "candidate"
+      if (formCandidateData.sFormType === 'candidate') {
+        await this.sendCandidateFormEmail(
+          formCandidateData.candidateName,
+          formCandidateData.candidateEmail,
+          formCandidateData.formCandidateAccessCode,
+          frontendUrl,
+          getCandidateFormAccessEmailTemplate,
+          'primeiro acesso'
         )
+
+        // Atualizar status para MAILED após envio bem-sucedido
+        await this.candidatesRepo.updateFormCandidateStatus(
+          formCandidateData.candidateId,
+          formCandidateData.sFormId,
+          FormCandidateStatus.MAILED
+        )
+
+        this.loggger.info('Status atualizado para MAILED')
       }
+      // Formulários "normal" e "ministerial" serão processados em outro cron
+      // quando a tabela de respostas estiver disponível
     }
   }
 }
