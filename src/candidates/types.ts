@@ -51,12 +51,6 @@ export interface CreateFormCandidate {
   formCandidateAccessCode: string
 }
 
-export interface ValidateAccessCodeResponse {
-  message: string
-  formCandidateId: number
-  unsignedTerms: any[]
-}
-
 export interface AccessCodeMapEntry {
   candidateId: number
   sFormId: number

@@ -188,9 +188,7 @@ export class CandidatesService {
    * Se expirado (>24h), gera novo código e reenvia email conforme tipo do formulário
    * Se válido, verifica termos ativos não assinados para o candidato
    */
-  async validateAccessCode(
-    accessCode: string
-  ): Promise<ValidateAccessCodeResponse> {
+  async validateAccessCode(accessCode: string): Promise<any[]> {
     const formCandidate =
       await this.candidatesRepo.findFormCandidateByAccessCode(accessCode)
 
@@ -225,27 +223,16 @@ export class CandidatesService {
     const activeTerms = await this.candidatesRepo.findActiveTermsForCandidate()
     
     if (activeTerms.length === 0) {
-      return {
-        message: 'Código válido',
-        formCandidateId: formCandidate.formCandidateId,
-        unsignedTerms: []
-      }
+      return []
     }
 
     const activeTermIds = activeTerms.map((term) => term.termId)
 
     // Buscar termos não assinados para este formCandidate
-    const unsignedTerms =
-      await this.candidatesRepo.findUnsignedTermsForFormCandidate(
-        formCandidate.formCandidateId,
-        activeTermIds
-      )
-
-    return {
-      message: 'Código válido',
-      formCandidateId: formCandidate.formCandidateId,
-      unsignedTerms
-    }
+    return await this.candidatesRepo.findUnsignedTermsForFormCandidate(
+      formCandidate.formCandidateId,
+      activeTermIds
+    )
   }
 
   /**

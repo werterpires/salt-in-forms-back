@@ -275,10 +275,10 @@ export class CandidatesRepo {
   }
 
   /**
-   * Busca termos ativos para o papel de candidato (roleId = 3)
+   * Busca termos ativos para o papel de candidato (roleId = 4)
    */
   async findActiveTermsForCandidate(): Promise<any[]> {
-    const candidateRoleId = 3 // ERoles.CANDIDATE
+    const candidateRoleId = 4 // ERoles.CANDIDATE
     const today = new Date()
 
     return this.knex(db.Tables.TERMS)
