@@ -18,7 +18,8 @@ export enum Tables {
   FORMS_CANDIDATES = 'formsCandidates',
   ANSWERS = 'answers',
   UNIONS = 'unions',
-  FIELDS = 'fields'
+  FIELDS = 'fields',
+  CANDIDATES_TERMS_SIGNATURES = 'candidatesTermsSignatures'
 }
 
 export enum Users {
@@ -209,4 +210,11 @@ export enum Fields {
   FIELD_NAME = 'fieldName',
   FIELD_ACRONYM = 'fieldAcronym',
   UNION_ID = 'unionId'
+}
+
+export enum CandidatesTermsSignatures {
+  CANDIDATE_TERM_SIGNATURE_ID = 'candidateTermSignatureId',
+  FORM_CANDIDATE_ID = 'formCandidateId',
+  TERM_ID = 'termId',
+  TERM_UNSIGNED = 'termUnsigned'
 }
