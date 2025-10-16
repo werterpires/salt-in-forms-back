@@ -13,14 +13,7 @@ import {
   transformCreateDto,
   transformUpdateDto
 } from './s-forms.helper'
-import {
-  CreateSForm,
-  SForm,
-  SFormFilter,
-  SFormType,
-  UpdateSForm,
-  SFormSimple
-} from './types'
+import { SForm, SFormFilter, SFormSimple } from './types'
 
 @Injectable()
 export class SFormsService {
@@ -102,10 +95,6 @@ export class SFormsService {
     if (!sourceForm) {
       throw new Error('#Formulário de origem não encontrado.')
     }
-
-    const targetForm = await this.sFormsRepo.findAllFormTypesByProcessId(
-      copySFormDto.targetFormId
-    )
 
     const copyData = processCopyDto(copySFormDto)
 

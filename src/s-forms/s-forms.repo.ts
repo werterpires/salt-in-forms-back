@@ -132,9 +132,16 @@ export class SFormsRepo {
             `${db.Tables.FORM_SECTIONS}.${db.FormSections.FORM_SECTION_ID}`,
             `${db.Tables.QUESTIONS}.${db.Questions.FORM_SECTION_ID}`
           )
-          .select(db.Questions.QUESTION_ID, db.Questions.QUESTION_STATEMENT)
+          .select(
+            db.Questions.QUESTION_ID,
+            db.Questions.QUESTION_STATEMENT,
+            db.Questions.QUESTION_TYPE
+          )
           .where(db.FormSections.S_FORM_ID, form[db.SForms.S_FORM_ID])
-          .andWhere(db.Questions.QUESTION_TYPE, EQuestionsTypes.EMAIL)
+          .whereIn(db.Questions.QUESTION_TYPE, [
+            EQuestionsTypes.EMAIL,
+            EQuestionsTypes.FIELDS
+          ])
           .orderBy(db.Questions.QUESTION_ORDER, 'asc')
 
         return {

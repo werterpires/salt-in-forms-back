@@ -94,7 +94,7 @@ export class CandidatesService {
    * Cron que busca candidatos de processos em período de inscrição
    * Executa diariamente às 11:45
    */
-  @Cron('45 11 * * *')
+  @Cron('40 15 * * *')
   async handleProcessInSubscriptionCron() {
     const processes = await this.candidatesRepo.findProcessInSubscription()
 

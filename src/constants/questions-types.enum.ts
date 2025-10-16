@@ -8,7 +8,8 @@ export enum EQuestionsTypes {
   DATE = 7,
   TIME = 8,
   MULTIPLE_RESPONSES = 9,
-  EMAIL = 10
+  EMAIL = 10,
+  FIELDS = 11
 }
 
 export const QuestionsTypesDetails: Record<
@@ -44,6 +45,9 @@ export const QuestionsTypesDetails: Record<
   },
   [EQuestionsTypes.EMAIL]: {
     typeName: 'Email'
+  },
+  [EQuestionsTypes.FIELDS]: {
+    typeName: 'Campos'
   }
 }
 export const QuestionsTypesArray = Object.values(EQuestionsTypes).filter(

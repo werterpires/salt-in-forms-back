@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConsoleLogger,
   InternalServerErrorException
 } from '@nestjs/common'
 import {
@@ -88,6 +87,8 @@ export class QuestionsHelper {
       }))
     }
 
+    updateQuestionData.questionOptions = questionOptions
+
     return updateQuestionData
   }
 
@@ -129,7 +130,7 @@ export class QuestionsHelper {
       )
     }
 
-    for (let subQuestion of createQuestionDto.subQuestions) {
+    for (const subQuestion of createQuestionDto.subQuestions) {
       const subQuestionType = subQuestion.subQuestionType as EQuestionsTypes
 
       const allowableTypesForSubQuestions = [
@@ -177,8 +178,10 @@ export class QuestionsHelper {
 
     // Verificar se a questão está sendo usada como emailQuestionId e se o tipo está mudando
     if (
-      existingQuestion.questionType === EQuestionsTypes.EMAIL &&
-      updateQuestionDto.questionType !== EQuestionsTypes.EMAIL
+      (existingQuestion.questionType as EQuestionsTypes) ===
+        EQuestionsTypes.EMAIL &&
+      (updateQuestionDto.questionType as EQuestionsTypes) !==
+        EQuestionsTypes.EMAIL
     ) {
       const isUsedAsEmailQuestion =
         await questionsRepo.isQuestionUsedAsEmailQuestionId(
@@ -420,7 +423,7 @@ export class QuestionsHelper {
     }
 
     switch (targetType) {
-      case 'number':
+      case 'number': {
         const numValue = parseFloat(value)
         if (isNaN(numValue)) {
           throw new BadRequestException(
@@ -428,6 +431,7 @@ export class QuestionsHelper {
           )
         }
         return numValue
+      }
       case 'boolean':
         if (value === 'true') return true
         if (value === 'false') return false
@@ -489,9 +493,9 @@ export class QuestionsHelper {
       sectionId = currentQuestion.formSectionId
     } else if (
       'formSectionId' in createQuestionDto &&
-      (createQuestionDto as CreateQuestionDto).formSectionId
+      createQuestionDto.formSectionId
     ) {
-      sectionId = (createQuestionDto as CreateQuestionDto).formSectionId
+      sectionId = createQuestionDto.formSectionId
     }
 
     if (sectionId === undefined) {
@@ -551,9 +555,9 @@ export class QuestionsHelper {
       questionOrder = currentQuestion.questionOrder
     } else if (
       'questionOrder' in createQuestionDto &&
-      (createQuestionDto as CreateQuestionDto).questionOrder
+      createQuestionDto.questionOrder
     ) {
-      questionOrder = (createQuestionDto as CreateQuestionDto).questionOrder
+      questionOrder = createQuestionDto.questionOrder
     }
 
     if (questionOrder === undefined) {
@@ -694,11 +698,13 @@ export class QuestionsHelper {
   ): void {
     // a) se a pergunta for do tipo "Resposta Aberta", "Data", "Hora" ou "Múltipla Resposta", as questionOptions devem não existir
     if (
-      questionType === EQuestionsTypes.OPEN_ANSWER ||
-      questionType === EQuestionsTypes.DATE ||
-      questionType === EQuestionsTypes.TIME ||
-      questionType === EQuestionsTypes.MULTIPLE_RESPONSES ||
-      questionType === EQuestionsTypes.EMAIL
+      (questionType as EQuestionsTypes) === EQuestionsTypes.OPEN_ANSWER ||
+      (questionType as EQuestionsTypes) === EQuestionsTypes.DATE ||
+      (questionType as EQuestionsTypes) === EQuestionsTypes.TIME ||
+      (questionType as EQuestionsTypes) ===
+        EQuestionsTypes.MULTIPLE_RESPONSES ||
+      (questionType as EQuestionsTypes) === EQuestionsTypes.EMAIL ||
+      (questionType as EQuestionsTypes) === EQuestionsTypes.FIELDS
     ) {
       if (questionOptions && questionOptions.length > 0) {
         throw new BadRequestException(
@@ -710,9 +716,9 @@ export class QuestionsHelper {
 
     // b) se for "Escolha Múltipla", "Escolha única", deve ter pelo menos 2 options do questionOptionsType 1 e 0 dos outros tipos
     if (
-      questionType === EQuestionsTypes.MULTIPLE_CHOICE ||
-      questionType === EQuestionsTypes.SINGLE_CHOICE ||
-      questionType === EQuestionsTypes.LIKERT_SCALE
+      (questionType as EQuestionsTypes) === EQuestionsTypes.MULTIPLE_CHOICE ||
+      (questionType as EQuestionsTypes) === EQuestionsTypes.SINGLE_CHOICE ||
+      (questionType as EQuestionsTypes) === EQuestionsTypes.LIKERT_SCALE
     ) {
       if (!questionOptions || questionOptions.length < 2) {
         throw new BadRequestException(
@@ -721,13 +727,19 @@ export class QuestionsHelper {
       }
 
       const type1Options = questionOptions.filter(
-        (opt) => opt.questionOptionType === EQuestionOptionsTypes.TYPE_ONE
+        (opt) =>
+          (opt.questionOptionType as EQuestionOptionsTypes) ===
+          EQuestionOptionsTypes.TYPE_ONE
       )
       const type2Options = questionOptions.filter(
-        (opt) => opt.questionOptionType === EQuestionOptionsTypes.TYPE_TWO
+        (opt) =>
+          (opt.questionOptionType as EQuestionOptionsTypes) ===
+          EQuestionOptionsTypes.TYPE_TWO
       )
       const type3Options = questionOptions.filter(
-        (opt) => opt.questionOptionType === EQuestionOptionsTypes.TYPE_THREE
+        (opt) =>
+          (opt.questionOptionType as EQuestionOptionsTypes) ===
+          EQuestionOptionsTypes.TYPE_THREE
       )
 
       if (type1Options.length < 2) {
@@ -745,8 +757,10 @@ export class QuestionsHelper {
 
     // c) se for "Matriz de escolha única" ou "matriz de escolha múltipla", deve ter pelo menos 2 options do questionOptionsType 1, ao menos 2 options do questionOptionsType 2, e 0 do questionOptionsType 3
     if (
-      questionType === EQuestionsTypes.SINGLE_CHOICE_MATRIX ||
-      questionType === EQuestionsTypes.MULTIPLE_CHOICE_MATRIX
+      (questionType as EQuestionsTypes) ===
+        EQuestionsTypes.SINGLE_CHOICE_MATRIX ||
+      (questionType as EQuestionsTypes) ===
+        EQuestionsTypes.MULTIPLE_CHOICE_MATRIX
     ) {
       if (!questionOptions || questionOptions.length < 4) {
         throw new BadRequestException(
@@ -755,13 +769,19 @@ export class QuestionsHelper {
       }
 
       const type1Options = questionOptions.filter(
-        (opt) => opt.questionOptionType === EQuestionOptionsTypes.TYPE_ONE
+        (opt) =>
+          (opt.questionOptionType as EQuestionOptionsTypes) ===
+          EQuestionOptionsTypes.TYPE_ONE
       )
       const type2Options = questionOptions.filter(
-        (opt) => opt.questionOptionType === EQuestionOptionsTypes.TYPE_TWO
+        (opt) =>
+          (opt.questionOptionType as EQuestionOptionsTypes) ===
+          EQuestionOptionsTypes.TYPE_TWO
       )
       const type3Options = questionOptions.filter(
-        (opt) => opt.questionOptionType === EQuestionOptionsTypes.TYPE_THREE
+        (opt) =>
+          (opt.questionOptionType as EQuestionOptionsTypes) ===
+          EQuestionOptionsTypes.TYPE_THREE
       )
 
       if (type1Options.length < 2) {

@@ -41,7 +41,7 @@ export async function validateUpdateDto(
         `#Formulários do tipo normal devem ter um emailQuestionId.`
       )
     }
-    
+
     // Validar se a questão é do tipo email
     const question = await questionsRepo.findById(emailQuestionId)
     if (!question) {
@@ -49,16 +49,38 @@ export async function validateUpdateDto(
         `#A questão informada como emailQuestionId não foi encontrada.`
       )
     }
-    
-    if (question.questionType !== 10) { // EQuestionsTypes.EMAIL
+
+    if (question.questionType !== 10) {
+      // EQuestionsTypes.EMAIL
       throw new BadRequestException(
         `#O emailQuestionId deve ser de uma questão do tipo Email.`
+      )
+    }
+  } else if (sFormType === 'ministerial') {
+    if (!emailQuestionId) {
+      throw new BadRequestException(
+        `#Formulários do tipo ministerial devem ter um fieldQuestionId.`
+      )
+    }
+
+    // Validar se a questão é do tipo email
+    const question = await questionsRepo.findById(emailQuestionId)
+    if (!question) {
+      throw new BadRequestException(
+        `#A questão informada como fieldQuestionId não foi encontrada.`
+      )
+    }
+
+    if (question.questionType !== 11) {
+      // EQuestionsTypes.FIELDS
+      throw new BadRequestException(
+        `#O emailQuestionId deve ser de uma questão do tipo FIELDS.`
       )
     }
   } else {
     if (emailQuestionId) {
       throw new BadRequestException(
-        `#Formulários que não são do tipo normal não podem ter emailQuestionId.`
+        `#Formulários do tipo "candidato" não podem ter emailQuestionId.`
       )
     }
   }
@@ -110,7 +132,7 @@ export async function validateCreateDto(
         `#Formulários do tipo normal devem ter um emailQuestionId.`
       )
     }
-    
+
     // Validar se a questão é do tipo email
     const question = await questionsRepo.findById(emailQuestionId)
     if (!question) {
@@ -118,8 +140,9 @@ export async function validateCreateDto(
         `#A questão informada como emailQuestionId não foi encontrada.`
       )
     }
-    
-    if (question.questionType !== 10) { // EQuestionsTypes.EMAIL
+
+    if (question.questionType !== 10) {
+      // EQuestionsTypes.EMAIL
       throw new BadRequestException(
         `#O emailQuestionId deve ser de uma questão do tipo Email.`
       )
@@ -153,7 +176,9 @@ function isValidFormType(value: string): value is SFormType {
   return sFormTypesArray.includes(value as SFormType)
 }
 
-export function transformCreateDto(createSFormDto: CreateSFormDto): CreateSForm {
+export function transformCreateDto(
+  createSFormDto: CreateSFormDto
+): CreateSForm {
   return {
     processId: createSFormDto.processId,
     sFormName: createSFormDto.sFormName,
@@ -162,16 +187,21 @@ export function transformCreateDto(createSFormDto: CreateSFormDto): CreateSForm 
   }
 }
 
-export function transformUpdateDto(updateSFormDto: UpdateSFormDto): UpdateSForm {
+export function transformUpdateDto(
+  updateSFormDto: UpdateSFormDto
+): UpdateSForm {
   const sFormType = updateSFormDto.sFormType as SFormType
-  
+
   return {
     sFormId: updateSFormDto.sFormId,
     sFormName: updateSFormDto.sFormName,
     sFormType: sFormType,
-    emailQuestionId: sFormType === 'normal' 
-      ? (updateSFormDto.emailQuestionId !== undefined ? updateSFormDto.emailQuestionId : null)
-      : null
+    emailQuestionId:
+      sFormType === 'normal'
+        ? updateSFormDto.emailQuestionId !== undefined
+          ? updateSFormDto.emailQuestionId
+          : null
+        : null
   }
 }
 

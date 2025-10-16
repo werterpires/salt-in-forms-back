@@ -63,4 +63,5 @@ export interface SFormBasic {
 export interface BasicQuestion {
   questionId: number
   questionStatement: string
+  questionType: number
 }
