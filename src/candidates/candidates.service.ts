@@ -15,7 +15,8 @@ import {
   transformApiItemToCandidate,
   getHoursDifference,
   generateFormAccessLink,
-  prepareCandidateEmailData
+  prepareCandidateEmailData,
+  getFrontendUrl
 } from './candidates.helper'
 import { FormCandidateStatus } from 'src/constants/form-candidate-status.const'
 import { getCandidateFormAccessEmailTemplate } from './email-templates/candidate-form-access.template'
@@ -233,12 +234,7 @@ export class CandidatesService {
     sFormId: number,
     accessCode: string
   ): Promise<void> {
-    const frontendUrl = process.env.FRONTEND_URL
-
-    if (!frontendUrl) {
-      this.loggger.error('#FRONTEND_URL não está definido no .env')
-      return
-    }
+    const frontendUrl = getFrontendUrl()
 
     // Buscar dados do candidato, formulário e tipo
     const formData =
@@ -436,12 +432,7 @@ export class CandidatesService {
    * Otimizado com uma única query para buscar todos os dados necessários
    */
   private async sendEmailsForCandidateForms(formsCandidatesIds: number[]) {
-    const frontendUrl = process.env.FRONTEND_URL
-
-    if (!frontendUrl) {
-      this.loggger.error('#FRONTEND_URL não está definido no .env')
-      return
-    }
+    const frontendUrl = getFrontendUrl()
 
     // Buscar todos os dados de uma vez (query otimizada com JOIN)
     const formsCandidatesData =

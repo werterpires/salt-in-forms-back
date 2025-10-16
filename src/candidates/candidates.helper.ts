@@ -175,6 +175,22 @@ export function decryptCandidateData(
 }
 
 /**
+ * Valida e obtém a URL do frontend do ambiente
+ *
+ * @returns URL do frontend
+ * @throws Error se FRONTEND_URL não estiver definida
+ */
+export function getFrontendUrl(): string {
+  const frontendUrl = process.env.FRONTEND_URL
+
+  if (!frontendUrl) {
+    throw new Error('#FRONTEND_URL não está definido no .env')
+  }
+
+  return frontendUrl
+}
+
+/**
  * Prepara dados de email para candidato do tipo "candidate"
  *
  * @param candidateName - Nome criptografado
