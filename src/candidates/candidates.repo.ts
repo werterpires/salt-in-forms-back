@@ -273,4 +273,61 @@ export class CandidatesRepo {
 
     return result || null
   }
+
+  /**
+   * Busca termos ativos para o papel de candidato (roleId = 3)
+   */
+  async findActiveTermsForCandidate(): Promise<any[]> {
+    const candidateRoleId = 3 // ERoles.CANDIDATE
+    const today = new Date()
+
+    return this.knex(db.Tables.TERMS)
+      .select(
+        db.Terms.TERM_ID,
+        db.Terms.TERM_TEXT,
+        db.Terms.TERM_TYPE_ID,
+        db.Terms.ROLE_ID,
+        db.Terms.BEGIN_DATE,
+        db.Terms.END_DATE
+      )
+      .where(db.Terms.ROLE_ID, candidateRoleId)
+      .where(db.Terms.BEGIN_DATE, '<=', today)
+      .where(function () {
+        this.where(db.Terms.END_DATE, '>=', today).orWhereNull(db.Terms.END_DATE)
+      })
+  }
+
+  /**
+   * Busca termos ativos que não possuem assinatura ativa para o formCandidateId
+   */
+  async findUnsignedTermsForFormCandidate(
+    formCandidateId: number,
+    activeTermIds: number[]
+  ): Promise<any[]> {
+    if (activeTermIds.length === 0) {
+      return []
+    }
+
+    const signedTermIds = await this.knex(db.Tables.CANDIDATES_TERMS_SIGNATURES)
+      .select(db.CandidatesTermsSignatures.TERM_ID)
+      .where(db.CandidatesTermsSignatures.FORM_CANDIDATE_ID, formCandidateId)
+      .whereNull(db.CandidatesTermsSignatures.TERM_UNSIGNED)
+      .whereIn(db.CandidatesTermsSignatures.TERM_ID, activeTermIds)
+
+    const signedIds = signedTermIds.map(
+      (row) => row[db.CandidatesTermsSignatures.TERM_ID]
+    )
+
+    return this.knex(db.Tables.TERMS)
+      .select(
+        db.Terms.TERM_ID,
+        db.Terms.TERM_TEXT,
+        db.Terms.TERM_TYPE_ID,
+        db.Terms.ROLE_ID,
+        db.Terms.BEGIN_DATE,
+        db.Terms.END_DATE
+      )
+      .whereIn(db.Terms.TERM_ID, activeTermIds)
+      .whereNotIn(db.Terms.TERM_ID, signedIds)
+  }
 }

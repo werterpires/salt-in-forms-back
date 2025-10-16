@@ -186,6 +186,7 @@ export class CandidatesService {
   /**
    * Valida um código de acesso
    * Se expirado (>24h), gera novo código e reenvia email conforme tipo do formulário
+   * Se válido, verifica termos ativos não assinados para o candidato
    */
   async validateAccessCode(
     accessCode: string
@@ -220,9 +221,30 @@ export class CandidatesService {
       )
     }
 
+    // Buscar termos ativos para candidatos
+    const activeTerms = await this.candidatesRepo.findActiveTermsForCandidate()
+    
+    if (activeTerms.length === 0) {
+      return {
+        message: 'Código válido',
+        formCandidateId: formCandidate.formCandidateId,
+        unsignedTerms: []
+      }
+    }
+
+    const activeTermIds = activeTerms.map((term) => term.termId)
+
+    // Buscar termos não assinados para este formCandidate
+    const unsignedTerms =
+      await this.candidatesRepo.findUnsignedTermsForFormCandidate(
+        formCandidate.formCandidateId,
+        activeTermIds
+      )
+
     return {
       message: 'Código válido',
-      formCandidateId: formCandidate.formCandidateId
+      formCandidateId: formCandidate.formCandidateId,
+      unsignedTerms
     }
   }
 

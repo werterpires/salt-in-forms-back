@@ -54,6 +54,7 @@ export interface CreateFormCandidate {
 export interface ValidateAccessCodeResponse {
   message: string
   formCandidateId: number
+  unsignedTerms: any[]
 }
 
 export interface AccessCodeMapEntry {
