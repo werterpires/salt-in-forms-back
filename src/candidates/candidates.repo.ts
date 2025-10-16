@@ -244,4 +244,33 @@ export class CandidatesRepo {
         [db.FormsCandidates.FORM_CANDIDATE_STATUS]: status
       })
   }
+
+  /**
+   * Busca dados do candidato e formulário para reenvio de email
+   */
+  async findCandidateAndFormDataForResend(
+    candidateId: number,
+    sFormId: number
+  ): Promise<{
+    sFormType: string
+    candidateName: string
+    candidateEmail: string
+  } | null> {
+    const result = await this.knex(db.Tables.CANDIDATES)
+      .select(
+        `${db.Tables.S_FORMS}.${db.SForms.S_FORM_TYPE} as sFormType`,
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_NAME} as candidateName`,
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_EMAIL} as candidateEmail`
+      )
+      .innerJoin(
+        db.Tables.S_FORMS,
+        `${db.Tables.S_FORMS}.${db.SForms.S_FORM_ID}`,
+        '=',
+        sFormId
+      )
+      .where(`${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_ID}`, candidateId)
+      .first()
+
+    return result || null
+  }
 }
