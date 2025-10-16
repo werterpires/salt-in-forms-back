@@ -56,15 +56,52 @@ export interface AccessCodeMapEntry {
   sFormId: number
 }
 
+export interface QuestionOptionToAnswer {
+  questionOptionId: number
+  questionOptionType: number
+  questionOptionValue: string
+}
+
+export interface ValidationToAnswer {
+  validationType: number
+  valueOne?: string | null
+  valueTwo?: string | null
+  valueThree?: string | null
+  valueFour?: string | null
+}
+
+export interface SubQuestionOptionToAnswer {
+  questionOptionId: number
+  questionOptionType: number
+  questionOptionValue: string
+}
+
+export interface SubValidationToAnswer {
+  validationType: number
+  valueOne?: string | null
+  valueTwo?: string | null
+  valueThree?: string | null
+  valueFour?: string | null
+}
+
+export interface SubQuestionToAnswer {
+  subQuestionId: number
+  subQuestionPosition: number
+  subQuestionType: number
+  subQuestionStatement: string
+  subQuestionOptions: SubQuestionOptionToAnswer[]
+  subValidations: SubValidationToAnswer[]
+}
+
 export interface QuestionToAnswer {
   questionId: number
   questionOrder: number
   questionType: number
   questionStatement: string
   questionDescription: string
-  options: any[]
-  validations: any[]
-  subQuestions: any[]
+  options: QuestionOptionToAnswer[]
+  validations: ValidationToAnswer[]
+  subQuestions: SubQuestionToAnswer[]
 }
 
 export interface SectionToAnswer {

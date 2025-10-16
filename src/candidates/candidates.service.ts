@@ -5,7 +5,11 @@ import { ExternalApiService } from '../shared/utils-module/external-api/external
 import { EncryptionService } from '../shared/utils-module/encryption/encryption.service'
 import {
   CreateCandidate,
-  CreateFormCandidate
+  CreateFormCandidate,
+  FormToAnswer,
+  SectionToAnswer,
+  QuestionToAnswer,
+  SubQuestionToAnswer
 } from './types'
 import { CustomLoggerService } from 'src/shared/utils-module/custom-logger/custom-logger.service'
 import { SendPulseEmailService } from '../shared/utils-module/email-sender/sendpulse-email.service'
@@ -188,7 +192,7 @@ export class CandidatesService {
    * Se válido, verifica termos ativos não assinados para o candidato
    * Retorna Terms[] se houver termos pendentes, ou FormToAnswer se não houver
    */
-  async validateAccessCode(accessCode: string): Promise<any[] | any> {
+  async validateAccessCode(accessCode: string): Promise<any[] | FormToAnswer> {
     const formCandidate =
       await this.candidatesRepo.findFormCandidateByAccessCode(accessCode)
 
@@ -244,7 +248,7 @@ export class CandidatesService {
   /**
    * Monta o FormToAnswer buscando cada parte separadamente
    */
-  private async buildFormToAnswer(sFormId: number): Promise<any> {
+  private async buildFormToAnswer(sFormId: number): Promise<FormToAnswer> {
     // 1. Buscar o formulário
     const form = await this.candidatesRepo.findFormById(sFormId)
 
@@ -256,7 +260,7 @@ export class CandidatesService {
     const sections = await this.candidatesRepo.findSectionsByFormId(sFormId)
 
     // 3. Para cada seção, buscar as questões
-    const sectionsWithQuestions = []
+    const sectionsWithQuestions: SectionToAnswer[] = []
 
     for (const section of sections) {
       const questions = await this.candidatesRepo.findQuestionsBySectionId(
@@ -264,7 +268,7 @@ export class CandidatesService {
       )
 
       // 4. Para cada questão, buscar options, validations e subquestions
-      const questionsComplete = []
+      const questionsComplete: QuestionToAnswer[] = []
 
       for (const question of questions) {
         const options = await this.candidatesRepo.findOptionsByQuestionId(
@@ -280,7 +284,7 @@ export class CandidatesService {
         )
 
         // Para cada subquestão, buscar suas options e validations
-        const subQuestionsComplete = []
+        const subQuestionsComplete: SubQuestionToAnswer[] = []
 
         for (const subQuestion of subQuestions) {
           const subQuestionOptions = await this.candidatesRepo.findSubQuestionOptions(
@@ -292,7 +296,10 @@ export class CandidatesService {
           )
 
           subQuestionsComplete.push({
-            ...subQuestion,
+            subQuestionId: subQuestion.subQuestionId,
+            subQuestionPosition: subQuestion.subQuestionPosition,
+            subQuestionType: subQuestion.subQuestionType,
+            subQuestionStatement: subQuestion.subQuestionStatement,
             subQuestionOptions,
             subValidations
           })
