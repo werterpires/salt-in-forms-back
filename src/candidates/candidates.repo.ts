@@ -5,6 +5,7 @@ import * as db from '../constants/db-schema.enum'
 import { Process } from 'src/processes/types'
 import { CreateCandidate, CreateFormCandidate, FormCandidate } from './types'
 import { ERoles } from '../constants/roles.const'
+import { Term } from 'src/terms/types'
 
 @Injectable()
 export class CandidatesRepo {
@@ -105,7 +106,7 @@ export class CandidatesRepo {
 
   /**
    * Busca candidatos que ainda não têm registro na tabela FormsCandidates
-   * 
+   *
    * @param processId - ID do processo
    * @returns Array de IDs dos candidatos sem FormsCandidates
    */
@@ -142,7 +143,7 @@ export class CandidatesRepo {
   /**
    * Busca candidatos completos com seus FormsCandidates para envio de emails
    * Otimizado para evitar N+1 queries
-   * 
+   *
    * @param formsCandidatesIds - Array de IDs dos FormsCandidates
    * @returns Array com dados completos para envio de email
    */
@@ -267,9 +268,16 @@ export class CandidatesRepo {
         db.Tables.S_FORMS,
         `${db.Tables.S_FORMS}.${db.SForms.S_FORM_ID}`,
         '=',
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID}`
+      )
+      .where(
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_ID}`,
+        candidateId
+      )
+      .andWhere(
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID}`,
         sFormId
       )
-      .where(`${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_ID}`, candidateId)
       .first()
 
     return result || null
@@ -293,7 +301,9 @@ export class CandidatesRepo {
       .where(db.Terms.ROLE_ID, ERoles.CANDIDATE)
       .where(db.Terms.BEGIN_DATE, '<=', today)
       .where(function () {
-        this.where(db.Terms.END_DATE, '>=', today).orWhereNull(db.Terms.END_DATE)
+        this.where(db.Terms.END_DATE, '>=', today).orWhereNull(
+          db.Terms.END_DATE
+        )
       })
   }
 
@@ -303,7 +313,7 @@ export class CandidatesRepo {
   async findUnsignedTermsForFormCandidate(
     formCandidateId: number,
     activeTermIds: number[]
-  ): Promise<any[]> {
+  ): Promise<Term[]> {
     if (activeTermIds.length === 0) {
       return []
     }
@@ -334,10 +344,13 @@ export class CandidatesRepo {
   /**
    * Busca dados básicos de um formulário por sFormId
    */
-  async findFormById(sFormId: number): Promise<{
-    sFormId: number
-    sFormName: string
-  } | undefined> {
+  async findFormById(sFormId: number): Promise<
+    | {
+        sFormId: number
+        sFormName: string
+      }
+    | undefined
+  > {
     return this.knex(db.Tables.S_FORMS)
       .select(db.SForms.S_FORM_ID, db.SForms.S_FORM_NAME)
       .where(db.SForms.S_FORM_ID, sFormId)

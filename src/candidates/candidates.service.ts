@@ -17,7 +17,6 @@ import {
   createAccessCode,
   transformApiItemToCandidate,
   getHoursDifference,
-  generateFormAccessLink,
   prepareCandidateEmailData,
   getFrontendUrl
 } from './candidates.helper'
@@ -25,6 +24,7 @@ import { FormCandidateStatus } from 'src/constants/form-candidate-status.const'
 import { getCandidateFormAccessEmailTemplate } from './email-templates/candidate-form-access.template'
 import { getImportSummaryEmailTemplate } from './email-templates/import-summary.template'
 import { getResendAccessCodeEmailTemplate } from './email-templates/resend-access-code.template'
+import { Term } from 'src/terms/types'
 
 @Injectable()
 export class CandidatesService {
@@ -192,7 +192,7 @@ export class CandidatesService {
    * Se válido, verifica termos ativos não assinados para o candidato
    * Retorna Terms[] se houver termos pendentes, ou FormToAnswer se não houver
    */
-  async validateAccessCode(accessCode: string): Promise<any[] | FormToAnswer> {
+  async validateAccessCode(accessCode: string): Promise<Term[] | FormToAnswer> {
     const formCandidate =
       await this.candidatesRepo.findFormCandidateByAccessCode(accessCode)
 
@@ -225,15 +225,16 @@ export class CandidatesService {
 
     // Buscar termos ativos para candidatos
     const activeTerms = await this.candidatesRepo.findActiveTermsForCandidate()
-    
+
     if (activeTerms.length > 0) {
       const activeTermIds = activeTerms.map((term) => term.termId)
 
       // Buscar termos não assinados para este formCandidate
-      const unsignedTerms = await this.candidatesRepo.findUnsignedTermsForFormCandidate(
-        formCandidate.formCandidateId,
-        activeTermIds
-      )
+      const unsignedTerms =
+        await this.candidatesRepo.findUnsignedTermsForFormCandidate(
+          formCandidate.formCandidateId,
+          activeTermIds
+        )
 
       // Se há termos não assinados, retorna eles
       if (unsignedTerms.length > 0) {
@@ -275,21 +276,24 @@ export class CandidatesService {
           question.questionId
         )
 
-        const validations = await this.candidatesRepo.findValidationsByQuestionId(
-          question.questionId
-        )
+        const validations =
+          await this.candidatesRepo.findValidationsByQuestionId(
+            question.questionId
+          )
 
-        const subQuestions = await this.candidatesRepo.findSubQuestionsByQuestionId(
-          question.questionId
-        )
+        const subQuestions =
+          await this.candidatesRepo.findSubQuestionsByQuestionId(
+            question.questionId
+          )
 
         // Para cada subquestão, buscar suas options e validations
         const subQuestionsComplete: SubQuestionToAnswer[] = []
 
         for (const subQuestion of subQuestions) {
-          const subQuestionOptions = await this.candidatesRepo.findSubQuestionOptions(
-            subQuestion.subQuestionId
-          )
+          const subQuestionOptions =
+            await this.candidatesRepo.findSubQuestionOptions(
+              subQuestion.subQuestionId
+            )
 
           const subValidations = await this.candidatesRepo.findSubValidations(
             subQuestion.subQuestionId
@@ -390,15 +394,14 @@ export class CandidatesService {
     emailType: 'primeiro acesso' | 'reenvio'
   ): Promise<void> {
     try {
-      const { recipientName, recipientEmail, html } =
-        prepareCandidateEmailData(
-          candidateName,
-          candidateEmail,
-          accessCode,
-          frontendUrl,
-          this.encryptionService,
-          emailTemplate
-        )
+      const { recipientName, recipientEmail, html } = prepareCandidateEmailData(
+        candidateName,
+        candidateEmail,
+        accessCode,
+        frontendUrl,
+        this.encryptionService,
+        emailTemplate
+      )
 
       await this.sendPulseEmailService.sendEmail(
         recipientEmail,
@@ -410,14 +413,9 @@ export class CandidatesService {
         `Email de ${emailType} enviado para ${recipientName} (${recipientEmail})`
       )
     } catch (error) {
-      this.loggger.error(
-        `Erro ao enviar email de ${emailType}:`,
-        error.stack
-      )
+      this.loggger.error(`Erro ao enviar email de ${emailType}:`, error.stack)
     }
   }
-
-  
 
   /**
    * Processa a inserção de candidatos verificando duplicatas
