@@ -7,9 +7,8 @@ export interface CreateAnswer {
 export interface Answer {
   questionId: number
   formCandidateId: number
-  answerValue: string
+  answerValue: string | null
   validAnswer: boolean
-  answerComment: string
 }
 
 export interface UpdateAnswerComment {
