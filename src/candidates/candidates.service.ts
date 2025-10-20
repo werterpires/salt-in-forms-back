@@ -52,8 +52,6 @@ export class CandidatesService {
     )
 
     for (const process of processes) {
-      console.log(process)
-
       // Buscar formulários do processo
       const sForms = await this.candidatesRepo.findSFormsByProcessId(
         process.processId
@@ -200,7 +198,8 @@ export class CandidatesService {
       throw new Error('#Código de acesso não encontrado.')
     }
 
-    const createdAt = new Date(formCandidate.created_at)
+    const createdAt = new Date(formCandidate.formCandidateAccessCode)
+
     const now = new Date()
     const hoursDifference = getHoursDifference(createdAt, now)
 

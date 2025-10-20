@@ -40,8 +40,8 @@ export interface FormCandidate {
   sFormId: number
   formCandidateStatus: number
   formCandidateAccessCode: string
-  created_at: Date
-  updated_at: Date
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface CreateFormCandidate {

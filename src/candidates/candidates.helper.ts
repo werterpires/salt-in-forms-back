@@ -7,10 +7,15 @@ import { CreateCandidate } from './types'
  * @returns Código de acesso de 45 caracteres
  */
 export function createAccessCode(): string {
-  const timestamp = Date.now().toString(36)
+  const timestamp = Date.now().toString(36).padStart(9, '0') // sempre 9 chars
   const randomPart = randomBytes(32).toString('base64url')
-  const inviteCode = (timestamp + randomPart).slice(0, 45)
-  return inviteCode
+  return (timestamp + randomPart).slice(0, 45)
+}
+
+export function extractDateFromFixed(code: string): Date {
+  const prefix = code.slice(0, 9) // sempre 9
+  const ms = parseInt(prefix, 36)
+  return new Date(ms)
 }
 
 /**

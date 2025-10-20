@@ -71,7 +71,7 @@ export class SendPulseService {
         )
 
       this.accessToken = response.data.access_token
-      console.log('New SendPulse Access Token:', this.accessToken) // Log do token
+
       this.logger.log('Token do SendPulse renovado com sucesso')
     } catch (error) {
       this.logger.error('Erro ao renovar token do SendPulse', error.stack)

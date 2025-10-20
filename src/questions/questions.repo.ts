@@ -81,7 +81,7 @@ export class QuestionsRepo {
         createQuestionData.questionOptions &&
         createQuestionData.questionOptions.length > 0
       ) {
-        for (let option of createQuestionData.questionOptions) {
+        for (const option of createQuestionData.questionOptions) {
           await trx(db.Tables.QUESTION_OPTIONS).insert({
             [db.QuestionOptions.QUESTION_ID]: questionId,
             [db.QuestionOptions.QUESTION_OPTION_TYPE]:
@@ -99,13 +99,8 @@ export class QuestionsRepo {
         return questionId
       }
 
-      console.log(
-        'createQuestionData.subQuestions',
-        createQuestionData.subQuestions
-      )
-
       // Inserir subquestões
-      for (let subQuestion of createQuestionData.subQuestions) {
+      for (const subQuestion of createQuestionData.subQuestions) {
         const subQuestionId = await trx(db.Tables.SUB_QUESTIONS).insert({
           [db.SubQuestions.QUESTION_ID]: questionId,
           [db.SubQuestions.SUB_QUESTION_STATEMENT]:
@@ -119,7 +114,7 @@ export class QuestionsRepo {
           subQuestion.subQuestionOptions &&
           subQuestion.subQuestionOptions.length > 0
         ) {
-          for (let subOption of subQuestion.subQuestionOptions) {
+          for (const subOption of subQuestion.subQuestionOptions) {
             await trx(db.Tables.SUB_QUESTION_OPTIONS).insert({
               [db.SubQuestionOptions.QUESTION_ID]: subQuestionId,
               [db.SubQuestionOptions.QUESTION_OPTION_TYPE]:
@@ -134,7 +129,7 @@ export class QuestionsRepo {
           subQuestion.subValidations &&
           subQuestion.subValidations.length > 0
         ) {
-          for (let subValidation of subQuestion.subValidations) {
+          for (const subValidation of subQuestion.subValidations) {
             await trx(db.Tables.SUB_VALIDATIONS).insert({
               [db.SubValidations.VALIDATION_TYPE]: subValidation.validationType,
               [db.SubValidations.QUESTION_ID]: subQuestionId,
@@ -173,9 +168,6 @@ export class QuestionsRepo {
   }
 
   async updateQuestion(updateQuestionData: UpdateQuestion): Promise<void> {
-    console.log('updateQuestionData', updateQuestionData)
-
-    console.log('processedData', updateQuestionData)
     await this.knex(db.Tables.QUESTIONS)
       .where(db.Questions.QUESTION_ID, updateQuestionData.questionId)
       .update({
@@ -600,7 +592,7 @@ export class QuestionsRepo {
         updateQuestionData.subQuestions.length > 0
       ) {
         // Insert new subquestions
-        for (let subQuestion of updateQuestionData.subQuestions) {
+        for (const subQuestion of updateQuestionData.subQuestions) {
           const [subQuestionId] = await trx(db.Tables.SUB_QUESTIONS).insert({
             [db.SubQuestions.QUESTION_ID]: updateQuestionData.questionId,
             [db.SubQuestions.SUB_QUESTION_STATEMENT]:
@@ -614,7 +606,7 @@ export class QuestionsRepo {
             subQuestion.subQuestionOptions &&
             subQuestion.subQuestionOptions.length > 0
           ) {
-            for (let subOption of subQuestion.subQuestionOptions) {
+            for (const subOption of subQuestion.subQuestionOptions) {
               await trx(db.Tables.SUB_QUESTION_OPTIONS).insert({
                 [db.SubQuestionOptions.QUESTION_ID]: subQuestionId,
                 [db.SubQuestionOptions.QUESTION_OPTION_TYPE]:
@@ -629,7 +621,7 @@ export class QuestionsRepo {
             subQuestion.subValidations &&
             subQuestion.subValidations.length > 0
           ) {
-            for (let subValidation of subQuestion.subValidations) {
+            for (const subValidation of subQuestion.subValidations) {
               await trx(db.Tables.SUB_VALIDATIONS).insert({
                 [db.SubValidations.VALIDATION_TYPE]:
                   subValidation.validationType,
