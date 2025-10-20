@@ -18,7 +18,8 @@ import {
   transformApiItemToCandidate,
   getHoursDifference,
   prepareCandidateEmailData,
-  getFrontendUrl
+  getFrontendUrl,
+  extractDateFromFixed
 } from './candidates.helper'
 import { FormCandidateStatus } from 'src/constants/form-candidate-status.const'
 import { getCandidateFormAccessEmailTemplate } from './email-templates/candidate-form-access.template'
@@ -193,22 +194,29 @@ export class CandidatesService {
   async validateAccessCode(accessCode: string): Promise<Term[] | FormToAnswer> {
     const formCandidate =
       await this.candidatesRepo.findFormCandidateByAccessCode(accessCode)
+    console.log('formCandidate encontrado:', formCandidate)
 
     if (!formCandidate) {
       throw new Error('#Código de acesso não encontrado.')
     }
 
-    const createdAt = new Date(formCandidate.formCandidateAccessCode)
+    const createdAt = extractDateFromFixed(
+      formCandidate.formCandidateAccessCode
+    )
 
     const now = new Date()
     const hoursDifference = getHoursDifference(createdAt, now)
 
-    if (hoursDifference > 24) {
+    console.log('Horas desde a criação do código:', hoursDifference)
+    console.log('Data de criação do código:', createdAt)
+    if (Number.isNaN(hoursDifference) || hoursDifference > 24) {
       const newAccessCode = createAccessCode()
       await this.candidatesRepo.updateAccessCode(
         formCandidate.formCandidateId,
         newAccessCode
       )
+
+      console.log('novo código gerado:', newAccessCode)
 
       // Buscar dados completos para reenvio de email
       await this.resendAccessCodeEmail(
@@ -216,6 +224,8 @@ export class CandidatesService {
         formCandidate.sFormId,
         newAccessCode
       )
+
+      console.log('email de reenvio processado')
 
       throw new Error(
         '#O período de acesso expirou. Um novo código foi gerado e enviado por email.'

@@ -265,6 +265,12 @@ export class CandidatesRepo {
         `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_EMAIL} as candidateEmail`
       )
       .innerJoin(
+        db.Tables.FORMS_CANDIDATES,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID}`,
+        '=',
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_ID}`
+      )
+      .innerJoin(
         db.Tables.S_FORMS,
         `${db.Tables.S_FORMS}.${db.SForms.S_FORM_ID}`,
         '=',
