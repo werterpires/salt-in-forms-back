@@ -242,13 +242,19 @@ export class CandidatesService {
     }
 
     // Se não há termos pendentes, montar o FormToAnswer
-    return await this.buildFormToAnswer(formCandidate.sFormId)
+    return await this.buildFormToAnswer(
+      formCandidate.sFormId,
+      formCandidate.formCandidateId
+    )
   }
 
   /**
    * Monta o FormToAnswer buscando cada parte separadamente
    */
-  private async buildFormToAnswer(sFormId: number): Promise<FormToAnswer> {
+  private async buildFormToAnswer(
+    sFormId: number,
+    formCandidateId: number
+  ): Promise<FormToAnswer> {
     // 1. Buscar o formulário
     const form = await this.candidatesRepo.findFormById(sFormId)
 
@@ -320,6 +326,22 @@ export class CandidatesService {
             question.questionId
           )
 
+        // Buscar ou criar answer fake
+        let answer =
+          await this.candidatesRepo.findAnswerByQuestionAndFormCandidate(
+            question.questionId,
+            formCandidateId
+          )
+
+        if (!answer) {
+          answer = {
+            questionId: question.questionId,
+            formCandidateId: formCandidateId,
+            answerValue: null,
+            validAnswer: true
+          }
+        }
+
         questionsComplete.push({
           questionId: question.questionId,
           questionOrder: question.questionOrder,
@@ -330,7 +352,8 @@ export class CandidatesService {
           validations,
           subQuestions: subQuestionsComplete,
           dependentQuestions,
-          dependentSections
+          dependentSections,
+          answer
         })
       }
 

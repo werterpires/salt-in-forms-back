@@ -530,4 +530,20 @@ export class CandidatesRepo {
       )
       .where(db.FormSections.QUESTION_DISPLAY_LINK, questionId)
   }
+
+  async findAnswerByQuestionAndFormCandidate(
+    questionId: number,
+    formCandidateId: number
+  ) {
+    return await this.knex(db.Tables.ANSWERS)
+      .select(
+        db.Answers.QUESTION_ID,
+        db.Answers.FORM_CANDIDATE_ID,
+        db.Answers.ANSWER_VALUE,
+        db.Answers.VALID_ANSWER
+      )
+      .where(db.Answers.QUESTION_ID, questionId)
+      .where(db.Answers.FORM_CANDIDATE_ID, formCandidateId)
+      .first()
+  }
 }
