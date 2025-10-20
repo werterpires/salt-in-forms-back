@@ -308,6 +308,7 @@ export class CandidatesService {
           })
         }
 
+        // TODO: Buscar questões e seções dependentes
         questionsComplete.push({
           questionId: question.questionId,
           questionOrder: question.questionOrder,
@@ -316,7 +317,9 @@ export class CandidatesService {
           questionDescription: question.questionDescription,
           options,
           validations,
-          subQuestions: subQuestionsComplete
+          subQuestions: subQuestionsComplete,
+          dependentQuestions: [],
+          dependentSections: []
         })
       }
 

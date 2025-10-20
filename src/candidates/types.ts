@@ -102,6 +102,8 @@ export interface QuestionToAnswer {
   options: QuestionOptionToAnswer[]
   validations: ValidationToAnswer[]
   subQuestions: SubQuestionToAnswer[]
+  dependentQuestions: dependentQuestion[]
+  dependentSections: dependentSection[]
 }
 
 export interface SectionToAnswer {
@@ -115,4 +117,18 @@ export interface FormToAnswer {
   sFormId: number
   sFormName: string
   sections: SectionToAnswer[]
+}
+
+export interface dependentSection {
+  formSectionId: number
+  formSectionDisplayRule: number
+  answerDisplayRule: number
+  answerDisplayValue: string
+}
+
+export interface dependentQuestion {
+  questionId: number
+  questionDisplayRule: number
+  answerDisplayRule: number
+  answerDisplayValue: string
 }
