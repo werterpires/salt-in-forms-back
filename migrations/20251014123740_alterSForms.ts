@@ -16,6 +16,10 @@ export async function up(knex: Knex): Promise<void> {
 
 export async function down(knex: Knex): Promise<void> {
   return await knex.schema.alterTable(db.Tables.S_FORMS, (table) => {
+    table.dropForeign(
+      [db.SForms.EMAIL_QUESTION_ID],
+      'sforms_emailquestionid_foreign'
+    )
     table.dropColumn(db.SForms.EMAIL_QUESTION_ID)
   })
 }

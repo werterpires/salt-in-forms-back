@@ -193,7 +193,7 @@ export enum FormsCandidates {
 export enum Answers {
   ANSWER_ID = 'answerId',
   QUESTION_ID = 'questionId',
-  CANDIDATE_ID = 'candidateId',
+  FORM_CANDIDATE_ID = 'formCandidateId',
   ANSWER_VALUE = 'answerValue',
   VALID_ANSWER = 'validAnswer',
   ANSWER_COMMENT = 'answerComment'

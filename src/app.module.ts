@@ -22,6 +22,7 @@ import { MinisterialsModule } from './ministerials/ministerials.module'
 import { FormSectionsModule } from './form-sections/form-sections.module'
 import { QuestionsModule } from './questions/questions.module';
 import { CandidatesModule } from './candidates/candidates.module';
+import { AnswersModule } from './answers/answers.module';
 
 config()
 
@@ -94,7 +95,8 @@ const knex = KnexModule.forRoot(
     MinisterialsModule,
     FormSectionsModule,
     QuestionsModule,
-    CandidatesModule
+    CandidatesModule,
+    AnswersModule
   ],
   controllers: [],
   providers: [
