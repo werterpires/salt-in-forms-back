@@ -510,7 +510,7 @@ export class CandidatesRepo {
   }
 
   async findDependentQuestionsByQuestionId(questionId: number) {
-    return this.knex(db.Tables.QUESTIONS)
+    return await this.knex(db.Tables.QUESTIONS)
       .select(
         db.Questions.QUESTION_ID,
         db.Questions.QUESTION_DISPLAY_RULE,
@@ -521,7 +521,7 @@ export class CandidatesRepo {
   }
 
   async findDependentSectionsByQuestionId(questionId: number) {
-    return this.knex(db.Tables.FORM_SECTIONS)
+    return await this.knex(db.Tables.FORM_SECTIONS)
       .select(
         db.FormSections.FORM_SECTION_ID,
         db.FormSections.FORM_SECTION_DISPLAY_RULE,
