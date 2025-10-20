@@ -308,7 +308,18 @@ export class CandidatesService {
           })
         }
 
-        // TODO: Buscar questões e seções dependentes
+        // Buscar questões dependentes (questions que referenciam esta question)
+        const dependentQuestions =
+          await this.candidatesRepo.findDependentQuestionsByQuestionId(
+            question.questionId
+          )
+
+        // Buscar seções dependentes (sections que referenciam esta question)
+        const dependentSections =
+          await this.candidatesRepo.findDependentSectionsByQuestionId(
+            question.questionId
+          )
+
         questionsComplete.push({
           questionId: question.questionId,
           questionOrder: question.questionOrder,
@@ -318,8 +329,8 @@ export class CandidatesService {
           options,
           validations,
           subQuestions: subQuestionsComplete,
-          dependentQuestions: [],
-          dependentSections: []
+          dependentQuestions,
+          dependentSections
         })
       }
 

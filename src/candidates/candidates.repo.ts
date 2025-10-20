@@ -496,7 +496,7 @@ export class CandidatesRepo {
       valueFour: string | null
     }>
   > {
-    return this.knex(db.Tables.SUB_VALIDATIONS)
+    const subValidations = await this.knex(db.Tables.SUB_VALIDATIONS)
       .select(
         db.SubValidations.VALIDATION_TYPE,
         db.SubValidations.VALUE_ONE,
@@ -505,5 +505,43 @@ export class CandidatesRepo {
         db.SubValidations.VALUE_FOUR
       )
       .where(db.SubValidations.QUESTION_ID, subQuestionId)
+
+    return subValidations
+  }
+
+  async findDependentQuestionsByQuestionId(questionId: number) {
+    const dependentQuestions = await this.knex(db.Tables.QUESTIONS)
+      .select(
+        db.Questions.QUESTION_ID,
+        db.Questions.QUESTION_DISPLAY_RULE,
+        db.Questions.ANSWER_DISPLEY_RULE,
+        db.Questions.ANSWER_DISPLAY_VALUE
+      )
+      .where(db.Questions.QUESTION_DISPLAY_LINK, questionId)
+
+    return dependentQuestions.map((q) => ({
+      questionId: q[db.Questions.QUESTION_ID],
+      questionDisplayRule: q[db.Questions.QUESTION_DISPLAY_RULE],
+      answerDisplayRule: q[db.Questions.ANSWER_DISPLEY_RULE],
+      answerDisplayValue: q[db.Questions.ANSWER_DISPLAY_VALUE]
+    }))
+  }
+
+  async findDependentSectionsByQuestionId(questionId: number) {
+    const dependentSections = await this.knex(db.Tables.FORM_SECTIONS)
+      .select(
+        db.FormSections.FORM_SECTION_ID,
+        db.FormSections.FORM_SECTION_DISPLAY_RULE,
+        db.FormSections.ANSWER_DISPLEY_RULE,
+        db.FormSections.ANSWER_DISPLAY_VALUE
+      )
+      .where(db.FormSections.QUESTION_DISPLAY_LINK, questionId)
+
+    return dependentSections.map((s) => ({
+      formSectionId: s[db.FormSections.FORM_SECTION_ID],
+      formSectionDisplayRule: s[db.FormSections.FORM_SECTION_DISPLAY_RULE],
+      answerDisplayRule: s[db.FormSections.ANSWER_DISPLEY_RULE],
+      answerDisplayValue: s[db.FormSections.ANSWER_DISPLAY_VALUE]
+    }))
   }
 }
