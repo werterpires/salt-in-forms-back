@@ -10,17 +10,13 @@ export class AnswersRepo {
   constructor(@InjectConnection('knexx') private readonly knex: Knex) {}
 
   async insertAnswer(answer: CreateAnswer): Promise<number> {
-    const [insertedId] = await this.knex(db.Tables.ANSWERS)
-      .insert({
-        [db.Answers.QUESTION_ID]: answer.questionId,
-        [db.Answers.FORM_CANDIDATE_ID]: answer.formCandidateId,
-        [db.Answers.ANSWER_VALUE]: answer.answerValue,
-        [db.Answers.VALID_ANSWER]: answer.validAnswer
-      })
-      .returning(db.Answers.ANSWER_ID)
+    const [insertedId] = await this.knex(db.Tables.ANSWERS).insert({
+      [db.Answers.QUESTION_ID]: answer.questionId,
+      [db.Answers.FORM_CANDIDATE_ID]: answer.formCandidateId,
+      [db.Answers.ANSWER_VALUE]: answer.answerValue,
+      [db.Answers.VALID_ANSWER]: answer.validAnswer
+    })
 
-    return typeof insertedId === 'object'
-      ? insertedId[db.Answers.ANSWER_ID]
-      : insertedId
+    return insertedId
   }
 }

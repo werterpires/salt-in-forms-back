@@ -12,7 +12,4 @@ export class CreateAnswerDto {
   @IsNotEmpty()
   @IsString()
   answerValue: string
-
-  @IsNotEmpty()
-  validAnswer: boolean
 }

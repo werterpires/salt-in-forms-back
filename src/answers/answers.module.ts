@@ -1,14 +1,14 @@
 
+
 import { Module } from '@nestjs/common'
 import { AnswersService } from './answers.service'
 import { AnswersController } from './answers.controller'
 import { AnswersRepo } from './answers.repo'
-import { CandidatesRepo } from '../candidates/candidates.repo'
-import { UtilsModuleModule } from '../shared/utils-module/utils-module.module'
+import { FormsCandidatesModule } from '../forms-candidates/forms-candidates.module'
 
 @Module({
-  imports: [UtilsModuleModule],
+  imports: [FormsCandidatesModule],
   controllers: [AnswersController],
-  providers: [AnswersService, AnswersRepo, CandidatesRepo]
+  providers: [AnswersService, AnswersRepo]
 })
 export class AnswersModule {}

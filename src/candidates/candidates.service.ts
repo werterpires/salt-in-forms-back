@@ -34,7 +34,8 @@ export class CandidatesService {
     private readonly externalApiService: ExternalApiService,
     private readonly encryptionService: EncryptionService,
     private readonly loggger: CustomLoggerService,
-    private readonly sendPulseEmailService: SendPulseEmailService
+    private readonly sendPulseEmailService: SendPulseEmailService,
+    private readonly formsCandidatesService: FormsCandidatesService
   ) {}
 
   /**
@@ -192,45 +193,13 @@ export class CandidatesService {
    * Retorna Terms[] se houver termos pendentes, ou FormToAnswer se não houver
    */
   async validateAccessCode(accessCode: string): Promise<Term[] | FormToAnswer> {
+    const formCandidateId =
+      await this.formsCandidatesService.validateAccessCodeAndGetFormCandidateId(
+        accessCode
+      )
+
     const formCandidate =
       await this.candidatesRepo.findFormCandidateByAccessCode(accessCode)
-    console.log('formCandidate encontrado:', formCandidate)
-
-    if (!formCandidate) {
-      throw new Error('#Código de acesso não encontrado.')
-    }
-
-    const createdAt = extractDateFromFixed(
-      formCandidate.formCandidateAccessCode
-    )
-
-    const now = new Date()
-    const hoursDifference = getHoursDifference(createdAt, now)
-
-    console.log('Horas desde a criação do código:', hoursDifference)
-    console.log('Data de criação do código:', createdAt)
-    if (Number.isNaN(hoursDifference) || hoursDifference > 24) {
-      const newAccessCode = createAccessCode()
-      await this.candidatesRepo.updateAccessCode(
-        formCandidate.formCandidateId,
-        newAccessCode
-      )
-
-      console.log('novo código gerado:', newAccessCode)
-
-      // Buscar dados completos para reenvio de email
-      await this.resendAccessCodeEmail(
-        formCandidate.candidateId,
-        formCandidate.sFormId,
-        newAccessCode
-      )
-
-      console.log('email de reenvio processado')
-
-      throw new Error(
-        '#O período de acesso expirou. Um novo código foi gerado e enviado por email.'
-      )
-    }
 
     // Buscar termos ativos para candidatos
     const activeTerms = await this.candidatesRepo.findActiveTermsForCandidate()
@@ -379,51 +348,6 @@ export class CandidatesService {
       sFormId: form.sFormId,
       sFormName: form.sFormName,
       sections: sectionsWithQuestions
-    }
-  }
-
-  /**
-   * Reenvia email de acesso conforme tipo do formulário
-   */
-  private async resendAccessCodeEmail(
-    candidateId: number,
-    sFormId: number,
-    accessCode: string
-  ): Promise<void> {
-    const frontendUrl = getFrontendUrl()
-
-    // Buscar dados do candidato, formulário e tipo
-    const formData =
-      await this.candidatesRepo.findCandidateAndFormDataForResend(
-        candidateId,
-        sFormId
-      )
-
-    if (!formData) {
-      this.loggger.error(
-        `#Dados não encontrados para candidateId: ${candidateId}, sFormId: ${sFormId}`
-      )
-      return
-    }
-
-    const { sFormType, candidateName, candidateEmail } = formData
-
-    if (sFormType === 'candidate') {
-      await this.sendCandidateFormEmail(
-        candidateName,
-        candidateEmail,
-        accessCode,
-        frontendUrl,
-        getResendAccessCodeEmailTemplate,
-        'reenvio'
-      )
-    } else if (sFormType === 'normal' || sFormType === 'ministerial') {
-      this.loggger.info(
-        `\n=== ATENÇÃO: Reenvio de código para formulário tipo "${sFormType}" ainda não implementado ===`
-      )
-      this.loggger.info(
-        'Quando implementar, buscar email da resposta da question vinculada (emailQuestionId)'
-      )
     }
   }
 
