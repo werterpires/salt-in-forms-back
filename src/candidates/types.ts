@@ -135,3 +135,23 @@ export interface DependentQuestion {
   answerDisplayRule: number
   answerDisplayValue: string
 }
+
+export interface ProcessInAnswerPeriod {
+  processId: number
+  processTitle: string
+}
+
+export interface SFormBasic {
+  sFormId: number
+  sFormType: string
+}
+
+export interface FormCandidateWithDetails {
+  formCandidateId: number
+  candidateId: number
+  sFormId: number
+  formCandidateAccessCode: string
+  candidateName: string
+  candidateEmail: string
+  sFormType: string
+}

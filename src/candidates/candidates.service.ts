@@ -9,7 +9,10 @@ import {
   FormToAnswer,
   SectionToAnswer,
   QuestionToAnswer,
-  SubQuestionToAnswer
+  SubQuestionToAnswer,
+  ProcessInAnswerPeriod,
+  SFormBasic,
+  FormCandidateWithDetails
 } from './types'
 import { CustomLoggerService } from 'src/shared/utils-module/custom-logger/custom-logger.service'
 import { SendPulseEmailService } from '../shared/utils-module/email-sender/sendpulse-email.service'
@@ -45,7 +48,7 @@ export class CandidatesService {
       '\n=== Executando cron: Buscar processos no período de respostas ==='
     )
 
-    const processes = await this.candidatesRepo.findProcessesInAnswerPeriod()
+    const processes: ProcessInAnswerPeriod[] = await this.candidatesRepo.findProcessesInAnswerPeriod()
 
     this.loggger.info(
       `\n=== Total de processos encontrados: ${processes.length} ===`
@@ -53,12 +56,12 @@ export class CandidatesService {
 
     for (const process of processes) {
       // Buscar formulários do processo
-      const sForms = await this.candidatesRepo.findSFormsByProcessId(
+      const sForms: SFormBasic[] = await this.candidatesRepo.findSFormsByProcessId(
         process.processId
       )
 
       // Buscar candidatos que não estão na tabela FormsCandidates
-      const candidatesNotInFormsCandidates =
+      const candidatesNotInFormsCandidates: number[] =
         await this.candidatesRepo.findCandidatesNotInFormsCandidatesByProcessId(
           process.processId
         )
@@ -79,7 +82,7 @@ export class CandidatesService {
         }
 
         // Inserir FormsCandidates em batch e obter IDs gerados
-        const insertedIds =
+        const insertedIds: number[] =
           await this.candidatesRepo.insertFormsCandidatesInBatch(
             formsCandidatesData
           )
@@ -100,7 +103,7 @@ export class CandidatesService {
    */
   @Cron('40 15 * * *')
   async handleProcessInSubscriptionCron() {
-    const processes = await this.candidatesRepo.findProcessInSubscription()
+    const processes: ProcessInAnswerPeriod[] = await this.candidatesRepo.findProcessInSubscription()
 
     const baseUrl = process.env.PROCESS_CANDIDATES_API
 
@@ -115,7 +118,7 @@ export class CandidatesService {
     for (const process of processes) {
       try {
         const apiUrl = `${baseUrl}${process.processTotvsId}`
-        const response = await this.externalApiService.get(apiUrl)
+        const response: { data: any[] } = await this.externalApiService.get(apiUrl)
 
         this.loggger.info(
           `Resposta da API para processo ${process.processTotvsId}:`,
@@ -123,7 +126,7 @@ export class CandidatesService {
         )
 
         // Transformar dados da API em candidatos
-        const candidates = this.parseApiResponseToCandidates(
+        const candidates: CreateCandidate[] = this.parseApiResponseToCandidates(
           response.data,
           process.processId
         )
@@ -415,15 +418,15 @@ export class CandidatesService {
 
       // Verificar duplicatas para cada processo
       for (const [processId, candidates] of candidatesByProcess) {
-        const uniqueDocuments = candidates.map((c) => c.candidateUniqueDocument)
-        const existingDocuments =
+        const uniqueDocuments: string[] = candidates.map((c) => c.candidateUniqueDocument)
+        const existingDocuments: string[] =
           await this.candidatesRepo.findExistingCandidatesByProcessAndDocument(
             processId,
             uniqueDocuments
           )
 
         // Filtrar apenas os candidatos que não existem
-        const newCandidates = candidates.filter(
+        const newCandidates: CreateCandidate[] = candidates.filter(
           (candidate) =>
             !existingDocuments.includes(candidate.candidateUniqueDocument)
         )
@@ -517,7 +520,7 @@ export class CandidatesService {
     const frontendUrl = getFrontendUrl()
 
     // Buscar todos os dados de uma vez (query otimizada com JOIN)
-    const formsCandidatesData =
+    const formsCandidatesData: FormCandidateWithDetails[] =
       await this.candidatesRepo.findCandidatesWithFormsCandidatesByIds(
         formsCandidatesIds
       )
