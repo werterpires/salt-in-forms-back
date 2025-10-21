@@ -4,7 +4,9 @@ export interface CreateAnswer {
   answerValue: string
   validAnswer: boolean
 }
+
 export interface Answer {
+  answerId: number
   questionId: number
   formCandidateId: number
   answerValue: string | null

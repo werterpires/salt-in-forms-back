@@ -3,6 +3,7 @@ import { AnswersRepo } from './answers.repo'
 import { CreateAnswerDto } from './dto/create-answer.dto'
 import { FormsCandidatesService } from '../forms-candidates/forms-candidates.service'
 import { transformCreateAnswerDto } from '../forms-candidates/forms-candidates.helper'
+import { Answer, CreateAnswer } from './types'
 
 @Injectable()
 export class AnswersService {
@@ -12,35 +13,31 @@ export class AnswersService {
   ) {}
 
   async createAnswer(createAnswerDto: CreateAnswerDto): Promise<number> {
-    const formCandidateId =
+    const formCandidateId: number =
       await this.formsCandidatesService.validateAccessCodeAndGetFormCandidateId(
         createAnswerDto.accessCode
       )
 
-    // Verificar se já existe uma resposta para esta questão e formCandidate
-    const existingAnswer =
+    const existingAnswer: Answer | undefined =
       await this.answersRepo.findAnswerByQuestionAndFormCandidate(
         createAnswerDto.questionId,
         formCandidateId
       )
 
-    // Se não existe, inserir nova resposta
     if (!existingAnswer) {
-      const answerData = transformCreateAnswerDto(
+      const answerData: CreateAnswer = transformCreateAnswerDto(
         createAnswerDto,
         formCandidateId
       )
       return await this.answersRepo.insertAnswer(answerData)
     }
 
-    // Se existe mas validAnswer é false, lançar erro
     if (!existingAnswer.validAnswer) {
       throw new Error(
         '#Essa pergunta não está habilitada para o candidato atual.'
       )
     }
 
-    // Se existe e validAnswer é true, atualizar o answerValue
     await this.answersRepo.updateAnswerValue(
       existingAnswer.answerId,
       createAnswerDto.answerValue

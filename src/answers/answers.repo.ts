@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
 import * as db from '../constants/db-schema.enum'
-import { CreateAnswer } from './types'
+import { Answer, CreateAnswer } from './types'
 
 @Injectable()
 export class AnswersRepo {
@@ -12,13 +12,7 @@ export class AnswersRepo {
   async findAnswerByQuestionAndFormCandidate(
     questionId: number,
     formCandidateId: number
-  ): Promise<{
-    answerId: number
-    questionId: number
-    formCandidateId: number
-    answerValue: string | null
-    validAnswer: boolean
-  } | undefined> {
+  ): Promise<Answer | undefined> {
     return this.knex(db.Tables.ANSWERS)
       .select(
         db.Answers.ANSWER_ID,
