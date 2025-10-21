@@ -13,6 +13,13 @@ export interface Answer {
   validAnswer: boolean
 }
 
+export interface AnswerWithoutId {
+  questionId: number
+  formCandidateId: number
+  answerValue: string | null
+  validAnswer: boolean
+}
+
 export interface UpdateAnswerComment {
   answerComment: string
   answerId: number

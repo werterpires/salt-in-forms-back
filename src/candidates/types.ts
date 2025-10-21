@@ -93,7 +93,7 @@ export interface SubQuestionToAnswer {
   subValidations: SubValidationToAnswer[]
 }
 
-import { Answer } from '../answers/types'
+import { AnswerWithoutId } from '../answers/types'
 
 export interface QuestionToAnswer {
   questionId: number
@@ -106,7 +106,7 @@ export interface QuestionToAnswer {
   subQuestions: SubQuestionToAnswer[]
   dependentQuestions: DependentQuestion[]
   dependentSections: DependentSection[]
-  answer: Answer
+  answer: AnswerWithoutId
 }
 
 export interface SectionToAnswer {

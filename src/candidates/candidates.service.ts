@@ -308,21 +308,26 @@ export class CandidatesService {
             question.questionId
           )
 
-        // Buscar ou criar answer fake
-        let answer =
+        // Buscar answer existente ou criar uma fake sem answerId
+        const existingAnswer =
           await this.candidatesRepo.findAnswerByQuestionAndFormCandidate(
             question.questionId,
             formCandidateId
           )
 
-        if (!answer) {
-          answer = {
-            questionId: question.questionId,
-            formCandidateId: formCandidateId,
-            answerValue: null,
-            validAnswer: true
-          }
-        }
+        const answer = existingAnswer
+          ? {
+              questionId: existingAnswer.questionId,
+              formCandidateId: existingAnswer.formCandidateId,
+              answerValue: existingAnswer.answerValue,
+              validAnswer: existingAnswer.validAnswer
+            }
+          : {
+              questionId: question.questionId,
+              formCandidateId: formCandidateId,
+              answerValue: null,
+              validAnswer: true
+            }
 
         questionsComplete.push({
           questionId: question.questionId,
