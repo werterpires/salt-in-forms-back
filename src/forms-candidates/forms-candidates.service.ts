@@ -1,4 +1,3 @@
-
 import { Injectable } from '@nestjs/common'
 import { FormsCandidatesRepo } from './forms-candidates.repo'
 import { SendPulseEmailService } from '../shared/utils-module/email-sender/sendpulse-email.service'
@@ -41,6 +40,8 @@ export class FormsCandidatesService {
     )
     const now = new Date()
     const hoursDifference = getHoursDifference(createdAt, now)
+
+    console.log('Hours difference:', hoursDifference)
 
     if (Number.isNaN(hoursDifference) || hoursDifference > 24) {
       const newAccessCode = createAccessCode()
@@ -86,15 +87,14 @@ export class FormsCandidatesService {
     const { sFormType, candidateName, candidateEmail } = formData
 
     if (sFormType === 'candidate') {
-      const { recipientName, recipientEmail, html } =
-        prepareCandidateEmailData(
-          candidateName,
-          candidateEmail,
-          accessCode,
-          frontendUrl,
-          this.encryptionService,
-          getResendAccessCodeEmailTemplate
-        )
+      const { recipientName, recipientEmail, html } = prepareCandidateEmailData(
+        candidateName,
+        candidateEmail,
+        accessCode,
+        frontendUrl,
+        this.encryptionService,
+        getResendAccessCodeEmailTemplate
+      )
 
       await this.sendPulseEmailService.sendEmail(
         recipientEmail,

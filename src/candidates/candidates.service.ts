@@ -16,16 +16,14 @@ import { SendPulseEmailService } from '../shared/utils-module/email-sender/sendp
 import {
   createAccessCode,
   transformApiItemToCandidate,
-  getHoursDifference,
   prepareCandidateEmailData,
-  getFrontendUrl,
-  extractDateFromFixed
+  getFrontendUrl
 } from './candidates.helper'
 import { FormCandidateStatus } from 'src/constants/form-candidate-status.const'
 import { getCandidateFormAccessEmailTemplate } from './email-templates/candidate-form-access.template'
 import { getImportSummaryEmailTemplate } from './email-templates/import-summary.template'
-import { getResendAccessCodeEmailTemplate } from './email-templates/resend-access-code.template'
 import { Term } from 'src/terms/types'
+import { FormsCandidatesService } from 'src/forms-candidates/forms-candidates.service'
 
 @Injectable()
 export class CandidatesService {
@@ -193,13 +191,18 @@ export class CandidatesService {
    * Retorna Terms[] se houver termos pendentes, ou FormToAnswer se não houver
    */
   async validateAccessCode(accessCode: string): Promise<Term[] | FormToAnswer> {
-    const formCandidateId =
-      await this.formsCandidatesService.validateAccessCodeAndGetFormCandidateId(
-        accessCode
-      )
+    await this.formsCandidatesService.validateAccessCodeAndGetFormCandidateId(
+      accessCode
+    )
 
     const formCandidate =
       await this.candidatesRepo.findFormCandidateByAccessCode(accessCode)
+
+    if (!formCandidate) {
+      throw new Error(
+        '#Candidato não encontrado para o código de acesso fornecido.'
+      )
+    }
 
     // Buscar termos ativos para candidatos
     const activeTerms = await this.candidatesRepo.findActiveTermsForCandidate()
