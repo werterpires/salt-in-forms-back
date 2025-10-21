@@ -1,6 +1,6 @@
 
 import { Injectable } from '@nestjs/common'
-import { CandidatesRepo } from '../candidates/candidates.repo'
+import { FormsCandidatesRepo } from './forms-candidates.repo'
 import { SendPulseEmailService } from '../shared/utils-module/email-sender/sendpulse-email.service'
 import { EncryptionService } from '../shared/utils-module/encryption/encryption.service'
 import { CustomLoggerService } from '../shared/utils-module/custom-logger/custom-logger.service'
@@ -16,7 +16,7 @@ import { getResendAccessCodeEmailTemplate } from '../candidates/email-templates/
 @Injectable()
 export class FormsCandidatesService {
   constructor(
-    private readonly candidatesRepo: CandidatesRepo,
+    private readonly formsCandidatesRepo: FormsCandidatesRepo,
     private readonly sendPulseEmailService: SendPulseEmailService,
     private readonly encryptionService: EncryptionService,
     private readonly logger: CustomLoggerService
@@ -30,7 +30,7 @@ export class FormsCandidatesService {
     accessCode: string
   ): Promise<number> {
     const formCandidate =
-      await this.candidatesRepo.findFormCandidateByAccessCode(accessCode)
+      await this.formsCandidatesRepo.findFormCandidateByAccessCode(accessCode)
 
     if (!formCandidate) {
       throw new Error('#Código de acesso não encontrado.')
@@ -44,7 +44,7 @@ export class FormsCandidatesService {
 
     if (Number.isNaN(hoursDifference) || hoursDifference > 24) {
       const newAccessCode = createAccessCode()
-      await this.candidatesRepo.updateAccessCode(
+      await this.formsCandidatesRepo.updateAccessCode(
         formCandidate.formCandidateId,
         newAccessCode
       )
@@ -71,7 +71,7 @@ export class FormsCandidatesService {
     const frontendUrl = getFrontendUrl()
 
     const formData =
-      await this.candidatesRepo.findCandidateAndFormDataForResend(
+      await this.formsCandidatesRepo.findCandidateAndFormDataForResend(
         candidateId,
         sFormId
       )
