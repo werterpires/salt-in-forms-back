@@ -9,6 +9,29 @@ import { CreateAnswer } from './types'
 export class AnswersRepo {
   constructor(@InjectConnection('knexx') private readonly knex: Knex) {}
 
+  async findAnswerByQuestionAndFormCandidate(
+    questionId: number,
+    formCandidateId: number
+  ): Promise<{
+    answerId: number
+    questionId: number
+    formCandidateId: number
+    answerValue: string | null
+    validAnswer: boolean
+  } | undefined> {
+    return this.knex(db.Tables.ANSWERS)
+      .select(
+        db.Answers.ANSWER_ID,
+        db.Answers.QUESTION_ID,
+        db.Answers.FORM_CANDIDATE_ID,
+        db.Answers.ANSWER_VALUE,
+        db.Answers.VALID_ANSWER
+      )
+      .where(db.Answers.QUESTION_ID, questionId)
+      .where(db.Answers.FORM_CANDIDATE_ID, formCandidateId)
+      .first()
+  }
+
   async insertAnswer(answer: CreateAnswer): Promise<number> {
     const [insertedId] = await this.knex(db.Tables.ANSWERS).insert({
       [db.Answers.QUESTION_ID]: answer.questionId,
@@ -18,5 +41,13 @@ export class AnswersRepo {
     })
 
     return insertedId
+  }
+
+  async updateAnswerValue(answerId: number, answerValue: string): Promise<void> {
+    await this.knex(db.Tables.ANSWERS)
+      .where(db.Answers.ANSWER_ID, answerId)
+      .update({
+        [db.Answers.ANSWER_VALUE]: answerValue
+      })
   }
 }
