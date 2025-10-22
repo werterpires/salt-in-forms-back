@@ -4,16 +4,16 @@ import { CreateAnswerDto } from './dto/create-answer.dto'
 import { FormsCandidatesService } from '../forms-candidates/forms-candidates.service'
 import { transformCreateAnswerDto } from '../forms-candidates/forms-candidates.helper'
 import { Answer, CreateAnswer } from './types'
+import { AnswersHelper } from './answers.helper'
+import { QuestionsRepo } from '../questions/questions.repo'
+import { Question, Validation } from '../questions/types'
 
 @Injectable()
 export class AnswersService {
-  openAnswerValidValidationsTypes = [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 19, 20, 21, 22, 23, 24
-  ]
-
   constructor(
     private readonly answersRepo: AnswersRepo,
-    private readonly formsCandidatesService: FormsCandidatesService
+    private readonly formsCandidatesService: FormsCandidatesService,
+    private readonly questionsRepo: QuestionsRepo
   ) {}
 
   async createAnswer(createAnswerDto: CreateAnswerDto): Promise<number> {
@@ -34,7 +34,24 @@ export class AnswersService {
       )
     }
 
-    //TO DO: validações
+    const question: Question | null = await this.questionsRepo.findById(
+      createAnswerDto.questionId
+    )
+
+    if (!question) {
+      throw new Error('#Pergunta não encontrada.')
+    }
+
+    const questionValidations: Validation[] =
+      await this.questionsRepo.findValidationsByQuestionId(question.questionId)
+
+    const validValidations: Validation[] =
+      AnswersHelper.filterValidValidations(
+        questionValidations,
+        question.questionType
+      )
+
+    AnswersHelper.validateAnswer(createAnswerDto.answerValue, validValidations)
 
     if (!existingAnswer) {
       const answerData: CreateAnswer = transformCreateAnswerDto(
