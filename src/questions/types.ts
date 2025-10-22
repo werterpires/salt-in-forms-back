@@ -108,3 +108,17 @@ export interface UpdateQuestion {
   subQuestions?: SubQuestion[]
   questionOptions?: QuestionOption[]
 }
+
+export interface QuestionWithDisplayRules {
+  questionId: number
+  questionOrder: number
+  questionStatement: string
+  questionDisplayRule: number
+  answerDisplayRule?: number
+  answerDisplayValue?: string | number[]
+}
+
+export interface QuestionBasic {
+  questionId: number
+  formSectionId: number
+}

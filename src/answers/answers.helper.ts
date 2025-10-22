@@ -1,9 +1,14 @@
 
 import { BadRequestException } from '@nestjs/common'
 import { VALIDATION_SPECIFICATIONS_BY_TYPE } from '../questions/validations'
-import { Validation } from '../questions/types'
+import {
+  Validation,
+  QuestionWithDisplayRules,
+  QuestionBasic
+} from '../questions/types'
 import { EQuestionsTypes } from '../constants/questions-types.enum'
 import { QuestionDependent } from './types'
+import { FormSectionWithDisplayRules } from '../form-sections/types'
 
 export class AnswersHelper {
   private static readonly OPEN_ANSWER_VALID_VALIDATIONS_TYPES = [
@@ -92,22 +97,9 @@ export class AnswersHelper {
   }
 
   static buildDependentsArray(
-    sectionsUsingQuestion: Array<{
-      formSectionId: number
-      formSectionDisplayRule: number
-      answerDisplayRule?: number
-      answerDisplayValue?: string | number[]
-    }>,
-    questionsFromSections: Array<{
-      questionId: number
-      formSectionId: number
-    }>,
-    questionsUsingQuestion: Array<{
-      questionId: number
-      questionDisplayRule: number
-      answerDisplayRule?: number
-      answerDisplayValue?: string | number[]
-    }>
+    sectionsUsingQuestion: FormSectionWithDisplayRules[],
+    questionsFromSections: QuestionBasic[],
+    questionsUsingQuestion: QuestionWithDisplayRules[]
   ): QuestionDependent[] {
     const dependents: QuestionDependent[] = []
     const addedQuestionIds = new Set<number>()

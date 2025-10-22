@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
 import * as db from '../constants/db-schema.enum'
-import { CreateFormSection, FormSection, UpdateFormSection } from './types'
+import {
+  CreateFormSection,
+  FormSection,
+  UpdateFormSection,
+  FormSectionWithDisplayRules
+} from './types'
 import { Question } from 'src/questions/types'
 
 @Injectable()
@@ -268,16 +273,7 @@ export class FormSectionsRepo {
 
   async findSectionsUsingQuestionDisplayLink(
     questionId: number
-  ): Promise<
-    Array<{
-      formSectionId: number
-      formSectionOrder: number
-      formSectionName: string
-      formSectionDisplayRule: number
-      answerDisplayRule?: number
-      answerDisplayValue?: string | number[]
-    }>
-  > {
+  ): Promise<FormSectionWithDisplayRules[]> {
     const sections = await this.knex(db.Tables.FORM_SECTIONS)
       .select(
         db.FormSections.FORM_SECTION_ID,

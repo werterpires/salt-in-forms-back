@@ -6,7 +6,8 @@ import {
   CreateQuestion,
   UpdateQuestion,
   QuestionOption,
-  Validation
+  Validation,
+  QuestionWithDisplayRules
 } from './types'
 import * as db from '../constants/db-schema.enum'
 
@@ -692,16 +693,7 @@ export class QuestionsRepo {
 
   async findQuestionsUsingQuestionDisplayLink(
     questionId: number
-  ): Promise<
-    Array<{
-      questionId: number
-      questionOrder: number
-      questionStatement: string
-      questionDisplayRule: number
-      answerDisplayRule?: number
-      answerDisplayValue?: string | number[]
-    }>
-  > {
+  ): Promise<QuestionWithDisplayRules[]> {
     const questions = await this.knex(db.Tables.QUESTIONS)
       .select(
         db.Questions.QUESTION_ID,
