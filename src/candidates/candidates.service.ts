@@ -27,6 +27,7 @@ import { getCandidateFormAccessEmailTemplate } from './email-templates/candidate
 import { getImportSummaryEmailTemplate } from './email-templates/import-summary.template'
 import { Term } from 'src/terms/types'
 import { FormsCandidatesService } from 'src/forms-candidates/forms-candidates.service'
+import { Process } from 'src/processes/types'
 
 @Injectable()
 export class CandidatesService {
@@ -48,7 +49,8 @@ export class CandidatesService {
       '\n=== Executando cron: Buscar processos no período de respostas ==='
     )
 
-    const processes: ProcessInAnswerPeriod[] = await this.candidatesRepo.findProcessesInAnswerPeriod()
+    const processes: ProcessInAnswerPeriod[] =
+      await this.candidatesRepo.findProcessesInAnswerPeriod()
 
     this.loggger.info(
       `\n=== Total de processos encontrados: ${processes.length} ===`
@@ -56,9 +58,8 @@ export class CandidatesService {
 
     for (const process of processes) {
       // Buscar formulários do processo
-      const sForms: SFormBasic[] = await this.candidatesRepo.findSFormsByProcessId(
-        process.processId
-      )
+      const sForms: SFormBasic[] =
+        await this.candidatesRepo.findSFormsByProcessId(process.processId)
 
       // Buscar candidatos que não estão na tabela FormsCandidates
       const candidatesNotInFormsCandidates: number[] =
@@ -103,7 +104,8 @@ export class CandidatesService {
    */
   @Cron('40 15 * * *')
   async handleProcessInSubscriptionCron() {
-    const processes: ProcessInAnswerPeriod[] = await this.candidatesRepo.findProcessInSubscription()
+    const processes: Process[] =
+      await this.candidatesRepo.findProcessInSubscription()
 
     const baseUrl = process.env.PROCESS_CANDIDATES_API
 
@@ -118,11 +120,12 @@ export class CandidatesService {
     for (const process of processes) {
       try {
         const apiUrl = `${baseUrl}${process.processTotvsId}`
-        const response: { data: any[] } = await this.externalApiService.get(apiUrl)
+        const response: { data: any[] } =
+          await this.externalApiService.get(apiUrl)
 
         this.loggger.info(
           `Resposta da API para processo ${process.processTotvsId}:`,
-          response.data
+          response.data.toString()
         )
 
         // Transformar dados da API em candidatos
@@ -418,7 +421,9 @@ export class CandidatesService {
 
       // Verificar duplicatas para cada processo
       for (const [processId, candidates] of candidatesByProcess) {
-        const uniqueDocuments: string[] = candidates.map((c) => c.candidateUniqueDocument)
+        const uniqueDocuments: string[] = candidates.map(
+          (c) => c.candidateUniqueDocument
+        )
         const existingDocuments: string[] =
           await this.candidatesRepo.findExistingCandidatesByProcessAndDocument(
             processId,
