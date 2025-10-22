@@ -32,3 +32,12 @@ export interface UpdateFormSection {
   answerDisplayRule?: number | null
   answerDisplayValue?: string | null
 }
+
+export interface FormSectionWithDisplayRules {
+  formSectionId: number
+  formSectionOrder: number
+  formSectionName: string
+  formSectionDisplayRule: number
+  answerDisplayRule?: number
+  answerDisplayValue?: string | number[]
+}

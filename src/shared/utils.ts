@@ -25,3 +25,41 @@ export function areArraysEqual(arr1: number[], arr2: number[]): boolean {
 
   return arr1.every((item) => set2.has(item))
 }
+
+export function parseLocalDate(dateStr: string): Date {
+  const parts = dateStr.split('/')
+  if (parts.length !== 3) {
+    throw new BadRequestException(
+      `#A data "${dateStr}" é inválida: formato esperado é YYYY/MM/DD`
+    )
+  }
+
+  const [year, month, day] = parts.map(Number)
+
+  if (isNaN(year) || isNaN(month) || isNaN(day)) {
+    throw new BadRequestException(
+      `#A data "${dateStr}" é inválida: contém valores não numéricos`
+    )
+  }
+
+  if (month < 1 || month > 12) {
+    throw new BadRequestException(
+      `#A data "${dateStr}" é inválida: mês deve estar entre 1 e 12`
+    )
+  }
+
+  if (day < 1) {
+    throw new BadRequestException(
+      `#A data "${dateStr}" é inválida: dia deve ser maior ou igual a 1`
+    )
+  }
+
+  const daysInMonth = new Date(year, month, 0).getDate()
+  if (day > daysInMonth) {
+    throw new BadRequestException(
+      `#A data "${dateStr}" é inválida: o mês ${month} do ano ${year} só tem ${daysInMonth} dias`
+    )
+  }
+
+  return new Date(year, month - 1, day)
+}

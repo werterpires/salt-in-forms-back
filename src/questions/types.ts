@@ -1,5 +1,6 @@
 import { CreateSubQuestionDto } from './dto/create-question.dto'
 import { QuestionOptionDto } from './dto/optionsDto'
+import { validationResult } from './validations'
 
 // Representa uma validação associada a uma questão
 export interface Validation {
@@ -40,7 +41,7 @@ export interface ValidationSpcification {
   valueTwoType: AcceptedTypes
   valueThreeType: AcceptedTypes
   valueFourType: AcceptedTypes
-  validationFunction: (...args: any[]) => boolean
+  validationFunction: (...args: any[]) => validationResult
 }
 
 type AcceptedTypes = 'string' | 'number' | 'boolean' | 'undefined'
@@ -106,4 +107,18 @@ export interface UpdateQuestion {
   validations?: Validation[]
   subQuestions?: SubQuestion[]
   questionOptions?: QuestionOption[]
+}
+
+export interface QuestionWithDisplayRules {
+  questionId: number
+  questionOrder: number
+  questionStatement: string
+  questionDisplayRule: number
+  answerDisplayRule?: number
+  answerDisplayValue?: string | number[]
+}
+
+export interface QuestionBasic {
+  questionId: number
+  formSectionId: number
 }

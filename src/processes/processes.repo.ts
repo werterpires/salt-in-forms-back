@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
-import { CreateProcess, ProcessesFilter, ProcessSimple, UpdateProcess } from './types'
+import {
+  CreateProcess,
+  ProcessesFilter,
+  ProcessSimple,
+  UpdateProcess
+} from './types'
 import * as db from '../constants/db-schema.enum'
 import { Paginator } from 'src/shared/types/types'
 import { applyFilters } from './processes.helper'
@@ -25,7 +30,9 @@ export class ProcessesRepo {
       db.Processes.PROCESS_TITLE,
       db.Processes.PROCESS_TOTVS_ID,
       db.Processes.PROCESS_BEGIN_DATE,
-      db.Processes.PROCESS_END_DATE
+      db.Processes.PROCESS_END_DATE,
+      db.Processes.PROCESS_END_ANSWERS,
+      db.Processes.PROCESS_END_SUBSCRIPTION
     )
 
     if (filters) {
@@ -51,7 +58,11 @@ export class ProcessesRepo {
         [db.Processes.PROCESS_BEGIN_DATE]:
           updateProcessData[db.Processes.PROCESS_BEGIN_DATE],
         [db.Processes.PROCESS_END_DATE]:
-          updateProcessData[db.Processes.PROCESS_END_DATE]
+          updateProcessData[db.Processes.PROCESS_END_DATE],
+        [db.Processes.PROCESS_END_ANSWERS]:
+          updateProcessData[db.Processes.PROCESS_END_ANSWERS],
+        [db.Processes.PROCESS_END_SUBSCRIPTION]:
+          updateProcessData[db.Processes.PROCESS_END_SUBSCRIPTION]
       })
       .into(db.Tables.PROCESSES)
       .where(

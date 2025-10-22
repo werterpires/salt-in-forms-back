@@ -1,43 +1,67 @@
 import { Injectable } from '@nestjs/common'
 import { CreateMinisterialsDto } from './dto/create-ministerials.dto'
-import { CreateMinisterial, Ministerial, MinisterialsFiltar } from './type'
+import { UpdateMinisterialDto } from './dto/update-ministerial.dto'
 import { MinisterialsRepo } from './ministerials.repo'
 import * as db from 'src/constants/db-schema.enum'
+import {
+  buildMinisterialData,
+  buildUpdateMinisterialData
+} from './ministerials.helper'
 import { FindAllResponse, Paginator } from 'src/shared/types/types'
+import {
+  MinisterialsFilter,
+  CreateMinisterialsTransaction,
+  MinisterialWithRelations
+} from './type'
 
 @Injectable()
 export class MinisterialsService {
   constructor(private readonly ministerialsRepo: MinisterialsRepo) {}
-  async mergeMinisterials(createMinisterialsDto: CreateMinisterialsDto) {
-    const ministerials: CreateMinisterial[] =
-      createMinisterialsDto.ministerials.map((m) => {
-        return {
-          ministerialName: m.ministerialName,
-          ministerialField: m.ministerialField,
-          ministerialEmail: m.ministerialEmail
-        }
-      })
 
-    await this.ministerialsRepo.mergeMinisterials(ministerials)
+  async createMinisterials(createMinisterialsDto: CreateMinisterialsDto) {
+    // Transform DTO to repository format
+    const dataToCreate: CreateMinisterialsTransaction = {
+      unions: createMinisterialsDto.unions.map((unionDto) => ({
+        unionName: unionDto.unionName,
+        unionAcronym: unionDto.unionAcronym,
+        fields: unionDto.fields.map((fieldDto) => ({
+          fieldName: fieldDto.fieldName,
+          fieldAcronym: fieldDto.fieldAcronym,
+          ministerial: fieldDto.ministerial
+            ? buildMinisterialData(fieldDto.ministerial, 0)
+            : undefined // fieldId will be set in transaction
+        }))
+      }))
+    }
+
+    await this.ministerialsRepo.createMinisterialsWithTransaction(dataToCreate)
   }
 
   async findAllMinisterials(
-    orderBy: Paginator<typeof db.Ministerials>,
-    filters: MinisterialsFiltar
-  ): Promise<FindAllResponse<Ministerial>> {
-    const ministerials = await this.ministerialsRepo.findAllMinisterials(
-      orderBy,
-      filters
-    )
+    paginator: Paginator<typeof db.Ministerials>,
+    filters: MinisterialsFilter
+  ): Promise<FindAllResponse<MinisterialWithRelations>> {
+    const results: MinisterialWithRelations[] =
+      await this.ministerialsRepo.findAllMinisterials(paginator, filters)
 
     const ministerialsQuantity =
       await this.ministerialsRepo.findMinisterialsQuantity(filters)
 
-    const ministerialsResponse: FindAllResponse<Ministerial> = {
-      data: ministerials,
+    const response: FindAllResponse<MinisterialWithRelations> = {
+      data: results,
       pagesQuantity: ministerialsQuantity
     }
 
-    return ministerialsResponse
+    return response
+  }
+
+  async updateMinisterial(
+    updateMinisterialDto: UpdateMinisterialDto
+  ): Promise<void> {
+    const { ministerialId, ...ministerialData } = updateMinisterialDto
+
+    const dataToUpdate = buildUpdateMinisterialData(ministerialData)
+
+    await this.ministerialsRepo.updateMinisterial(ministerialId, dataToUpdate)
   }
 }

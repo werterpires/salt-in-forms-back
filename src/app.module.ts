@@ -7,6 +7,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { KnexModule } from 'nest-knexjs'
 import { toSnakeCase } from './shared/utils'
 import camelcaseKeys from 'camelcase-keys'
+import { ScheduleModule } from '@nestjs/schedule'
 
 import { config } from 'dotenv'
 import { AuthModule } from './shared/auth/auth.module'
@@ -20,6 +21,9 @@ import { QuestionsAreasModule } from './questions-areas/questions-areas.module'
 import { MinisterialsModule } from './ministerials/ministerials.module'
 import { FormSectionsModule } from './form-sections/form-sections.module'
 import { QuestionsModule } from './questions/questions.module';
+import { CandidatesModule } from './candidates/candidates.module';
+import { AnswersModule } from './answers/answers.module';
+import { FormsCandidatesModule } from './forms-candidates/forms-candidates.module';
 
 config()
 
@@ -82,6 +86,7 @@ const knex = KnexModule.forRoot(
     UtilsModuleModule,
     throttler,
     knex,
+    ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
     TermsModule,
@@ -90,7 +95,10 @@ const knex = KnexModule.forRoot(
     QuestionsAreasModule,
     MinisterialsModule,
     FormSectionsModule,
-    QuestionsModule
+    QuestionsModule,
+    CandidatesModule,
+    AnswersModule,
+    FormsCandidatesModule
   ],
   controllers: [],
   providers: [

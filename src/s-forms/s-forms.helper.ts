@@ -3,7 +3,9 @@ import {
   SFormToValidate,
   SFormType,
   sFormTypesArray,
-  CopySForm
+  CopySForm,
+  CreateSForm,
+  UpdateSForm
 } from './types'
 import { Knex } from 'knex'
 import * as db from '../constants/db-schema.enum'
@@ -21,14 +23,66 @@ export function applyFilters(filters: SFormFilter, query: Knex.QueryBuilder) {
   }
 }
 
-export function validateUpdateDto(
+export async function validateUpdateDto(
   updateSFormDto: UpdateSFormDto,
-  sForms: SFormToValidate[]
+  sForms: SFormToValidate[],
+  questionsRepo: any
 ) {
-  const { sFormType } = updateSFormDto
+  const { sFormType, emailQuestionId } = updateSFormDto
 
   if (!isValidFormType(sFormType)) {
     throw new BadRequestException(`#O tipo do formulário nâo existe.`)
+  }
+
+  // Validar emailQuestionId baseado no tipo
+  if (sFormType === 'normal') {
+    if (!emailQuestionId) {
+      throw new BadRequestException(
+        `#Formulários do tipo normal devem ter um emailQuestionId.`
+      )
+    }
+
+    // Validar se a questão é do tipo email
+    const question = await questionsRepo.findById(emailQuestionId)
+    if (!question) {
+      throw new BadRequestException(
+        `#A questão informada como emailQuestionId não foi encontrada.`
+      )
+    }
+
+    if (question.questionType !== 10) {
+      // EQuestionsTypes.EMAIL
+      throw new BadRequestException(
+        `#O emailQuestionId deve ser de uma questão do tipo Email.`
+      )
+    }
+  } else if (sFormType === 'ministerial') {
+    if (!emailQuestionId) {
+      throw new BadRequestException(
+        `#Formulários do tipo ministerial devem ter um fieldQuestionId.`
+      )
+    }
+
+    // Validar se a questão é do tipo email
+    const question = await questionsRepo.findById(emailQuestionId)
+    if (!question) {
+      throw new BadRequestException(
+        `#A questão informada como fieldQuestionId não foi encontrada.`
+      )
+    }
+
+    if (question.questionType !== 11) {
+      // EQuestionsTypes.FIELDS
+      throw new BadRequestException(
+        `#O emailQuestionId deve ser de uma questão do tipo FIELDS.`
+      )
+    }
+  } else {
+    if (emailQuestionId) {
+      throw new BadRequestException(
+        `#Formulários do tipo "candidato" não podem ter emailQuestionId.`
+      )
+    }
   }
 
   if (sFormType == 'ministerial') {
@@ -60,14 +114,45 @@ export function validateUpdateDto(
   }
 }
 
-export function validateCreateDto(
+export async function validateCreateDto(
   createSFormDto: CreateSFormDto,
-  sForms: SFormToValidate[]
+  sForms: SFormToValidate[],
+  questionsRepo: any
 ) {
-  const { sFormType } = createSFormDto
+  const { sFormType, emailQuestionId } = createSFormDto
 
   if (!isValidFormType(sFormType)) {
     throw new BadRequestException(`#O tipo do formulário nâo existe.`)
+  }
+
+  // Validar emailQuestionId baseado no tipo
+  if (sFormType === 'normal') {
+    if (!emailQuestionId) {
+      throw new BadRequestException(
+        `#Formulários do tipo normal devem ter um emailQuestionId.`
+      )
+    }
+
+    // Validar se a questão é do tipo email
+    const question = await questionsRepo.findById(emailQuestionId)
+    if (!question) {
+      throw new BadRequestException(
+        `#A questão informada como emailQuestionId não foi encontrada.`
+      )
+    }
+
+    if (question.questionType !== 10) {
+      // EQuestionsTypes.EMAIL
+      throw new BadRequestException(
+        `#O emailQuestionId deve ser de uma questão do tipo Email.`
+      )
+    }
+  } else {
+    if (emailQuestionId) {
+      throw new BadRequestException(
+        `#Formulários que não são do tipo normal não podem ter emailQuestionId.`
+      )
+    }
   }
 
   if (sFormType == 'ministerial') {
@@ -89,6 +174,35 @@ export function validateCreateDto(
 
 function isValidFormType(value: string): value is SFormType {
   return sFormTypesArray.includes(value as SFormType)
+}
+
+export function transformCreateDto(
+  createSFormDto: CreateSFormDto
+): CreateSForm {
+  return {
+    processId: createSFormDto.processId,
+    sFormName: createSFormDto.sFormName,
+    sFormType: createSFormDto.sFormType as SFormType,
+    emailQuestionId: createSFormDto.emailQuestionId
+  }
+}
+
+export function transformUpdateDto(
+  updateSFormDto: UpdateSFormDto
+): UpdateSForm {
+  const sFormType = updateSFormDto.sFormType as SFormType
+
+  return {
+    sFormId: updateSFormDto.sFormId,
+    sFormName: updateSFormDto.sFormName,
+    sFormType: sFormType,
+    emailQuestionId:
+      sFormType === 'normal'
+        ? updateSFormDto.emailQuestionId !== undefined
+          ? updateSFormDto.emailQuestionId
+          : null
+        : null
+  }
 }
 
 export function processCopyDto(copySFormDto: CopySFormDto): CopySForm {

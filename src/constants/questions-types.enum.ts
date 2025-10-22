@@ -7,7 +7,9 @@ export enum EQuestionsTypes {
   MULTIPLE_CHOICE_MATRIX = 6,
   DATE = 7,
   TIME = 8,
-  MULTIPLE_RESPONSES = 9
+  MULTIPLE_RESPONSES = 9,
+  EMAIL = 10,
+  FIELDS = 11
 }
 
 export const QuestionsTypesDetails: Record<
@@ -40,6 +42,12 @@ export const QuestionsTypesDetails: Record<
   },
   [EQuestionsTypes.MULTIPLE_RESPONSES]: {
     typeName: 'Respostas Múltiplas'
+  },
+  [EQuestionsTypes.EMAIL]: {
+    typeName: 'Email'
+  },
+  [EQuestionsTypes.FIELDS]: {
+    typeName: 'Campos'
   }
 }
 export const QuestionsTypesArray = Object.values(EQuestionsTypes).filter(

@@ -6,6 +6,11 @@ function isNilOrEmpty(value: any): boolean {
   return value === undefined || value === null || value === ''
 }
 
+export interface validationResult {
+  isValid: boolean
+  errorMessage: string
+}
+
 export const greaterThanOrEqual: ValidationSpcification = {
   validationType: 1,
   validationName: 'Maior ou igual a',
@@ -15,15 +20,41 @@ export const greaterThanOrEqual: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: any, min: number) => {
-    if (isNilOrEmpty(value)) return true
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    const minValue = Number(val1)
+    if (
+      typeof minValue !== 'number' ||
+      isNaN(minValue) ||
+      val2 ||
+      val3 ||
+      val4
+    ) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Maior ou igual a"'
+      )
+    }
+
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     if (typeof value !== 'number') {
       value = parseFloat(value)
     }
+
     if (isNaN(value)) {
-      throw new BadRequestException('O valor deve ser um número')
+      return { isValid: false, errorMessage: 'O valor deve ser um número' }
     }
-    return value >= min
+    const isValid = value >= minValue
+    return isValid
+      ? { isValid: true, errorMessage: '' }
+      : {
+          isValid: false,
+          errorMessage: `O valor deve ser maior ou igual a ${minValue}`
+        }
   }
 }
 
@@ -35,15 +66,26 @@ export const greaterThan: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: any, min: number) => {
-    if (isNilOrEmpty(value)) return true
-    if (typeof value !== 'number') {
-      value = parseFloat(value)
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    const min = Number(val1)
+    if (typeof min !== 'number' || isNaN(min) || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Maior que"'
+      )
     }
-    if (isNaN(value)) {
-      throw new BadRequestException('O valor deve ser um número')
-    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+    if (typeof value !== 'number') value = parseFloat(value)
+    if (isNaN(value))
+      return { isValid: false, errorMessage: 'O valor deve ser um número' }
     return value > min
+      ? { isValid: true, errorMessage: '' }
+      : { isValid: false, errorMessage: `O valor deve ser maior que ${min}` }
   }
 }
 
@@ -56,15 +98,29 @@ export const lessThanOrEqual: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: any, max: number) => {
-    if (isNilOrEmpty(value)) return true
-    if (typeof value !== 'number') {
-      value = parseFloat(value)
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    const max = Number(val1)
+    if (typeof max !== 'number' || isNaN(max) || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Menor ou igual a"'
+      )
     }
-    if (isNaN(value)) {
-      throw new BadRequestException('O valor deve ser um número')
-    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+    if (typeof value !== 'number') value = parseFloat(value)
+    if (isNaN(value))
+      return { isValid: false, errorMessage: 'O valor deve ser um número' }
     return value <= max
+      ? { isValid: true, errorMessage: '' }
+      : {
+          isValid: false,
+          errorMessage: `O valor deve ser menor ou igual a ${max}`
+        }
   }
 }
 
@@ -76,15 +132,26 @@ export const lessThan: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: any, max: number) => {
-    if (isNilOrEmpty(value)) return true
-    if (typeof value !== 'number') {
-      value = parseFloat(value)
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    const max = Number(val1)
+    if (typeof max !== 'number' || isNaN(max) || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Menor que"'
+      )
     }
-    if (isNaN(value)) {
-      throw new BadRequestException('O valor deve ser um número')
-    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+    if (typeof value !== 'number') value = parseFloat(value)
+    if (isNaN(value))
+      return { isValid: false, errorMessage: 'O valor deve ser um número' }
     return value < max
+      ? { isValid: true, errorMessage: '' }
+      : { isValid: false, errorMessage: `O valor deve ser menor que ${max}` }
   }
 }
 
@@ -96,8 +163,22 @@ export const required: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: any) => {
-    return value !== undefined && value !== null && value !== ''
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (val1 || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Obrigatório"'
+      )
+    }
+    const ok = value !== undefined && value !== null && value !== ''
+    return ok
+      ? { isValid: true, errorMessage: '' }
+      : { isValid: false, errorMessage: 'Campo obrigatório' }
   }
 }
 
@@ -110,12 +191,34 @@ export const minLength: ValidationSpcification = {
   valueTwoType: 'number',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: any, minLength: number) => {
-    if (isNilOrEmpty(value)) return true
-    if (typeof value !== 'string') {
-      throw new BadRequestException('O valor deve ser uma string')
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    const min = Number(val1)
+    if (typeof min !== 'number' || isNaN(min) || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Tamanho mínimo"'
+      )
     }
-    return value.length >= minLength
+    //remove todos os espaços em branco do início e do fim da string e deixa só um espaço entre as palavras
+
+    if (typeof value !== 'string')
+      return { isValid: false, errorMessage: 'O valor deve ser um texto' }
+
+    value = value.trim().replace(/\s+/g, ' ')
+
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+
+    return value.length >= min
+      ? { isValid: true, errorMessage: '' }
+      : {
+          isValid: false,
+          errorMessage: `O tamanho mínimo é ${min} caracteres, e atualmente possui apenas ${value.length}.`
+        }
   }
 }
 
@@ -128,12 +231,30 @@ export const maxLength: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: any, maxLength: number) => {
-    if (isNilOrEmpty(value)) return true
-    if (typeof value !== 'string') {
-      throw new BadRequestException('O valor deve ser uma string')
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    const max = Number(val1)
+    if (typeof max !== 'number' || isNaN(max) || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Tamanho máximo"'
+      )
     }
-    return value.length <= maxLength
+    if (typeof value !== 'string')
+      return { isValid: false, errorMessage: 'O valor deve ser uma string' }
+    value = value.trim().replace(/\s+/g, ' ')
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+
+    return value.length <= max
+      ? { isValid: true, errorMessage: '' }
+      : {
+          isValid: false,
+          errorMessage: `O tamanho máximo é ${max} caracteres, e atualmente possui ${value.length}.`
+        }
   }
 }
 
@@ -145,10 +266,25 @@ export const isEmail: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: string) => {
-    if (isNilOrEmpty(value)) return true
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (val1 || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Email válido"'
+      )
+    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+    if (typeof value !== 'string')
+      return { isValid: false, errorMessage: 'O valor deve ser uma string' }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return emailRegex.test(value)
+      ? { isValid: true, errorMessage: '' }
+      : { isValid: false, errorMessage: 'Email inválido' }
   }
 }
 
@@ -160,13 +296,31 @@ export const isUrl: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: string) => {
-    if (isNilOrEmpty(value)) return true
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (val1 || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "URL válida"'
+      )
+    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+    if (typeof value !== 'string')
+      return { isValid: false, errorMessage: 'O valor deve ser uma string' }
+    value = value.trim()
+    const urlPattern = /^(https?:\/\/)?([\w.-]+)\.([a-zA-Z]{2,})([/\w.-]*)*\/?$/
+    if (!urlPattern.test(value)) {
+      return { isValid: false, errorMessage: 'URL inválida' }
+    }
     try {
       new URL(value)
-      return true
+      return { isValid: true, errorMessage: '' }
     } catch {
-      return false
+      return { isValid: false, errorMessage: 'URL inválida' }
     }
   }
 }
@@ -180,9 +334,37 @@ export const valueBetweenInclusive: ValidationSpcification = {
   valueTwoType: 'number',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: number, min: number, max: number) => {
-    if (isNilOrEmpty(value)) return true
-    return value >= min && value <= max
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    const min = Number(val1)
+    const max = Number(val2)
+    if (
+      typeof min !== 'number' ||
+      isNaN(min) ||
+      typeof max !== 'number' ||
+      isNaN(max) ||
+      val3 ||
+      val4
+    ) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Valor entre (inclusivo)"'
+      )
+    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+    const num = Number(value)
+    if (isNaN(num))
+      return { isValid: false, errorMessage: 'O valor deve ser um número' }
+    return num >= min && num <= max
+      ? { isValid: true, errorMessage: '' }
+      : {
+          isValid: false,
+          errorMessage: `Escolha um valor numérico de ${min} a ${max}`
+        }
   }
 }
 
@@ -195,9 +377,37 @@ export const valueBetweenExclusive: ValidationSpcification = {
   valueTwoType: 'number',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: number, min: number, max: number) => {
-    if (isNilOrEmpty(value)) return true
-    return value > min && value < max
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    const min = Number(val1)
+    const max = Number(val2)
+    if (
+      typeof min !== 'number' ||
+      isNaN(min) ||
+      typeof max !== 'number' ||
+      isNaN(max) ||
+      val3 ||
+      val4
+    ) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Valor entre (exclusivo)"'
+      )
+    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+    const num = Number(value)
+    if (isNaN(num))
+      return { isValid: false, errorMessage: 'O valor deve ser um número' }
+    return num > min && num < max
+      ? { isValid: true, errorMessage: '' }
+      : {
+          isValid: false,
+          errorMessage: `O valor deve ser maior que ${min} e menor que ${max}`
+        }
   }
 }
 
@@ -210,14 +420,33 @@ export const minDate: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: string, minDate: string) => {
-    if (isNilOrEmpty(value)) return true
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (typeof val1 !== 'string' || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Data mínima"'
+      )
+    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     const dateValue = new Date(value)
-    const minDateValue = new Date(minDate)
+    const minDateValue = new Date(val1)
     if (isNaN(dateValue.getTime()) || isNaN(minDateValue.getTime())) {
-      throw new BadRequestException('O valor deve ser uma data válida')
+      return {
+        isValid: false,
+        errorMessage: 'O valor deve ser uma data válida'
+      }
     }
     return dateValue >= minDateValue
+      ? { isValid: true, errorMessage: '' }
+      : {
+          isValid: false,
+          errorMessage: `A data deve ser maior ou igual a ${val1}`
+        }
   }
 }
 
@@ -230,14 +459,33 @@ export const maxDate: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: string, maxDate: string) => {
-    if (isNilOrEmpty(value)) return true
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (typeof val1 !== 'string' || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Data máxima"'
+      )
+    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     const dateValue = new Date(value)
-    const maxDateValue = new Date(maxDate)
+    const maxDateValue = new Date(val1)
     if (isNaN(dateValue.getTime()) || isNaN(maxDateValue.getTime())) {
-      throw new BadRequestException('O valor deve ser uma data válida')
+      return {
+        isValid: false,
+        errorMessage: 'O valor deve ser uma data válida'
+      }
     }
     return dateValue <= maxDateValue
+      ? { isValid: true, errorMessage: '' }
+      : {
+          isValid: false,
+          errorMessage: `A data deve ser menor ou igual a ${val1}`
+        }
   }
 }
 
@@ -249,10 +497,23 @@ export const isDate: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: string) => {
-    if (isNilOrEmpty(value)) return true
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (val1 !== undefined || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Data válida"'
+      )
+    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     const dateValue = new Date(value)
     return !isNaN(dateValue.getTime())
+      ? { isValid: true, errorMessage: '' }
+      : { isValid: false, errorMessage: 'Data inválida' }
   }
 }
 
@@ -265,19 +526,38 @@ export const isDateBetweenInclusive: ValidationSpcification = {
   valueTwoType: 'string',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: string, minDate: string, maxDate: string) => {
-    if (isNilOrEmpty(value)) return true
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (typeof val1 !== 'string' || typeof val2 !== 'string' || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Data entre (inclusivo)"'
+      )
+    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     const dateValue = new Date(value)
-    const minDateValue = new Date(minDate)
-    const maxDateValue = new Date(maxDate)
+    const minDateValue = new Date(val1)
+    const maxDateValue = new Date(val2)
     if (
       isNaN(dateValue.getTime()) ||
       isNaN(minDateValue.getTime()) ||
       isNaN(maxDateValue.getTime())
     ) {
-      throw new BadRequestException('O valor deve ser uma data válida')
+      return {
+        isValid: false,
+        errorMessage: 'O valor deve ser uma data válida'
+      }
     }
     return dateValue >= minDateValue && dateValue <= maxDateValue
+      ? { isValid: true, errorMessage: '' }
+      : {
+          isValid: false,
+          errorMessage: `A data deve estar entre ${val1} e ${val2}`
+        }
   }
 }
 
@@ -290,19 +570,38 @@ export const isDateBetweenExclusive: ValidationSpcification = {
   valueTwoType: 'string',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: string, minDate: string, maxDate: string) => {
-    if (isNilOrEmpty(value)) return true
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (typeof val1 !== 'string' || typeof val2 !== 'string' || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Data entre (exclusivo)"'
+      )
+    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     const dateValue = new Date(value)
-    const minDateValue = new Date(minDate)
-    const maxDateValue = new Date(maxDate)
+    const minDateValue = new Date(val1)
+    const maxDateValue = new Date(val2)
     if (
       isNaN(dateValue.getTime()) ||
       isNaN(minDateValue.getTime()) ||
       isNaN(maxDateValue.getTime())
     ) {
-      throw new BadRequestException('O valor deve ser uma data válida')
+      return {
+        isValid: false,
+        errorMessage: 'O valor deve ser uma data válida'
+      }
     }
     return dateValue > minDateValue && dateValue < maxDateValue
+      ? { isValid: true, errorMessage: '' }
+      : {
+          isValid: false,
+          errorMessage: `A data deve estar estritamente entre ${val1} e ${val2}`
+        }
   }
 }
 
@@ -315,12 +614,34 @@ export const minAge: ValidationSpcification = {
   valueTwoType: 'number',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: string, minAge: number) => {
-    if (isNilOrEmpty(value)) return true
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    const minAge = Number(val1)
+    if (
+      typeof val1 === 'undefined' ||
+      typeof minAge !== 'number' ||
+      isNaN(minAge) ||
+      val2 ||
+      val3 ||
+      val4
+    ) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Tempo mínimo"'
+      )
+    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     const initialDate = new Date(value)
     const today = new Date()
     if (isNaN(initialDate.getTime())) {
-      throw new BadRequestException('O valor deve ser uma data válida')
+      return {
+        isValid: false,
+        errorMessage: 'O valor deve ser uma data válida'
+      }
     }
     const age = today.getFullYear() - initialDate.getFullYear()
     const monthDiff = today.getMonth() - initialDate.getMonth()
@@ -328,9 +649,12 @@ export const minAge: ValidationSpcification = {
       monthDiff < 0 ||
       (monthDiff === 0 && today.getDate() < initialDate.getDate())
     ) {
-      return age >= minAge
+      // birthday not reached yet
     }
-    return age > minAge
+    const isValid = age >= minAge
+    return isValid
+      ? { isValid: true, errorMessage: '' }
+      : { isValid: false, errorMessage: `A idade mínima é ${minAge}` }
   }
 }
 
@@ -343,22 +667,41 @@ export const maxAge: ValidationSpcification = {
   valueTwoType: 'number',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: string, maxAge: number) => {
-    if (isNilOrEmpty(value)) return true
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    const maxAge = Number(val1)
+    if (
+      typeof val1 === 'undefined' ||
+      typeof maxAge !== 'number' ||
+      isNaN(maxAge) ||
+      val2 ||
+      val3 ||
+      val4
+    ) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Tempo máximo"'
+      )
+    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     const initialDate = new Date(value)
     const today = new Date()
     if (isNaN(initialDate.getTime())) {
-      throw new BadRequestException('O valor deve ser uma data válida')
+      return {
+        isValid: false,
+        errorMessage: 'O valor deve ser uma data válida'
+      }
     }
     const age = today.getFullYear() - initialDate.getFullYear()
-    const monthDiff = today.getMonth() - initialDate.getMonth()
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < initialDate.getDate())
-    ) {
-      return age <= maxAge
-    }
-    return age < maxAge
+
+    const isValid = age <= maxAge
+    return isValid
+      ? { isValid: true, errorMessage: '' }
+      : { isValid: false, errorMessage: `A idade máxima é ${maxAge}` }
   }
 }
 
@@ -370,12 +713,24 @@ export const isNumeric: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: any) => {
-    if (isNilOrEmpty(value)) return true
-    if (typeof value === 'string') {
-      value = value.replace(',', '.')
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (val1 || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Valor numérico"'
+      )
     }
-    return !isNaN(parseFloat(value.toString())) && isFinite(value)
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+    if (typeof value === 'string') value = value.replace(',', '.')
+    const ok = !isNaN(parseFloat(value.toString())) && isFinite(Number(value))
+    return ok
+      ? { isValid: true, errorMessage: '' }
+      : { isValid: false, errorMessage: 'O valor deve ser numérico' }
   }
 }
 
@@ -387,14 +742,26 @@ export const isAlpha: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: any) => {
-    if (isNilOrEmpty(value)) return true
-    if (typeof value !== 'string') {
-      throw new BadRequestException('O valor deve ser uma string')
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (val1 || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Apenas letras"'
+      )
     }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+    if (typeof value !== 'string')
+      return { isValid: false, errorMessage: 'O valor deve ser uma string' }
     value = value.trim()
     const alphaRegex = /^[a-zA-Z]+$/
     return alphaRegex.test(value)
+      ? { isValid: true, errorMessage: '' }
+      : { isValid: false, errorMessage: 'Apenas letras são permitidas' }
   }
 }
 
@@ -407,13 +774,26 @@ export const minWords: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: any, minWords: number) => {
-    if (isNilOrEmpty(value)) return true
-    if (typeof value !== 'string') {
-      throw new BadRequestException('O valor deve ser uma string')
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    const min = Number(val1)
+    if (typeof min !== 'number' || isNaN(min) || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Número mínimo de palavras"'
+      )
     }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+    if (typeof value !== 'string')
+      return { isValid: false, errorMessage: 'O valor deve ser uma string' }
     const words = value.trim().split(/\s+/)
-    return words.length >= minWords
+    return words.length >= min
+      ? { isValid: true, errorMessage: '' }
+      : { isValid: false, errorMessage: `Número mínimo de palavras: ${min}` }
   }
 }
 
@@ -426,13 +806,26 @@ export const maxWords: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: any, maxWords: number) => {
-    if (isNilOrEmpty(value)) return true
-    if (typeof value !== 'string') {
-      throw new BadRequestException('O valor deve ser uma string')
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    const max = Number(val1)
+    if (typeof max !== 'number' || isNaN(max) || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Número máximo de palavras"'
+      )
     }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+    if (typeof value !== 'string')
+      return { isValid: false, errorMessage: 'O valor deve ser uma string' }
     const words = value.trim().split(/\s+/)
-    return words.length <= maxWords
+    return words.length <= max
+      ? { isValid: true, errorMessage: '' }
+      : { isValid: false, errorMessage: `Número máximo de palavras: ${max}.` }
   }
 }
 
@@ -444,14 +837,30 @@ export const isAlphaSpace: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: any) => {
-    if (isNilOrEmpty(value)) return true
-    if (typeof value !== 'string') {
-      throw new BadRequestException('O valor deve ser uma string')
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (val1 || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Apenas letras e espaços"'
+      )
     }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+    if (typeof value !== 'string')
+      return { isValid: false, errorMessage: 'O valor deve ser uma string' }
     value = value.trim()
     const alphaSpaceRegex = /^[a-zA-Z\s]+$/
     return alphaSpaceRegex.test(value)
+      ? { isValid: true, errorMessage: '' }
+      : {
+          isValid: false,
+          errorMessage:
+            'Apenas letras e espaços são permitidos (Números e símbolos não).'
+        }
   }
 }
 
@@ -463,14 +872,30 @@ export const isAlphaNumeric: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: any) => {
-    if (isNilOrEmpty(value)) return true
-    if (typeof value !== 'string') {
-      throw new BadRequestException('O valor deve ser uma string')
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (val1 || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Apenas letras e números"'
+      )
     }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+    if (typeof value !== 'string')
+      return { isValid: false, errorMessage: 'O valor deve ser uma string' }
     value = value.trim()
     const alphaNumericRegex = /^[a-zA-Z0-9]+$/
     return alphaNumericRegex.test(value)
+      ? { isValid: true, errorMessage: '' }
+      : {
+          isValid: false,
+          errorMessage:
+            'Apenas letras e números são permitidos (espaços e símbolos não)'
+        }
   }
 }
 
@@ -482,14 +907,29 @@ export const isFutureDate: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: string) => {
-    if (isNilOrEmpty(value)) return true
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (val1 !== undefined || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Data futura"'
+      )
+    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     const dateValue = new Date(value)
     const today = new Date()
-    if (isNaN(dateValue.getTime())) {
-      throw new BadRequestException('O valor deve ser uma data válida')
-    }
+    if (isNaN(dateValue.getTime()))
+      return {
+        isValid: false,
+        errorMessage: 'O valor deve ser uma data válida'
+      }
     return dateValue > today
+      ? { isValid: true, errorMessage: '' }
+      : { isValid: false, errorMessage: 'A data deve ser no futuro' }
   }
 }
 
@@ -501,14 +941,29 @@ export const isPastDate: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: string) => {
-    if (isNilOrEmpty(value)) return true
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (val1 || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Data passada"'
+      )
+    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     const dateValue = new Date(value)
     const today = new Date()
-    if (isNaN(dateValue.getTime())) {
-      throw new BadRequestException('O valor deve ser uma data válida')
-    }
+    if (isNaN(dateValue.getTime()))
+      return {
+        isValid: false,
+        errorMessage: 'O valor deve ser uma data válida'
+      }
     return dateValue < today
+      ? { isValid: true, errorMessage: '' }
+      : { isValid: false, errorMessage: 'A data deve ser no passado' }
   }
 }
 
@@ -520,12 +975,31 @@ export const isUnicEmail: ValidationSpcification = {
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
-  validationFunction: (value: string, existingEmails: string[]) => {
-    if (isNilOrEmpty(value)) return true
-    if (typeof value !== 'string') {
-      throw new BadRequestException('O valor deve ser uma string')
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (val1 || val2 || val3 || val4) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Data passada"'
+      )
     }
-    return !existingEmails.includes(value)
+    const existingEmails = val1
+    if (!Array.isArray(existingEmails) && existingEmails !== undefined) {
+      throw new BadRequestException(
+        'Parâmetros inválidos para a validação "Email único"'
+      )
+    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+    if (typeof value !== 'string')
+      return { isValid: false, errorMessage: 'O valor deve ser uma string' }
+    const isUnique = !existingEmails || !existingEmails.includes(value)
+    return isUnique
+      ? { isValid: true, errorMessage: '' }
+      : { isValid: false, errorMessage: 'Email já existe' }
   }
 }
 

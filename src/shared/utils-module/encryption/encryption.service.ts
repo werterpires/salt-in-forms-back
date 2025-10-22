@@ -1,12 +1,67 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import * as crypto from 'crypto'
 
 @Injectable()
 export class EncryptionService {
-  private readonly algorithm = 'aes-256-cbc'
-  private readonly key = crypto.scryptSync('minha-senha-secreta', 'salto', 32)
-  private readonly ivLength = 16
-  private readonly bufferFormat = 'hex'
+  private readonly algorithm: string
+  private readonly key: Buffer
+  private readonly ivLength: number
+  private readonly bufferFormat: BufferEncoding
+
+  constructor() {
+    if (!process.env.ENCRYPTION_ALGORITHM) {
+      throw new InternalServerErrorException(
+        'ENCRYPTION_ALGORITHM não está definido no .env'
+      )
+    }
+    if (!process.env.ENCRYPTION_PASSWORD) {
+      throw new InternalServerErrorException(
+        'ENCRYPTION_PASSWORD não está definido no .env'
+      )
+    }
+    if (!process.env.ENCRYPTION_SALT) {
+      throw new InternalServerErrorException(
+        'ENCRYPTION_SALT não está definido no .env'
+      )
+    }
+    if (!process.env.ENCRYPTION_KEYLEN) {
+      throw new InternalServerErrorException(
+        'ENCRYPTION_KEYLEN não está definido no .env'
+      )
+    }
+    if (!process.env.ENCRYPTION_IV_LENGTH) {
+      throw new InternalServerErrorException(
+        'ENCRYPTION_IV_LENGTH não está definido no .env'
+      )
+    }
+    if (!process.env.ENCRYPTION_BUFFER_FORMAT) {
+      throw new InternalServerErrorException(
+        'ENCRYPTION_BUFFER_FORMAT não está definido no .env'
+      )
+    }
+
+    this.algorithm = process.env.ENCRYPTION_ALGORITHM
+    const password = process.env.ENCRYPTION_PASSWORD
+    const salt = process.env.ENCRYPTION_SALT
+    const keylen = parseInt(process.env.ENCRYPTION_KEYLEN, 10)
+
+    if (isNaN(keylen)) {
+      throw new InternalServerErrorException(
+        'ENCRYPTION_KEYLEN deve ser um número válido'
+      )
+    }
+
+    this.ivLength = parseInt(process.env.ENCRYPTION_IV_LENGTH, 10)
+
+    if (isNaN(this.ivLength)) {
+      throw new InternalServerErrorException(
+        'ENCRYPTION_IV_LENGTH deve ser um número válido'
+      )
+    }
+
+    this.bufferFormat = process.env.ENCRYPTION_BUFFER_FORMAT as BufferEncoding
+    this.key = crypto.scryptSync(password, salt, keylen)
+  }
 
   encrypt(text: string): string {
     const iv = crypto.randomBytes(this.ivLength)

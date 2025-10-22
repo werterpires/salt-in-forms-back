@@ -8,12 +8,14 @@ import {
   SFormToValidate,
   UpdateSForm,
   CopySForm,
-  SFormType,
-  SFormSimple
+  SFormSimple,
+  SFormBasic,
+  BasicQuestion
 } from './types'
 import * as db from '../constants/db-schema.enum'
 import { Paginator } from 'src/shared/types/types'
 import { applyFilters } from './s-forms.helper'
+import { EQuestionsTypes } from 'src/constants/questions-types.enum'
 
 @Injectable()
 export class SFormsRepo {
@@ -35,7 +37,8 @@ export class SFormsRepo {
         db.SForms.S_FORM_ID,
         db.SForms.S_FORM_NAME,
         db.SForms.S_FORM_TYPE,
-        db.SForms.PROCESS_ID
+        db.SForms.PROCESS_ID,
+        db.SForms.EMAIL_QUESTION_ID
       )
       .where(db.SForms.PROCESS_ID, processId)
 
@@ -74,14 +77,10 @@ export class SFormsRepo {
   }
 
   updateSForm(updateSFormDAta: UpdateSForm) {
-    const { sFormId, sFormName, sFormType } = updateSFormDAta
     return this.knex(db.Tables.S_FORMS)
-      .update({
-        [db.SForms.S_FORM_NAME]: sFormName,
-        [db.SForms.S_FORM_TYPE]: sFormType
-      })
+      .update(updateSFormDAta)
       .where({
-        [db.SForms.S_FORM_ID]: sFormId
+        [db.SForms.S_FORM_ID]: updateSFormDAta.sFormId
       })
   }
 
@@ -99,7 +98,8 @@ export class SFormsRepo {
         db.SForms.S_FORM_ID,
         db.SForms.S_FORM_NAME,
         db.SForms.S_FORM_TYPE,
-        db.SForms.PROCESS_ID
+        db.SForms.PROCESS_ID,
+        db.SForms.EMAIL_QUESTION_ID
       )
       .where(db.SForms.S_FORM_ID, sFormId)
       .first()) as SForm
@@ -116,7 +116,45 @@ export class SFormsRepo {
       .orderBy(db.SForms.S_FORM_NAME, 'asc')
   }
 
-  async copySForm(copyData: CopySForm, sourceFormType: SFormType) {
+  async findAllBasicByProcessId(processId: number): Promise<SFormBasic[]> {
+    const forms: SFormBasic[] = await this.knex(db.Tables.S_FORMS)
+      .select(db.SForms.S_FORM_ID, db.SForms.S_FORM_NAME)
+      .where(db.SForms.PROCESS_ID, processId)
+      .orderBy(db.SForms.S_FORM_NAME, 'asc')
+
+    const results: SFormBasic[] = await Promise.all(
+      forms.map(async (form): Promise<SFormBasic> => {
+        const emailQuestions: BasicQuestion[] = await this.knex(
+          db.Tables.QUESTIONS
+        )
+          .join(
+            db.Tables.FORM_SECTIONS,
+            `${db.Tables.FORM_SECTIONS}.${db.FormSections.FORM_SECTION_ID}`,
+            `${db.Tables.QUESTIONS}.${db.Questions.FORM_SECTION_ID}`
+          )
+          .select(
+            db.Questions.QUESTION_ID,
+            db.Questions.QUESTION_STATEMENT,
+            db.Questions.QUESTION_TYPE
+          )
+          .where(db.FormSections.S_FORM_ID, form[db.SForms.S_FORM_ID])
+          .whereIn(db.Questions.QUESTION_TYPE, [
+            EQuestionsTypes.EMAIL,
+            EQuestionsTypes.FIELDS
+          ])
+          .orderBy(db.Questions.QUESTION_ORDER, 'asc')
+
+        return {
+          ...form,
+          emailQuestions
+        }
+      })
+    )
+
+    return results
+  }
+
+  async copySForm(copyData: CopySForm) {
     return this.knex.transaction(async (trx) => {
       // 2. Buscar e copiar seções
       const sections = await trx(db.Tables.FORM_SECTIONS)
@@ -136,12 +174,12 @@ export class SFormsRepo {
             section[db.FormSections.FORM_SECTION_ORDER],
           [db.FormSections.FORM_SECTION_DISPLAY_RULE]:
             section[db.FormSections.FORM_SECTION_DISPLAY_RULE],
-          [db.FormSections.FORM_SECTION_DISPLAY_LINK]: null, // Será atualizado depois
-          [db.FormSections.QUESTION_DISPLAY_LINK]: null, // Será atualizado depois
+          [db.FormSections.FORM_SECTION_DISPLAY_LINK]: null,
+          [db.FormSections.QUESTION_DISPLAY_LINK]: null,
           [db.FormSections.ANSWER_DISPLEY_RULE]:
             section[db.FormSections.ANSWER_DISPLEY_RULE],
           [db.FormSections.ANSWER_DISPLAY_VALUE]:
-            section[db.FormSections.ANSWER_DISPLAY_VALUE] // Também deveria ser atualizado depois
+            section[db.FormSections.ANSWER_DISPLAY_VALUE]
         }
 
         const [newSectionId] = await trx(db.Tables.FORM_SECTIONS).insert(
@@ -334,7 +372,9 @@ export class SFormsRepo {
           section[db.FormSections.FORM_SECTION_ID]
         )
 
-        const updates: any = {}
+        const updates: Partial<
+          Record<keyof typeof db.FormSections, number | string | null>
+        > = {}
 
         // Mapear formSectionDisplayLink
         if (section[db.FormSections.FORM_SECTION_DISPLAY_LINK]) {
@@ -381,7 +421,9 @@ export class SFormsRepo {
           .where(db.Questions.QUESTION_ID, oldQuestionId)
           .first()
 
-        const updates: any = {}
+        const updates: Partial<
+          Record<keyof typeof db.Questions, number | string | null>
+        > = {}
 
         // Mapear formSectionDisplayLink
         if (originalQuestion[db.Questions.FORM_SECTION_DISPLAY_LINK]) {

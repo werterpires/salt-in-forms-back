@@ -1,21 +1,38 @@
-import { Length } from 'class-validator'
+
+import { IsOptional, IsString, Length } from 'class-validator'
 
 export class CreateMinisterialDto {
-  @Length(5, 150, {
-    message:
-      '#O nome do ministerial deve ter no mínimo 5 e no máximo 150 caracteres'
+  @IsString({ message: '#O nome do ministerial deve ser uma string' })
+  @Length(1, 255, {
+    message: '#O nome do ministerial deve ter no mínimo 1 e no máximo 255 caracteres'
   })
   ministerialName: string
 
-  @Length(2, 150, {
-    message:
-      '#O campo do ministerial deve ter no mínimo 2 e no máximo 150 caracteres'
-  })
-  ministerialField: string
+  @IsOptional()
+  @IsString({ message: '#O telefone principal deve ser uma string' })
+  ministerialPrimaryPhone?: string
 
-  @Length(5, 150, {
-    message:
-      '#O email do ministerial deve ter no mínimo 5 e no máximo 150 caracteres'
-  })
-  ministerialEmail: string
+  @IsOptional()
+  @IsString({ message: '#O telefone secundário deve ser uma string' })
+  ministerialSecondaryPhone?: string
+
+  @IsOptional()
+  @IsString({ message: '#O telefone fixo deve ser uma string' })
+  ministerialLandlinePhone?: string
+
+  @IsOptional()
+  @IsString({ message: '#O email principal deve ser uma string' })
+  ministerialPrimaryEmail?: string
+
+  @IsOptional()
+  @IsString({ message: '#O email alternativo deve ser uma string' })
+  ministerialAlternativeEmail?: string
+
+  @IsOptional()
+  @IsString({ message: '#O nome da secretaria deve ser uma string' })
+  ministerialSecretaryName?: string
+
+  @IsOptional()
+  @IsString({ message: '#O telefone da secretaria deve ser uma string' })
+  ministerialSecretaryPhone?: string
 }

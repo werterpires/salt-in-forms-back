@@ -1,0 +1,166 @@
+SMTP Service API
+SMTP will only work if the SMTP account is activated beforehand. Fill out the application form to get started. Learn more: How to get started with SMTP.
+
+Send an email
+To send an email, send a POST request to:
+
+https://api.sendpulse.com/smtp/emails
+Request parameters:
+
+Parameter	Type	Description	 
+email	object	Serialized object with email data	required
+Email array parameters:
+
+Parameter	Type	Description	 
+html	string	HTML version of an email, encoded in Base64	required*
+text	string	Text version of the email	required*
+template	array	Template:	required*
+id	string/int	Template ID that was uploaded in the service. Use Get a list of templates on an acoount method to get the template ID (use either real_id or id parameter from the response) 	required
+variables	object	Includes variables' names and values in such a format:  {"name_of_the_variable": "value_of_the_variable"}	
+required
+
+auto_plain_text	boolean	Type parameter, whether or not to automatically generate a text part for messages that are not given text; default is false	required
+subject	string	Email subject	required
+from	object	An array containing the sender’s name and email address	required
+to	array	An array of recipients	required
+сс	array	An array of recipients who will receive a copy of the email. Recipients will see who received an email copy	optional
+bcc	array	An array of recipients who will receive a blind carbon copy of the email. Recipients will not see who received an email copy	optional
+attachments	object	An object where the key is the name of the file, and the value is the contents of the file, for example, {"name_of_the_file": "contents_of_the_file"}	optional
+attachments_binary	object	An object where the key is the name of the file, and the value is the contents of the file, encoded in Base64	optional
+*Note: You can use parameter html and text to send the template directly in this request.
+
+Or you can use the parameter template and send a static template uploaded to the email service and send only values for these variables (which were added in template).
+
+Example of sending a custom template:
+
+{
+  "email": {
+    "html": "PHA+RXhhbXBsZSB0ZXh0PC9wPg==",
+    "text": "Example text",
+    "subject": "Example subject",
+    "from": {
+      "name": "Example name",
+      "email": "sender@example.com"
+    },
+    "to": [
+      {
+        "name": "Recipient1 name",
+        "email": "recipient1@example.com"
+      }
+    ]
+  }
+}
+
+Example of sending a system template with custom variables:
+
+{
+  "email": {
+    "subject": "Test",
+    "template": {
+      "id": 123456,
+      "variables": {
+        "name": "George",
+        "code": "123456"
+      }
+    },
+    "from": {
+      "name": "Mike",
+      "email": "mike.johnson@domain.com"
+    },
+    "to": [
+      {
+        "email": "recipient1@example.com",
+        "name": "George"
+      }
+    ]
+  }
+}
+
+In this example, a template parameter is used instead of html and text parameters.
+
+Example of sending email copies:
+
+{
+  "email": {
+    "html":"dGVzdCBBUEk=",
+    "text": "text",
+    "subject": "subject",
+    "from": {
+      "name": "test",
+      "email": "test@test.com"
+    },
+    "to": [
+      {
+        "name": "recipient 1",
+        "email": "recipient1@test.com"
+      }
+    ],
+    "cc":[
+      {
+         "name":"recipient 2",
+         "email":"recipient2@test.com" 
+      }
+    ],
+    "bcc":[
+      {
+         "name":"recipient 3",
+         "email":"recipient3@test.com" 
+      }
+    ]
+  }
+}
+
+Example of sending an email with attachments:
+
+{
+  "email": {
+    "html": "PHA+RXhhbXBsZSB0ZXh0PC9wPg==",
+    "text": "Example text b",
+    "subject": "Example subject b",
+    "from": {
+      "name": "Example name",
+      "email": "sender@example.com"
+    },
+    "to": [
+      {
+        "name": "Recipient1 name",
+        "email": "recipient1@example.com"
+      }
+    ],
+    "attachments":{
+        "file1.txt":"file1 text content",
+        "file2.txt":"file2 text content"
+    }
+  }
+}
+
+Example of sending an email with attachments_binary:
+
+{
+  "email": {
+    "html": "PHA+RXhhbXBsZSB0ZXh0PC9wPg==",
+    "text": "Example text b",
+    "subject": "Example subject b",
+    "from": {
+      "name": "Example name",
+      "email": "sender@example.com"
+    },
+    "to": [
+      {
+        "name": "Recipient1 name",
+        "email": "recipient1@example.com"
+      }
+    ],
+    "attachments_binary":{
+        "file1.txt":"bXkgdGV4dA==",
+        "file2.txt":"bXkgdGV4dA=="
+    }
+  }
+}
+
+If the request is successful, you will receive a response:
+
+{
+    "result": true,
+    "id": "pzkic9-0afezp-fc"
+}

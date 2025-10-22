@@ -9,6 +9,7 @@ const services = [QuestionsService, QuestionsRepo, FormSectionsRepo]
 
 @Module({
   controllers: [QuestionsController],
-  providers: services
+  providers: services,
+  exports: [QuestionsRepo]
 })
 export class QuestionsModule {}

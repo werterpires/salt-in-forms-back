@@ -13,7 +13,13 @@ export enum Tables {
   VALIDATIONS = 'validations',
   SUB_QUESTIONS = 'subQuestions',
   SUB_QUESTION_OPTIONS = 'subQuestionOptions',
-  SUB_VALIDATIONS = 'subValidations'
+  SUB_VALIDATIONS = 'subValidations',
+  CANDIDATES = 'candidates',
+  FORMS_CANDIDATES = 'formsCandidates',
+  ANSWERS = 'answers',
+  UNIONS = 'unions',
+  FIELDS = 'fields',
+  CANDIDATES_TERMS_SIGNATURES = 'candidatesTermsSignatures'
 }
 
 export enum Users {
@@ -54,14 +60,17 @@ export enum Processes {
   PROCESS_TITLE = 'processTitle',
   PROCESS_TOTVS_ID = 'processTotvsId',
   PROCESS_BEGIN_DATE = 'processBeginDate',
-  PROCESS_END_DATE = 'processEndDate'
+  PROCESS_END_DATE = 'processEndDate',
+  PROCESS_END_ANSWERS = 'processEndAnswers',
+  PROCESS_END_SUBSCRIPTION = 'processEndSubscription'
 }
 
 export enum SForms {
   S_FORM_ID = 'sFormId',
   PROCESS_ID = 'processId',
   S_FORM_NAME = 'sFormName',
-  S_FORM_TYPE = 'sFormType'
+  S_FORM_TYPE = 'sFormType',
+  EMAIL_QUESTION_ID = 'emailQuestionId'
 }
 
 export enum QuestionsAreas {
@@ -74,9 +83,15 @@ export enum QuestionsAreas {
 export enum Ministerials {
   MINISTERIAL_ID = 'ministerialId',
   MINISTERIAL_NAME = 'ministerialName',
-  MINISTERIAL_FIELD = 'ministerialField',
-  MINISTERIAL_EMAIL = 'ministerialEmail',
-  MINISTERIAL_ACTIVE = 'ministerialActive'
+  MINISTERIAL_PRIMARY_PHONE = 'ministerialPrimaryPhone',
+  MINISTERIAL_SECONDARY_PHONE = 'ministerialSecondaryPhone',
+  MINISTERIAL_LANDLINE_PHONE = 'ministerialLandlinePhone',
+  MINISTERIAL_PRIMARY_EMAIL = 'ministerialPrimaryEmail',
+  MINISTERIAL_ALTERNATIVE_EMAIL = 'ministerialAlternativeEmail',
+  MINISTERIAL_SECRETARY_NAME = 'ministerialSecretaryName',
+  MINISTERIAL_SECRETARY_PHONE = 'ministerialSecretaryPhone',
+  MINISTERIAL_ACTIVE = 'ministerialActive',
+  FIELD_ID = 'fieldId'
 }
 
 export enum FormSections {
@@ -146,4 +161,60 @@ export enum SubValidations {
   VALUE_TWO = 'valueTwo',
   VALUE_THREE = 'valueThree',
   VALUE_FOUR = 'valueFour'
+}
+
+export enum Candidates {
+  CANDIDATE_ID = 'candidateId',
+  PROCESS_ID = 'processId',
+  CANDIDATE_NAME = 'candidateName',
+  CANDIDATE_UNIQUE_DOCUMENT = 'candidateUniqueDocument',
+  CANDIDATE_EMAIL = 'candidateEmail',
+  CANDIDATE_PHONE = 'candidatePhone',
+  CANDIDATE_BIRTHDATE = 'candidateBirthdate',
+  CANDIDATE_FOREIGNER = 'candidateForeigner',
+  CANDIDATE_ADDRESS = 'candidateAddress',
+  CANDIDATE_ADDRESS_NUMBER = 'candidateAddressNumber',
+  CANDIDATE_DISTRICT = 'candidateDistrict',
+  CANDIDATE_CITY = 'candidateCity',
+  CANDIDATE_STATE = 'candidateState',
+  CANDIDATE_ZIP_CODE = 'candidateZipCode',
+  CANDIDATE_COUNTRY = 'candidateCountry',
+  INTERVIEW_USER_ID = 'interviewUserId'
+}
+
+export enum FormsCandidates {
+  FORM_CANDIDATE_ID = 'formCandidateId',
+  CANDIDATE_ID = 'candidateId',
+  S_FORM_ID = 'sFormId',
+  FORM_CANDIDATE_STATUS = 'formCandidateStatus',
+  FORM_CANDIDATE_ACCESS_CODE = 'formCandidateAccessCode'
+}
+
+export enum Answers {
+  ANSWER_ID = 'answerId',
+  QUESTION_ID = 'questionId',
+  FORM_CANDIDATE_ID = 'formCandidateId',
+  ANSWER_VALUE = 'answerValue',
+  VALID_ANSWER = 'validAnswer',
+  ANSWER_COMMENT = 'answerComment'
+}
+
+export enum Unions {
+  UNION_ID = 'unionId',
+  UNION_NAME = 'unionName',
+  UNION_ACRONYM = 'unionAcronym'
+}
+
+export enum Fields {
+  FIELD_ID = 'fieldId',
+  FIELD_NAME = 'fieldName',
+  FIELD_ACRONYM = 'fieldAcronym',
+  UNION_ID = 'unionId'
+}
+
+export enum CandidatesTermsSignatures {
+  CANDIDATE_TERM_SIGNATURE_ID = 'candidateTermSignatureId',
+  FORM_CANDIDATE_ID = 'formCandidateId',
+  TERM_ID = 'termId',
+  TERM_UNSIGNED = 'termUnsigned'
 }

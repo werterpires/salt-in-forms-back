@@ -3,37 +3,32 @@ import { CreateSFormDto } from './dto/create-s-form.dto'
 import { UpdateSFormDto } from './dto/update-s-form.dto'
 import { CopySFormDto } from './dto/copy-s-form.dto'
 import { SFormsRepo } from './s-forms.repo'
+import { QuestionsRepo } from '../questions/questions.repo'
 import * as db from 'src/constants/db-schema.enum'
 import { FindAllResponse, Paginator } from 'src/shared/types/types'
 import {
   validateCreateDto,
   validateUpdateDto,
-  processCopyDto
+  processCopyDto,
+  transformCreateDto,
+  transformUpdateDto
 } from './s-forms.helper'
-import {
-  CreateSForm,
-  SForm,
-  SFormFilter,
-  SFormType,
-  UpdateSForm,
-  SFormSimple
-} from './types'
+import { SForm, SFormFilter, SFormSimple } from './types'
 
 @Injectable()
 export class SFormsService {
-  constructor(private readonly sFormsRepo: SFormsRepo) {}
+  constructor(
+    private readonly sFormsRepo: SFormsRepo,
+    private readonly questionsRepo: QuestionsRepo
+  ) {}
   async createSForm(createSFormDto: CreateSFormDto) {
     const sFormTypes = await this.sFormsRepo.findAllFormTypesByProcessId(
       createSFormDto.processId
     )
 
-    validateCreateDto(createSFormDto, sFormTypes)
+    await validateCreateDto(createSFormDto, sFormTypes, this.questionsRepo)
 
-    const sFormCreateData: CreateSForm = {
-      processId: createSFormDto.processId,
-      sFormName: createSFormDto.sFormName,
-      sFormType: createSFormDto.sFormType as SFormType
-    }
+    const sFormCreateData = transformCreateDto(createSFormDto)
 
     return await this.sFormsRepo.createSForm(sFormCreateData)
   }
@@ -72,20 +67,20 @@ export class SFormsService {
     return await this.sFormsRepo.findAllSFormsSimpleByProcessId(processId)
   }
 
+  async findAllBasicByProcessId(processId: number) {
+    return await this.sFormsRepo.findAllBasicByProcessId(processId)
+  }
+
   async updateSForm(updateSFormDto: UpdateSFormDto) {
     const sForms = await this.sFormsRepo.findAllFormTypesByProcessId(
       updateSFormDto.sFormId
     )
 
-    validateUpdateDto(updateSFormDto, sForms)
+    await validateUpdateDto(updateSFormDto, sForms, this.questionsRepo)
 
-    const updateFormDate: UpdateSForm = {
-      sFormId: updateSFormDto.sFormId,
-      sFormName: updateSFormDto.sFormName,
-      sFormType: updateSFormDto.sFormType as SFormType
-    }
+    const updateFormData = transformUpdateDto(updateSFormDto)
 
-    return await this.sFormsRepo.updateSForm(updateFormDate)
+    return await this.sFormsRepo.updateSForm(updateFormData)
   }
 
   async deleteSForm(sFormId: number) {
@@ -101,12 +96,8 @@ export class SFormsService {
       throw new Error('#Formulário de origem não encontrado.')
     }
 
-    const targetForm = await this.sFormsRepo.findAllFormTypesByProcessId(
-      copySFormDto.targetFormId
-    )
-
     const copyData = processCopyDto(copySFormDto)
 
-    return await this.sFormsRepo.copySForm(copyData, sourceForm.sFormType)
+    return await this.sFormsRepo.copySForm(copyData)
   }
 }

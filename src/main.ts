@@ -5,8 +5,10 @@ import { ValidationPipe } from '@nestjs/common'
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface'
 
 const corsOptions: CorsOptions = {
-  origin: ['http://localhost:4200', 'http://31.97.162.197']
-}
+  origin: (process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map(origin => origin.trim()),
+};
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {

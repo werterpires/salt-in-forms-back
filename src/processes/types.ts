@@ -3,7 +3,9 @@ export interface CreateProcess {
   [db.Processes.PROCESS_TITLE]: string
   [db.Processes.PROCESS_TOTVS_ID]: string
   [db.Processes.PROCESS_BEGIN_DATE]: Date
-  [db.Processes.PROCESS_END_DATE]?: Date
+  [db.Processes.PROCESS_END_DATE]: Date
+  [db.Processes.PROCESS_END_ANSWERS]: Date
+  [db.Processes.PROCESS_END_SUBSCRIPTION]: Date
 }
 
 export interface UpdateProcess extends CreateProcess {

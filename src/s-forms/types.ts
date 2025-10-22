@@ -4,12 +4,14 @@ export interface CreateSForm {
   processId: number
   sFormName: string
   sFormType: SFormType
+  emailQuestionId?: number
 }
 
 export interface UpdateSForm {
   sFormId: number
   sFormName: string
   sFormType: SFormType
+  emailQuestionId?: number | null
 }
 
 export interface SForm {
@@ -17,6 +19,7 @@ export interface SForm {
   sFormName: string
   sFormType: SFormType
   processId: number
+  emailQuestionId?: number
 }
 
 export const sFormTypesArray = ['candidate', 'ministerial', 'normal'] as const
@@ -49,4 +52,16 @@ export interface FormCopyResult {
 export interface SFormSimple {
   [db.SForms.S_FORM_ID]: number
   [db.SForms.S_FORM_NAME]: string
+}
+
+export interface SFormBasic {
+  sFormId: number
+  sFormName: string
+  emailQuestions?: BasicQuestion[]
+}
+
+export interface BasicQuestion {
+  questionId: number
+  questionStatement: string
+  questionType: number
 }

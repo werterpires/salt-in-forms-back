@@ -1,0 +1,20 @@
+Resposta da API para processo f6fded5b-c412-44d7-0252-08ddde7a60ec: [
+  {
+    orderItemId: 'd883f0aa-7f2e-4184-dcc2-08dddb8245e4',
+    orderId: 'e8d6b30e-ede2-4a68-3c2c-08dddb8245db',
+    enrollmentModelId: 'f6fded5b-c412-44d7-0252-08ddde7a60ec',
+    attributes: '[{"Label":"cpf","InputType":"text","Required":false,"OrderIndex":1,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"723.721.556-60","Price":0.0}]},{"Label":"email","InputType":"text","Required":false,"OrderIndex":2,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"raul_moura@technicolor.com","Price":0.0}]},{"Label":"endereço","InputType":"text","Required":false,"OrderIndex":3,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"Rua Limeira","Price":0.0}]},{"Label":"estado","InputType":"text","Required":false,"OrderIndex":4,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"RO","Price":0.0}]},{"Label":"cep","InputType":"text","Required":false,"OrderIndex":5,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"76871-255","Price":0.0}]},{"Label":"telefone","InputType":"text","Required":false,"OrderIndex":6,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"(69) 99796-0043","Price":0.0}]}]',
+    price: 0,
+    totalValue: 0,
+    allowIssuingCertificate: null
+  },
+  {
+    orderItemId: 'ceb8bac2-be3d-4ca8-dd9c-08dddb8245e4',
+    orderId: 'ea80dad0-87b0-47f6-3cff-08dddb8245db',
+    enrollmentModelId: 'f6fded5b-c412-44d7-0252-08ddde7a60ec',
+    attributes: '[{"Label":"Nome Completo","InputType":"text","Required":true,"OrderIndex":1,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"Caleb Isaac Julio Pires","Price":0.0}]},{"Label":"Estrangeiro ?","InputType":"option","Required":true,"OrderIndex":2,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"Não","Price":0.0}]},{"Label":"N° Passaporte","InputType":"text","Required":false,"OrderIndex":3,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"","Price":0.0}]},{"Label":"CPF","InputType":"text","Required":false,"OrderIndex":4,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"960.282.004-76","Price":0.0}]},{"Label":"Data de Nascimento","InputType":"date","Required":true,"OrderIndex":5,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"13/09/1966","Price":0.0}]},{"Label":"E-mail","InputType":"text","Required":true,"OrderIndex":6,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"calebisaacpires@humanfit.com.br","Price":0.0}]},{"Label":"Telefone","InputType":"text","Required":true,"OrderIndex":7,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"(21) 98508-7287","Price":0.0}]},{"Label":"Cep","InputType":"text","Required":true,"OrderIndex":8,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"23020-450","Price":0.0}]},{"Label":"Endereço","InputType":"text","Required":false,"OrderIndex":9,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"Rua Campina Verde","Price":0.0}]},{"Label":"Número","InputType":"text","Required":false,"OrderIndex":10,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"477","Price":0.0}]},{"Label":"Bairro","InputType":"text","Required":false,"OrderIndex":11,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"Guaratiba","Price":0.0}]},{"Label":"Cidade","InputType":"text","Required":false,"OrderIndex":12,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"Rio de Janeiro","Price":0.0}]},{"Label":"Estado","InputType":"option","Required":false,"OrderIndex":13,"MinSelections":1,"MaxSelections":1,"Values":[{"Caption":"RJ","Price":0.0}]}]',
+    price: 0,
+    totalValue: 0,
+    allowIssuingCertificate: null
+  }
+]

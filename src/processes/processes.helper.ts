@@ -4,39 +4,68 @@ import * as db from 'src/constants/db-schema.enum'
 import { CreateProcessDto } from './dto/create-process.dto'
 import { CreateProcess, ProcessesFilter, UpdateProcess } from './types'
 import { UpdateProcessDto } from './dto/update-process.dto'
+import { getDateFromString } from 'src/shared/utils'
 
 export function validateDto(createProcessDto: CreateProcessDto) {
-  const beginDate = new Date(createProcessDto.processBeginDate)
+  const beginDate = getDateFromString(createProcessDto.processBeginDate)
   if (isNaN(beginDate.getTime())) {
     throw new BadRequestException('#Data de início inválida.')
   }
 
-  if (createProcessDto.processEndDate) {
-    const endDate = new Date(createProcessDto.processEndDate)
-    if (isNaN(endDate.getTime())) {
-      throw new BadRequestException('#Data de fim inválida.')
-    }
+  const endDate = getDateFromString(createProcessDto.processEndDate)
+  if (isNaN(endDate.getTime())) {
+    throw new BadRequestException('#Data de fim inválida.')
+  }
 
-    if (endDate < beginDate) {
-      throw new BadRequestException(
-        '#Data de fim deve ser maior ou igual que a data de início.'
-      )
-    }
+  const endDateAnswers = getDateFromString(createProcessDto.processEndAnswers)
+
+  if (isNaN(endDateAnswers.getTime())) {
+    throw new BadRequestException('#Data de fim para respostas inválida.')
+  }
+  const endDateSubscription = getDateFromString(
+    createProcessDto.processEndSubscription
+  )
+
+  if (isNaN(endDateSubscription.getTime())) {
+    throw new BadRequestException('#Data de fim para inscrições inválida.')
+  }
+
+  if (endDateSubscription < beginDate) {
+    throw new BadRequestException(
+      '#Data de fim para inscrições deve ser maior ou igual que a data de início.'
+    )
+  }
+
+  if (endDateAnswers < endDateSubscription) {
+    throw new BadRequestException(
+      '#Data de fim para respostas deve ser maior ou igual que a data de fim para inscrições.'
+    )
+  }
+
+  if (endDate < endDateAnswers) {
+    throw new BadRequestException(
+      '#Data de fim deve ser maior ou igual que a data de fim para respostas.'
+    )
   }
 }
 
 export function makeProcessData(
   createProcessDto: CreateProcessDto
 ): CreateProcess {
-  const beginDate = new Date(createProcessDto.processBeginDate)
-  const endDate = createProcessDto.processEndDate
-    ? new Date(createProcessDto.processEndDate)
-    : undefined
+  const beginDate = getDateFromString(createProcessDto.processBeginDate)
+  const endDate = getDateFromString(createProcessDto.processEndDate)
+  const endDateAnswers = getDateFromString(createProcessDto.processEndAnswers)
+  const endDateSubscription = getDateFromString(
+    createProcessDto.processEndSubscription
+  )
+
   const processData = {
     [db.Processes.PROCESS_TITLE]: createProcessDto.processTitle,
     processTotvsId: createProcessDto.processTotvsId,
     processBeginDate: beginDate,
-    processEndDate: endDate
+    processEndDate: endDate,
+    processEndAnswers: endDateAnswers,
+    processEndSubscription: endDateSubscription
   }
   return processData
 }
