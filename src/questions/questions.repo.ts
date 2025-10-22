@@ -692,12 +692,24 @@ export class QuestionsRepo {
 
   async findQuestionsUsingQuestionDisplayLink(
     questionId: number
-  ): Promise<any[]> {
+  ): Promise<
+    Array<{
+      questionId: number
+      questionOrder: number
+      questionStatement: string
+      questionDisplayRule: number
+      answerDisplayRule?: number
+      answerDisplayValue?: string | number[]
+    }>
+  > {
     const questions = await this.knex(db.Tables.QUESTIONS)
       .select(
         db.Questions.QUESTION_ID,
         db.Questions.QUESTION_ORDER,
-        db.Questions.QUESTION_STATEMENT
+        db.Questions.QUESTION_STATEMENT,
+        db.Questions.QUESTION_DISPLAY_RULE,
+        db.Questions.ANSWER_DISPLEY_RULE,
+        db.Questions.ANSWER_DISPLAY_VALUE
       )
       .where(db.Questions.QUESTION_DISPLAY_LINK, questionId)
 

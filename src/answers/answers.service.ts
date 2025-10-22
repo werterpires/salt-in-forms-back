@@ -56,18 +56,18 @@ export class AnswersService {
     AnswersHelper.validateAnswer(createAnswerDto.answerValue, validValidations)
 
     // Buscar dependentes da questão
-    const sectionsUsingQuestion: any[] =
+    const sectionsUsingQuestion =
       await this.formSectionsRepo.findSectionsUsingQuestionDisplayLink(
         question.questionId
       )
 
-    const questionsUsingQuestion: any[] =
+    const questionsUsingQuestion =
       await this.questionsRepo.findQuestionsUsingQuestionDisplayLink(
         question.questionId
       )
 
     // Buscar todas as questões das seções que referenciam questionA
-    const questionsFromSections: any[] = []
+    const questionsFromSections: Question[] = []
     for (const section of sectionsUsingQuestion) {
       const sectionQuestions = await this.questionsRepo.findAllBySectionId(
         section.formSectionId

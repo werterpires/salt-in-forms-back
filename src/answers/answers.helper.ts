@@ -92,9 +92,22 @@ export class AnswersHelper {
   }
 
   static buildDependentsArray(
-    sectionsUsingQuestion: any[],
-    questionsFromSections: any[],
-    questionsUsingQuestion: any[]
+    sectionsUsingQuestion: Array<{
+      formSectionId: number
+      formSectionDisplayRule: number
+      answerDisplayRule?: number
+      answerDisplayValue?: string | number[]
+    }>,
+    questionsFromSections: Array<{
+      questionId: number
+      formSectionId: number
+    }>,
+    questionsUsingQuestion: Array<{
+      questionId: number
+      questionDisplayRule: number
+      answerDisplayRule?: number
+      answerDisplayValue?: string | number[]
+    }>
   ): QuestionDependent[] {
     const dependents: QuestionDependent[] = []
     const addedQuestionIds = new Set<number>()

@@ -265,4 +265,30 @@ export class FormSectionsRepo {
 
     return sections
   }
+
+  async findSectionsUsingQuestionDisplayLink(
+    questionId: number
+  ): Promise<
+    Array<{
+      formSectionId: number
+      formSectionOrder: number
+      formSectionName: string
+      formSectionDisplayRule: number
+      answerDisplayRule?: number
+      answerDisplayValue?: string | number[]
+    }>
+  > {
+    const sections = await this.knex(db.Tables.FORM_SECTIONS)
+      .select(
+        db.FormSections.FORM_SECTION_ID,
+        db.FormSections.FORM_SECTION_ORDER,
+        db.FormSections.FORM_SECTION_NAME,
+        db.FormSections.FORM_SECTION_DISPLAY_RULE,
+        db.FormSections.ANSWER_DISPLEY_RULE,
+        db.FormSections.ANSWER_DISPLAY_VALUE
+      )
+      .where(db.FormSections.QUESTION_DISPLAY_LINK, questionId)
+
+    return sections
+  }
 }
