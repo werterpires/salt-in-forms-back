@@ -1,4 +1,3 @@
-
 import { BadRequestException } from '@nestjs/common'
 import { VALIDATION_SPECIFICATIONS_BY_TYPE } from '../questions/validations'
 import {
@@ -16,20 +15,25 @@ export class AnswersHelper {
   private static readonly OPEN_ANSWER_VALID_VALIDATIONS_TYPES = [
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 19, 20, 21, 22, 23, 24
   ]
-  
+
   private static readonly MULTIPLE_CHOICE_VALID_VALIDATIONS_TYPES: number[] = []
   private static readonly SINGLE_CHOICE_VALID_VALIDATIONS_TYPES: number[] = []
   private static readonly LIKERT_SCALE_VALID_VALIDATIONS_TYPES: number[] = []
-  private static readonly SINGLE_CHOICE_MATRIX_VALID_VALIDATIONS_TYPES: number[] = []
-  private static readonly MULTIPLE_CHOICE_MATRIX_VALID_VALIDATIONS_TYPES: number[] = []
+  private static readonly SINGLE_CHOICE_MATRIX_VALID_VALIDATIONS_TYPES: number[] =
+    []
+  private static readonly MULTIPLE_CHOICE_MATRIX_VALID_VALIDATIONS_TYPES: number[] =
+    []
   private static readonly DATE_VALID_VALIDATIONS_TYPES: number[] = []
   private static readonly TIME_VALID_VALIDATIONS_TYPES: number[] = []
-  private static readonly MULTIPLE_RESPONSES_VALID_VALIDATIONS_TYPES: number[] = []
+  private static readonly MULTIPLE_RESPONSES_VALID_VALIDATIONS_TYPES: number[] =
+    []
   private static readonly EMAIL_VALID_VALIDATIONS_TYPES: number[] = []
   private static readonly FIELDS_VALID_VALIDATIONS_TYPES: number[] = []
 
-  static getValidValidationsTypesByQuestionType(questionType: number): number[] {
-    switch (questionType) {
+  static getValidValidationsTypesByQuestionType(
+    questionType: number
+  ): number[] {
+    switch (questionType as EQuestionsTypes) {
       case EQuestionsTypes.OPEN_ANSWER:
         return this.OPEN_ANSWER_VALID_VALIDATIONS_TYPES
       case EQuestionsTypes.MULTIPLE_CHOICE:
@@ -67,15 +71,12 @@ export class AnswersHelper {
     )
   }
 
-  static validateAnswer(
-    answerValue: string,
-    validations: Validation[]
-  ): void {
+  static validateAnswer(answerValue: string, validations: Validation[]): void {
     const errorMessages: string[] = []
 
     for (const validation of validations) {
       const spec = VALIDATION_SPECIFICATIONS_BY_TYPE[validation.validationType]
-      
+
       if (!spec) {
         continue
       }
@@ -143,9 +144,6 @@ export class AnswersHelper {
 
     return dependents
   }
-}
-
-
 
   static evaluateAnswerDisplayRule(
     answerValue: string,
@@ -166,7 +164,7 @@ export class AnswersHelper {
     const answerArray = answerValue.split('||').map((v) => v.trim())
     const displayArray = displayValueStr.split('||').map((v) => v.trim())
 
-    switch (answerDisplayRule) {
+    switch (answerDisplayRule as AnswersDisplayRules) {
       case AnswersDisplayRules.EQUALS:
         // Verifica se os arrays são iguais (mesmo conteúdo, ordem independente)
         if (answerArray.length !== displayArray.length) {
@@ -235,3 +233,4 @@ export class AnswersHelper {
       validAnswer
     }
   }
+}

@@ -1,4 +1,3 @@
-
 import { Injectable } from '@nestjs/common'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
@@ -37,7 +36,10 @@ export class AnswersRepo {
     return insertedId
   }
 
-  async updateAnswerValue(answerId: number, answerValue: string): Promise<void> {
+  async updateAnswerValue(
+    answerId: number,
+    answerValue: string
+  ): Promise<void> {
     await this.knex(db.Tables.ANSWERS)
       .where(db.Answers.ANSWER_ID, answerId)
       .update({
