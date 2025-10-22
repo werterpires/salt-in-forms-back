@@ -3,17 +3,19 @@ import { AnswersRepo } from './answers.repo'
 import { CreateAnswerDto } from './dto/create-answer.dto'
 import { FormsCandidatesService } from '../forms-candidates/forms-candidates.service'
 import { transformCreateAnswerDto } from '../forms-candidates/forms-candidates.helper'
-import { Answer, CreateAnswer } from './types'
+import { Answer, CreateAnswer, QuestionDependent } from './types'
 import { AnswersHelper } from './answers.helper'
 import { QuestionsRepo } from '../questions/questions.repo'
 import { Question, Validation } from '../questions/types'
+import { FormSectionsRepo } from '../form-sections/form-sections.repo'
 
 @Injectable()
 export class AnswersService {
   constructor(
     private readonly answersRepo: AnswersRepo,
     private readonly formsCandidatesService: FormsCandidatesService,
-    private readonly questionsRepo: QuestionsRepo
+    private readonly questionsRepo: QuestionsRepo,
+    private readonly formSectionsRepo: FormSectionsRepo
   ) {}
 
   async createAnswer(createAnswerDto: CreateAnswerDto): Promise<number> {
@@ -52,6 +54,34 @@ export class AnswersService {
       )
 
     AnswersHelper.validateAnswer(createAnswerDto.answerValue, validValidations)
+
+    // Buscar dependentes da questão
+    const sectionsUsingQuestion: any[] =
+      await this.formSectionsRepo.findSectionsUsingQuestionDisplayLink(
+        question.questionId
+      )
+
+    const questionsUsingQuestion: any[] =
+      await this.questionsRepo.findQuestionsUsingQuestionDisplayLink(
+        question.questionId
+      )
+
+    // Buscar todas as questões das seções que referenciam questionA
+    const questionsFromSections: any[] = []
+    for (const section of sectionsUsingQuestion) {
+      const sectionQuestions = await this.questionsRepo.findAllBySectionId(
+        section.formSectionId
+      )
+      questionsFromSections.push(...sectionQuestions)
+    }
+
+    const dependents: QuestionDependent[] = AnswersHelper.buildDependentsArray(
+      sectionsUsingQuestion,
+      questionsFromSections,
+      questionsUsingQuestion
+    )
+
+    // TODO: continue
 
     if (!existingAnswer) {
       const answerData: CreateAnswer = transformCreateAnswerDto(

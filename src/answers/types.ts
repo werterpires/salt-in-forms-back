@@ -24,3 +24,10 @@ export interface UpdateAnswerComment {
   answerComment: string
   answerId: number
 }
+
+export interface QuestionDependent {
+  questionId: number
+  displayRule: number
+  answerDisplayRule?: number
+  answerDisplayValue?: string | number[]
+}

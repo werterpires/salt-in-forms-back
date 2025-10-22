@@ -8,6 +8,7 @@ const services = [FormSectionsService, FormSectionsRepo]
 
 @Module({
   controllers: [FormSectionsController],
-  providers: services
+  providers: services,
+  exports: [FormSectionsRepo]
 })
 export class FormSectionsModule {}

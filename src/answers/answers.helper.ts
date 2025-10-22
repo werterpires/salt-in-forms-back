@@ -3,6 +3,7 @@ import { BadRequestException } from '@nestjs/common'
 import { VALIDATION_SPECIFICATIONS_BY_TYPE } from '../questions/validations'
 import { Validation } from '../questions/types'
 import { EQuestionsTypes } from '../constants/questions-types.enum'
+import { QuestionDependent } from './types'
 
 export class AnswersHelper {
   private static readonly OPEN_ANSWER_VALID_VALIDATIONS_TYPES = [
@@ -88,5 +89,51 @@ export class AnswersHelper {
     if (errorMessages.length > 0) {
       throw new BadRequestException(`#${errorMessages[0]}`)
     }
+  }
+
+  static buildDependentsArray(
+    sectionsUsingQuestion: any[],
+    questionsFromSections: any[],
+    questionsUsingQuestion: any[]
+  ): QuestionDependent[] {
+    const dependents: QuestionDependent[] = []
+    const addedQuestionIds = new Set<number>()
+
+    // 1) Processar seções que referenciam a questionA
+    for (const section of sectionsUsingQuestion) {
+      const sectionQuestions = questionsFromSections.filter(
+        (q) => q.formSectionId === section.formSectionId
+      )
+
+      for (const question of sectionQuestions) {
+        const dependent: QuestionDependent = {
+          questionId: question.questionId,
+          displayRule: section.formSectionDisplayRule,
+          answerDisplayRule: section.answerDisplayRule,
+          answerDisplayValue: section.answerDisplayValue
+        }
+
+        dependents.push(dependent)
+        addedQuestionIds.add(question.questionId)
+      }
+    }
+
+    // 2) Processar questões que referenciam diretamente a questionA
+    for (const question of questionsUsingQuestion) {
+      // Verificar se já não está no array
+      if (!addedQuestionIds.has(question.questionId)) {
+        const dependent: QuestionDependent = {
+          questionId: question.questionId,
+          displayRule: question.questionDisplayRule,
+          answerDisplayRule: question.answerDisplayRule,
+          answerDisplayValue: question.answerDisplayValue
+        }
+
+        dependents.push(dependent)
+        addedQuestionIds.add(question.questionId)
+      }
+    }
+
+    return dependents
   }
 }
