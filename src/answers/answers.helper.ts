@@ -9,6 +9,8 @@ import {
 import { EQuestionsTypes } from '../constants/questions-types.enum'
 import { QuestionDependent } from './types'
 import { FormSectionWithDisplayRules } from '../form-sections/types'
+import { AnswersDisplayRules } from '../constants/answer_display_rule'
+import { FormSectionDisplayRules } from '../constants/form-section-display-rules.const'
 
 export class AnswersHelper {
   private static readonly OPEN_ANSWER_VALID_VALIDATIONS_TYPES = [
@@ -142,3 +144,94 @@ export class AnswersHelper {
     return dependents
   }
 }
+
+
+
+  static evaluateAnswerDisplayRule(
+    answerValue: string,
+    answerDisplayRule: number,
+    answerDisplayValue: string | number[] | undefined
+  ): boolean {
+    if (!answerDisplayValue) {
+      return false
+    }
+
+    // Converter answerDisplayValue para string se for array
+    const displayValueStr =
+      typeof answerDisplayValue === 'string'
+        ? answerDisplayValue
+        : answerDisplayValue.join('||')
+
+    // Converter strings em arrays baseados em ||
+    const answerArray = answerValue.split('||').map((v) => v.trim())
+    const displayArray = displayValueStr.split('||').map((v) => v.trim())
+
+    switch (answerDisplayRule) {
+      case AnswersDisplayRules.EQUALS:
+        // Verifica se os arrays são iguais (mesmo conteúdo, ordem independente)
+        if (answerArray.length !== displayArray.length) {
+          return false
+        }
+        return answerArray.every((val) => displayArray.includes(val))
+
+      case AnswersDisplayRules.MORE_THAN:
+        return parseFloat(answerValue) > parseFloat(displayValueStr)
+
+      case AnswersDisplayRules.LESS_THAN:
+        return parseFloat(answerValue) < parseFloat(displayValueStr)
+
+      case AnswersDisplayRules.MORE_THAN_OR_EQUAL:
+        return parseFloat(answerValue) >= parseFloat(displayValueStr)
+
+      case AnswersDisplayRules.LESS_THAN_OR_EQUAL:
+        return parseFloat(answerValue) <= parseFloat(displayValueStr)
+
+      case AnswersDisplayRules.INCLUDES:
+        // Verifica se answerArray inclui algum elemento de displayArray
+        return displayArray.some((val) => answerArray.includes(val))
+
+      case AnswersDisplayRules.EXCLUDES:
+        // Verifica se answerArray não inclui nenhum elemento de displayArray
+        return !displayArray.some((val) => answerArray.includes(val))
+
+      default:
+        return false
+    }
+  }
+
+  static processDependentValidity(
+    answerValue: string,
+    dependent: QuestionDependent
+  ): { questionId: number; shouldProcess: boolean; validAnswer: boolean } {
+    // Se displayRule for ALWAYS_SHOW (1), não processa
+    if (dependent.displayRule === FormSectionDisplayRules.ALWAYS_SHOW) {
+      return {
+        questionId: dependent.questionId,
+        shouldProcess: false,
+        validAnswer: true
+      }
+    }
+
+    // Avaliar a answerDisplayRule
+    let validAnswer = false
+    if (dependent.answerDisplayRule) {
+      validAnswer = this.evaluateAnswerDisplayRule(
+        answerValue,
+        dependent.answerDisplayRule,
+        dependent.answerDisplayValue
+      )
+    }
+
+    // Aplicar a displayRule
+    if (dependent.displayRule === FormSectionDisplayRules.DONT_SHOW_IF) {
+      // Inverte o booleano
+      validAnswer = !validAnswer
+    }
+    // Se displayRule for SHOW_IF (2), mantém como está
+
+    return {
+      questionId: dependent.questionId,
+      shouldProcess: true,
+      validAnswer
+    }
+  }

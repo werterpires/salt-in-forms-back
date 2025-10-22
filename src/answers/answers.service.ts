@@ -3,7 +3,12 @@ import { AnswersRepo } from './answers.repo'
 import { CreateAnswerDto } from './dto/create-answer.dto'
 import { FormsCandidatesService } from '../forms-candidates/forms-candidates.service'
 import { transformCreateAnswerDto } from '../forms-candidates/forms-candidates.helper'
-import { Answer, CreateAnswer, QuestionDependent } from './types'
+import {
+  Answer,
+  CreateAnswer,
+  QuestionDependent,
+  DependentProcessingResult
+} from './types'
 import { AnswersHelper } from './answers.helper'
 import { QuestionsRepo } from '../questions/questions.repo'
 import { Question, Validation } from '../questions/types'
@@ -81,21 +86,94 @@ export class AnswersService {
       questionsUsingQuestion
     )
 
-    // TODO: continue
+    // Processar dependentes e salvar tudo em uma transação
+    const dependentResults: DependentProcessingResult[] =
+      await this.answersRepo.knex.transaction(async (trx) => {
+        // 1. Salvar ou atualizar a resposta principal
+        let answerId: number
+        if (!existingAnswer) {
+          const answerData: CreateAnswer = transformCreateAnswerDto(
+            createAnswerDto,
+            formCandidateId
+          )
+          answerId = await this.answersRepo.insertAnswerInTransaction(
+            answerData,
+            trx
+          )
+        } else {
+          await this.answersRepo.updateAnswerValueInTransaction(
+            existingAnswer.answerId,
+            createAnswerDto.answerValue,
+            trx
+          )
+          answerId = existingAnswer.answerId
+        }
 
-    if (!existingAnswer) {
-      const answerData: CreateAnswer = transformCreateAnswerDto(
-        createAnswerDto,
-        formCandidateId
-      )
-      return await this.answersRepo.insertAnswer(answerData)
-    }
+        // 2. Processar dependentes
+        const results: DependentProcessingResult[] = []
 
-    await this.answersRepo.updateAnswerValue(
-      existingAnswer.answerId,
-      createAnswerDto.answerValue
-    )
+        if (dependents.length > 0) {
+          // Avaliar a validade de cada dependente
+          const dependentsToProcess = dependents
+            .map((dep) =>
+              AnswersHelper.processDependentValidity(
+                createAnswerDto.answerValue,
+                dep
+              )
+            )
+            .filter((result) => result.shouldProcess)
 
-    return existingAnswer.answerId
+          if (dependentsToProcess.length > 0) {
+            // Buscar answers existentes dos dependentes
+            const questionIds = dependentsToProcess.map((d) => d.questionId)
+            const existingDependentAnswers =
+              await this.answersRepo.findAnswersByQuestionsAndFormCandidate(
+                questionIds,
+                formCandidateId,
+                trx
+              )
+
+            // Criar mapa de answers existentes
+            const answersMap = new Map<number, Answer>()
+            existingDependentAnswers.forEach((answer) => {
+              answersMap.set(answer.questionId, answer)
+            })
+
+            // Processar cada dependente
+            for (const depResult of dependentsToProcess) {
+              const existingDepAnswer = answersMap.get(depResult.questionId)
+
+              if (existingDepAnswer) {
+                // Atualizar validAnswer se necessário
+                if (existingDepAnswer.validAnswer !== depResult.validAnswer) {
+                  await this.answersRepo.updateAnswerValidAnswer(
+                    existingDepAnswer.answerId,
+                    depResult.validAnswer,
+                    trx
+                  )
+                }
+              } else {
+                // Criar nova answer
+                const newAnswer: CreateAnswer = {
+                  questionId: depResult.questionId,
+                  formCandidateId: formCandidateId,
+                  answerValue: '',
+                  validAnswer: depResult.validAnswer
+                }
+                await this.answersRepo.insertAnswerInTransaction(newAnswer, trx)
+              }
+
+              results.push({
+                questionId: depResult.questionId,
+                validAnswer: depResult.validAnswer
+              })
+            }
+          }
+        }
+
+        return results
+      })
+
+    return existingAnswer ? existingAnswer.answerId : 0
   }
 }

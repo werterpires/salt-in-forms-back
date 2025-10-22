@@ -31,3 +31,8 @@ export interface QuestionDependent {
   answerDisplayRule?: number
   answerDisplayValue?: string | number[]
 }
+
+export interface DependentProcessingResult {
+  questionId: number
+  validAnswer: boolean
+}
