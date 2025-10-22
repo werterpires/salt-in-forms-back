@@ -3,12 +3,12 @@ import { AnswersService } from './answers.service'
 import { AnswersController } from './answers.controller'
 import { AnswersRepo } from './answers.repo'
 import { FormsCandidatesModule } from '../forms-candidates/forms-candidates.module'
-import { QuestionsRepo } from '../questions/questions.repo'
+import { QuestionsModule } from '../questions/questions.module'
 
 @Module({
-  imports: [FormsCandidatesModule],
+  imports: [FormsCandidatesModule, QuestionsModule],
   controllers: [AnswersController],
-  providers: [AnswersService, AnswersRepo, QuestionsRepo],
+  providers: [AnswersService, AnswersRepo],
   exports: [AnswersService]
 })
 export class AnswersModule {}

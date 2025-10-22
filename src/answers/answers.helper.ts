@@ -2,6 +2,7 @@
 import { BadRequestException } from '@nestjs/common'
 import { VALIDATION_SPECIFICATIONS_BY_TYPE } from '../questions/validations'
 import { Validation } from '../questions/types'
+import { EQuestionsTypes } from '../constants/questions-types.enum'
 
 export class AnswersHelper {
   private static readonly OPEN_ANSWER_VALID_VALIDATIONS_TYPES = [
@@ -21,27 +22,27 @@ export class AnswersHelper {
 
   static getValidValidationsTypesByQuestionType(questionType: number): number[] {
     switch (questionType) {
-      case 1: // OPEN_ANSWER
+      case EQuestionsTypes.OPEN_ANSWER:
         return this.OPEN_ANSWER_VALID_VALIDATIONS_TYPES
-      case 2: // MULTIPLE_CHOICE
+      case EQuestionsTypes.MULTIPLE_CHOICE:
         return this.MULTIPLE_CHOICE_VALID_VALIDATIONS_TYPES
-      case 3: // SINGLE_CHOICE
+      case EQuestionsTypes.SINGLE_CHOICE:
         return this.SINGLE_CHOICE_VALID_VALIDATIONS_TYPES
-      case 4: // LIKERT_SCALE
+      case EQuestionsTypes.LIKERT_SCALE:
         return this.LIKERT_SCALE_VALID_VALIDATIONS_TYPES
-      case 5: // SINGLE_CHOICE_MATRIX
+      case EQuestionsTypes.SINGLE_CHOICE_MATRIX:
         return this.SINGLE_CHOICE_MATRIX_VALID_VALIDATIONS_TYPES
-      case 6: // MULTIPLE_CHOICE_MATRIX
+      case EQuestionsTypes.MULTIPLE_CHOICE_MATRIX:
         return this.MULTIPLE_CHOICE_MATRIX_VALID_VALIDATIONS_TYPES
-      case 7: // DATE
+      case EQuestionsTypes.DATE:
         return this.DATE_VALID_VALIDATIONS_TYPES
-      case 8: // TIME
+      case EQuestionsTypes.TIME:
         return this.TIME_VALID_VALIDATIONS_TYPES
-      case 9: // MULTIPLE_RESPONSES
+      case EQuestionsTypes.MULTIPLE_RESPONSES:
         return this.MULTIPLE_RESPONSES_VALID_VALIDATIONS_TYPES
-      case 10: // EMAIL
+      case EQuestionsTypes.EMAIL:
         return this.EMAIL_VALID_VALIDATIONS_TYPES
-      case 11: // FIELDS
+      case EQuestionsTypes.FIELDS:
         return this.FIELDS_VALID_VALIDATIONS_TYPES
       default:
         return []
