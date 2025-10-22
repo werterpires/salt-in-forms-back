@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 import { AnswersRepo } from './answers.repo'
 import { CreateAnswerDto } from './dto/create-answer.dto'
 import { FormsCandidatesService } from '../forms-candidates/forms-candidates.service'
@@ -37,7 +37,7 @@ export class AnswersService {
       )
 
     if (existingAnswer && !existingAnswer.validAnswer) {
-      throw new Error(
+      throw new BadRequestException(
         '#Essa questão não está habilitada para respostas desse usuário.'
       )
     }
@@ -47,7 +47,7 @@ export class AnswersService {
     )
 
     if (!question) {
-      throw new Error('#Pergunta não encontrada.')
+      throw new BadRequestException('#Pergunta não encontrada.')
     }
 
     const questionValidations: Validation[] =
