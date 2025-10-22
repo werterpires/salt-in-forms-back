@@ -29,6 +29,7 @@ export class AnswersService {
         createAnswerDto.accessCode
       )
 
+    // Primeira validação: verificar se já existe answer e se está habilitada
     const existingAnswer: Answer | undefined =
       await this.answersRepo.findAnswerByQuestionAndFormCandidate(
         createAnswerDto.questionId,
@@ -37,7 +38,7 @@ export class AnswersService {
 
     if (existingAnswer && !existingAnswer.validAnswer) {
       throw new Error(
-        '#Essa pergunta não está habilitada para o candidato atual.'
+        '#Essa questão não está habilitada para respostas desse usuário.'
       )
     }
 
