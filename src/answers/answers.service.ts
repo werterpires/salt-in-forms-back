@@ -23,7 +23,9 @@ export class AnswersService {
     private readonly formSectionsRepo: FormSectionsRepo
   ) {}
 
-  async createAnswer(createAnswerDto: CreateAnswerDto): Promise<number> {
+  async createAnswer(
+    createAnswerDto: CreateAnswerDto
+  ): Promise<DependentProcessingResult[]> {
     const formCandidateId: number =
       await this.formsCandidatesService.validateAccessCodeAndGetFormCandidateId(
         createAnswerDto.accessCode
@@ -88,7 +90,7 @@ export class AnswersService {
 
     // Processar dependentes e salvar tudo em uma transação
 
-    await this.answersRepo.knex.transaction(async (trx) => {
+    const response = await this.answersRepo.knex.transaction(async (trx) => {
       // 1. Salvar ou atualizar a resposta principal
       if (!existingAnswer) {
         const answerData: CreateAnswer = transformCreateAnswerDto(
@@ -107,68 +109,68 @@ export class AnswersService {
       // 2. Processar dependentes
       const results: DependentProcessingResult[] = []
 
-      if (dependents.length > 0) {
-        // Avaliar a validade de cada dependente
-        const dependentsToProcess = dependents
-          .map((dep) =>
-            AnswersHelper.processDependentValidity(
-              createAnswerDto.answerValue,
-              dep
-            )
+      // Avaliar a validade de cada dependente
+      const dependentsToProcess = dependents
+        .map((dep) =>
+          AnswersHelper.processDependentValidity(
+            createAnswerDto.answerValue,
+            dep
           )
-          .filter((result) => result.shouldProcess)
+        )
+        .filter((result) => result.shouldProcess)
 
-        if (dependentsToProcess.length > 0) {
-          // Buscar answers existentes dos dependentes
-          const questionIds = dependentsToProcess.map((d) => d.questionId)
-          const existingDependentAnswers =
-            await this.answersRepo.findAnswersByQuestionsAndFormCandidate(
-              questionIds,
-              formCandidateId,
+      if (dependentsToProcess.length <= 0) {
+        return results
+      }
+
+      // Buscar answers existentes dos dependentes
+      const questionIds = dependentsToProcess.map((d) => d.questionId)
+      const existingDependentAnswers =
+        await this.answersRepo.findAnswersByQuestionsAndFormCandidate(
+          questionIds,
+          formCandidateId,
+          trx
+        )
+
+      // Criar mapa de answers existentes
+      const answersMap = new Map<number, Answer>()
+      existingDependentAnswers.forEach((answer) => {
+        answersMap.set(answer.questionId, answer)
+      })
+
+      // Processar cada dependente
+      for (const depResult of dependentsToProcess) {
+        const existingDepAnswer = answersMap.get(depResult.questionId)
+
+        if (existingDepAnswer) {
+          // Atualizar validAnswer se necessário
+          if (existingDepAnswer.validAnswer !== depResult.validAnswer) {
+            await this.answersRepo.updateAnswerValidAnswer(
+              existingDepAnswer.answerId,
+              depResult.validAnswer,
               trx
             )
-
-          // Criar mapa de answers existentes
-          const answersMap = new Map<number, Answer>()
-          existingDependentAnswers.forEach((answer) => {
-            answersMap.set(answer.questionId, answer)
-          })
-
-          // Processar cada dependente
-          for (const depResult of dependentsToProcess) {
-            const existingDepAnswer = answersMap.get(depResult.questionId)
-
-            if (existingDepAnswer) {
-              // Atualizar validAnswer se necessário
-              if (existingDepAnswer.validAnswer !== depResult.validAnswer) {
-                await this.answersRepo.updateAnswerValidAnswer(
-                  existingDepAnswer.answerId,
-                  depResult.validAnswer,
-                  trx
-                )
-              }
-            } else {
-              // Criar nova answer
-              const newAnswer: CreateAnswer = {
-                questionId: depResult.questionId,
-                formCandidateId: formCandidateId,
-                answerValue: '',
-                validAnswer: depResult.validAnswer
-              }
-              await this.answersRepo.insertAnswerInTransaction(newAnswer, trx)
-            }
-
-            results.push({
-              questionId: depResult.questionId,
-              validAnswer: depResult.validAnswer
-            })
           }
+        } else {
+          // Criar nova answer
+          const newAnswer: CreateAnswer = {
+            questionId: depResult.questionId,
+            formCandidateId: formCandidateId,
+            answerValue: '',
+            validAnswer: depResult.validAnswer
+          }
+          await this.answersRepo.insertAnswerInTransaction(newAnswer, trx)
         }
+
+        results.push({
+          questionId: depResult.questionId,
+          validAnswer: depResult.validAnswer
+        })
       }
 
       return results
     })
 
-    return existingAnswer ? existingAnswer.answerId : 0
+    return response
   }
 }

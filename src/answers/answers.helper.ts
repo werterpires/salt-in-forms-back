@@ -202,7 +202,10 @@ export class AnswersHelper {
     dependent: QuestionDependent
   ): { questionId: number; shouldProcess: boolean; validAnswer: boolean } {
     // Se displayRule for ALWAYS_SHOW (1), não processa
-    if (dependent.displayRule === FormSectionDisplayRules.ALWAYS_SHOW) {
+    if (
+      (dependent.displayRule as FormSectionDisplayRules) ===
+      FormSectionDisplayRules.ALWAYS_SHOW
+    ) {
       return {
         questionId: dependent.questionId,
         shouldProcess: false,
@@ -221,7 +224,10 @@ export class AnswersHelper {
     }
 
     // Aplicar a displayRule
-    if (dependent.displayRule === FormSectionDisplayRules.DONT_SHOW_IF) {
+    if (
+      (dependent.displayRule as FormSectionDisplayRules) ===
+      FormSectionDisplayRules.DONT_SHOW_IF
+    ) {
       // Inverte o booleano
       validAnswer = !validAnswer
     }

@@ -28,6 +28,7 @@ import { getImportSummaryEmailTemplate } from './email-templates/import-summary.
 import { Term } from 'src/terms/types'
 import { FormsCandidatesService } from 'src/forms-candidates/forms-candidates.service'
 import { Process } from 'src/processes/types'
+import { AnswerWithoutId } from 'src/answers/types'
 
 @Injectable()
 export class CandidatesService {
@@ -321,16 +322,12 @@ export class CandidatesService {
             formCandidateId
           )
 
-        const answer = existingAnswer
+        const answer: AnswerWithoutId = existingAnswer
           ? {
-              questionId: existingAnswer.questionId,
-              formCandidateId: existingAnswer.formCandidateId,
               answerValue: existingAnswer.answerValue,
               validAnswer: existingAnswer.validAnswer
             }
           : {
-              questionId: question.questionId,
-              formCandidateId: formCandidateId,
               answerValue: null,
               validAnswer: true
             }
