@@ -6,10 +6,11 @@ import {
   QuestionBasic
 } from '../questions/types'
 import { EQuestionsTypes } from '../constants/questions-types.enum'
-import { QuestionDependent } from './types'
+import { QuestionDependent, Answer } from './types'
 import { FormSectionWithDisplayRules } from '../form-sections/types'
 import { AnswersDisplayRules } from '../constants/answer_display_rule'
 import { FormSectionDisplayRules } from '../constants/form-section-display-rules.const'
+import { EncryptionService } from '../shared/utils-module/encryption/encryption.service'
 
 export class AnswersHelper {
   private static readonly OPEN_ANSWER_VALID_VALIDATIONS_TYPES = [
@@ -238,5 +239,52 @@ export class AnswersHelper {
       shouldProcess: true,
       validAnswer
     }
+  }
+
+  static encryptAnswerValue(
+    answerValue: string,
+    encryptionService: EncryptionService
+  ): string {
+    return encryptionService.encrypt(answerValue)
+  }
+
+  static decryptAnswerValue(
+    encryptedValue: string,
+    encryptionService: EncryptionService
+  ): string {
+    return encryptionService.decrypt(encryptedValue)
+  }
+
+  static decryptAnswer(
+    answer: Answer | undefined,
+    encryptionService: EncryptionService
+  ): Answer | undefined {
+    if (!answer) {
+      return undefined
+    }
+
+    if (answer.answerValue) {
+      return {
+        ...answer,
+        answerValue: this.decryptAnswerValue(
+          answer.answerValue,
+          encryptionService
+        )
+      }
+    }
+
+    return answer
+  }
+
+  static decryptAnswers(
+    answers: Answer[],
+    encryptionService: EncryptionService
+  ): Answer[] {
+    return answers.map((answer) => ({
+      ...answer,
+      answerValue: answer.answerValue
+        ? this.decryptAnswerValue(answer.answerValue, encryptionService)
+        : answer.answerValue
+    }))
   }
 }

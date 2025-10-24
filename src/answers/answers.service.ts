@@ -34,11 +34,16 @@ export class AnswersService {
       )
 
     // Primeira validação: verificar se já existe answer e se está habilitada
-    const existingAnswer: Answer | undefined =
+    const existingAnswerEncrypted: Answer | undefined =
       await this.answersRepo.findAnswerByQuestionAndFormCandidate(
         createAnswerDto.questionId,
         formCandidateId
       )
+
+    const existingAnswer: Answer | undefined = AnswersHelper.decryptAnswer(
+      existingAnswerEncrypted,
+      this.encryptionService
+    )
 
     if (existingAnswer && !existingAnswer.validAnswer) {
       throw new BadRequestException(
@@ -93,9 +98,10 @@ export class AnswersService {
     // Processar dependentes e salvar tudo em uma transação
 
     const response = await this.answersRepo.knex.transaction(async (trx) => {
-      // Criptografar o answerValue
-      const encryptedAnswerValue = this.encryptionService.encrypt(
-        createAnswerDto.answerValue
+      // Criptografar o answerValue usando helper
+      const encryptedAnswerValue: string = AnswersHelper.encryptAnswerValue(
+        createAnswerDto.answerValue,
+        this.encryptionService
       )
 
       // 1. Salvar ou atualizar a resposta principal
@@ -133,12 +139,17 @@ export class AnswersService {
 
       // Buscar answers existentes dos dependentes
       const questionIds = dependentsToProcess.map((d) => d.questionId)
-      const existingDependentAnswers =
+      const existingDependentAnswersEncrypted: Answer[] =
         await this.answersRepo.findAnswersByQuestionsAndFormCandidate(
           questionIds,
           formCandidateId,
           trx
         )
+
+      const existingDependentAnswers: Answer[] = AnswersHelper.decryptAnswers(
+        existingDependentAnswersEncrypted,
+        this.encryptionService
+      )
 
       // Criar mapa de answers existentes
       const answersMap = new Map<number, Answer>()

@@ -3,20 +3,16 @@ import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
 import * as db from '../constants/db-schema.enum'
 import { Answer, CreateAnswer } from './types'
-import { EncryptionService } from '../shared/utils-module/encryption/encryption.service'
 
 @Injectable()
 export class AnswersRepo {
-  constructor(
-    @InjectConnection('knexx') public readonly knex: Knex,
-    private readonly encryptionService: EncryptionService
-  ) {}
+  constructor(@InjectConnection('knexx') public readonly knex: Knex) {}
 
   async findAnswerByQuestionAndFormCandidate(
     questionId: number,
     formCandidateId: number
   ): Promise<Answer | undefined> {
-    const answer = await this.knex(db.Tables.ANSWERS)
+    return this.knex(db.Tables.ANSWERS)
       .select(
         db.Answers.ANSWER_ID,
         db.Answers.QUESTION_ID,
@@ -27,12 +23,6 @@ export class AnswersRepo {
       .where(db.Answers.QUESTION_ID, questionId)
       .where(db.Answers.FORM_CANDIDATE_ID, formCandidateId)
       .first()
-
-    if (answer && answer.answerValue) {
-      answer.answerValue = this.encryptionService.decrypt(answer.answerValue)
-    }
-
-    return answer
   }
 
   async insertAnswer(answer: CreateAnswer): Promise<number> {
@@ -62,7 +52,7 @@ export class AnswersRepo {
     formCandidateId: number,
     trx?: Knex.Transaction
   ): Promise<Answer[]> {
-    const answers = await (trx || this.knex)(db.Tables.ANSWERS)
+    return (trx || this.knex)(db.Tables.ANSWERS)
       .select(
         db.Answers.ANSWER_ID,
         db.Answers.QUESTION_ID,
@@ -72,13 +62,6 @@ export class AnswersRepo {
       )
       .whereIn(db.Answers.QUESTION_ID, questionIds)
       .where(db.Answers.FORM_CANDIDATE_ID, formCandidateId)
-
-    return answers.map((answer) => ({
-      ...answer,
-      answerValue: answer.answerValue
-        ? this.encryptionService.decrypt(answer.answerValue)
-        : answer.answerValue
-    }))
   }
 
   async updateAnswerValidAnswer(
