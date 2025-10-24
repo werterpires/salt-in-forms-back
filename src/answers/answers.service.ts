@@ -13,6 +13,7 @@ import { AnswersHelper } from './answers.helper'
 import { QuestionsRepo } from '../questions/questions.repo'
 import { Question, Validation } from '../questions/types'
 import { FormSectionsRepo } from '../form-sections/form-sections.repo'
+import { EncryptionService } from '../shared/utils-module/encryption/encryption.service'
 
 @Injectable()
 export class AnswersService {
@@ -20,7 +21,8 @@ export class AnswersService {
     private readonly answersRepo: AnswersRepo,
     private readonly formsCandidatesService: FormsCandidatesService,
     private readonly questionsRepo: QuestionsRepo,
-    private readonly formSectionsRepo: FormSectionsRepo
+    private readonly formSectionsRepo: FormSectionsRepo,
+    private readonly encryptionService: EncryptionService
   ) {}
 
   async createAnswer(
@@ -91,17 +93,23 @@ export class AnswersService {
     // Processar dependentes e salvar tudo em uma transação
 
     const response = await this.answersRepo.knex.transaction(async (trx) => {
+      // Criptografar o answerValue
+      const encryptedAnswerValue = this.encryptionService.encrypt(
+        createAnswerDto.answerValue
+      )
+
       // 1. Salvar ou atualizar a resposta principal
       if (!existingAnswer) {
         const answerData: CreateAnswer = transformCreateAnswerDto(
           createAnswerDto,
           formCandidateId
         )
+        answerData.answerValue = encryptedAnswerValue
         await this.answersRepo.insertAnswerInTransaction(answerData, trx)
       } else {
         await this.answersRepo.updateAnswerValueInTransaction(
           existingAnswer.answerId,
-          createAnswerDto.answerValue,
+          encryptedAnswerValue,
           trx
         )
       }
