@@ -20,10 +20,10 @@ import {
   createAccessCode,
   transformApiItemToCandidate,
   prepareCandidateEmailData,
-  getFrontendUrl
+  getFrontendUrl,
+  decryptAnswer
 } from './candidates.helper'
 import { FormCandidateStatus } from 'src/constants/form-candidate-status.const'
-import { AnswersHelper } from 'src/answers/answers.helper'
 import { getCandidateFormAccessEmailTemplate } from './email-templates/candidate-form-access.template'
 import { getImportSummaryEmailTemplate } from './email-templates/import-summary.template'
 import { Term } from 'src/terms/types'
@@ -324,12 +324,10 @@ export class CandidatesService {
           )
 
         // Descriptografar answer se existir
-        const existingAnswer = existingAnswerEncrypted
-          ? AnswersHelper.decryptAnswer(
-              existingAnswerEncrypted,
-              this.encryptionService
-            )
-          : undefined
+        const existingAnswer = decryptAnswer(
+          existingAnswerEncrypted,
+          this.encryptionService
+        )
 
         const answer: AnswerWithoutId = existingAnswer
           ? {
