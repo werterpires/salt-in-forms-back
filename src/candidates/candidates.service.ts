@@ -23,6 +23,7 @@ import {
   getFrontendUrl
 } from './candidates.helper'
 import { FormCandidateStatus } from 'src/constants/form-candidate-status.const'
+import { AnswersHelper } from 'src/answers/answers.helper'
 import { getCandidateFormAccessEmailTemplate } from './email-templates/candidate-form-access.template'
 import { getImportSummaryEmailTemplate } from './email-templates/import-summary.template'
 import { Term } from 'src/terms/types'
@@ -316,11 +317,19 @@ export class CandidatesService {
           )
 
         // Buscar answer existente ou criar uma fake sem answerId
-        const existingAnswer =
+        const existingAnswerEncrypted =
           await this.candidatesRepo.findAnswerByQuestionAndFormCandidate(
             question.questionId,
             formCandidateId
           )
+
+        // Descriptografar answer se existir
+        const existingAnswer = existingAnswerEncrypted
+          ? AnswersHelper.decryptAnswer(
+              existingAnswerEncrypted,
+              this.encryptionService
+            )
+          : undefined
 
         const answer: AnswerWithoutId = existingAnswer
           ? {
