@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { FormsCandidatesRepo } from './forms-candidates.repo'
 import { SendPulseEmailService } from '../shared/utils-module/email-sender/sendpulse-email.service'
 import { EncryptionService } from '../shared/utils-module/encryption/encryption.service'
@@ -32,7 +32,7 @@ export class FormsCandidatesService {
       await this.formsCandidatesRepo.findFormCandidateByAccessCode(accessCode)
 
     if (!formCandidate) {
-      throw new Error('#Código de acesso não encontrado.')
+      throw new NotFoundException('#Código de acesso não encontrado.')
     }
 
     const createdAt = extractDateFromFixed(

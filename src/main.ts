@@ -7,8 +7,8 @@ import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.int
 const corsOptions: CorsOptions = {
   origin: (process.env.CORS_ORIGINS || '')
     .split(',')
-    .map(origin => origin.trim()),
-};
+    .map((origin) => origin.trim())
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
