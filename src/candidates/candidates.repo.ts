@@ -6,6 +6,7 @@ import { Process } from 'src/processes/types'
 import { CreateCandidate, CreateFormCandidate, FormCandidate } from './types'
 import { ERoles } from '../constants/roles.const'
 import { Term } from 'src/terms/types'
+import { Answer } from 'src/answers/types'
 
 @Injectable()
 export class CandidatesRepo {
@@ -540,7 +541,7 @@ export class CandidatesRepo {
   async findAnswerByQuestionAndFormCandidate(
     questionId: number,
     formCandidateId: number
-  ) {
+  ): Promise<Answer> {
     return await this.knex(db.Tables.ANSWERS)
       .select(
         db.Answers.QUESTION_ID,

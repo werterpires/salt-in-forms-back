@@ -205,9 +205,9 @@ export function getFrontendUrl(): string {
 export function decryptAnswer<T extends { answerValue: string | null }>(
   answer: T | undefined,
   encryptionService: { decrypt: (value: string) => string }
-): T | undefined {
+): T | null {
   if (!answer) {
-    return undefined
+    return null
   }
 
   if (answer.answerValue) {
