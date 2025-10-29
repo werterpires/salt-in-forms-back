@@ -14,8 +14,6 @@ export interface Answer {
 }
 
 export interface AnswerWithoutId {
-  questionId: number
-  formCandidateId: number
   answerValue: string | null
   validAnswer: boolean
 }

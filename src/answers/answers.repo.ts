@@ -52,7 +52,7 @@ export class AnswersRepo {
     formCandidateId: number,
     trx?: Knex.Transaction
   ): Promise<Answer[]> {
-    const query = (trx || this.knex)(db.Tables.ANSWERS)
+    return (trx || this.knex)(db.Tables.ANSWERS)
       .select(
         db.Answers.ANSWER_ID,
         db.Answers.QUESTION_ID,
@@ -62,8 +62,6 @@ export class AnswersRepo {
       )
       .whereIn(db.Answers.QUESTION_ID, questionIds)
       .where(db.Answers.FORM_CANDIDATE_ID, formCandidateId)
-
-    return query
   }
 
   async updateAnswerValidAnswer(

@@ -196,6 +196,31 @@ export function getFrontendUrl(): string {
 }
 
 /**
+ * Descriptografa um answer se ele existir
+ *
+ * @param answer - Answer criptografada ou undefined
+ * @param encryptionService - Serviço de criptografia
+ * @returns Answer descriptografada ou undefined
+ */
+export function decryptAnswer<T extends { answerValue: string | null }>(
+  answer: T | undefined,
+  encryptionService: { decrypt: (value: string) => string }
+): T | null {
+  if (!answer) {
+    return null
+  }
+
+  if (answer.answerValue) {
+    return {
+      ...answer,
+      answerValue: encryptionService.decrypt(answer.answerValue)
+    }
+  }
+
+  return answer
+}
+
+/**
  * Prepara dados de email para candidato do tipo "candidate"
  *
  * @param candidateName - Nome criptografado

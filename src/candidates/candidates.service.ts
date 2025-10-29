@@ -20,7 +20,8 @@ import {
   createAccessCode,
   transformApiItemToCandidate,
   prepareCandidateEmailData,
-  getFrontendUrl
+  getFrontendUrl,
+  decryptAnswer
 } from './candidates.helper'
 import { FormCandidateStatus } from 'src/constants/form-candidate-status.const'
 import { getCandidateFormAccessEmailTemplate } from './email-templates/candidate-form-access.template'
@@ -28,6 +29,7 @@ import { getImportSummaryEmailTemplate } from './email-templates/import-summary.
 import { Term } from 'src/terms/types'
 import { FormsCandidatesService } from 'src/forms-candidates/forms-candidates.service'
 import { Process } from 'src/processes/types'
+import { AnswerWithoutId } from 'src/answers/types'
 
 @Injectable()
 export class CandidatesService {
@@ -315,22 +317,24 @@ export class CandidatesService {
           )
 
         // Buscar answer existente ou criar uma fake sem answerId
-        const existingAnswer =
+        const existingAnswerEncrypted =
           await this.candidatesRepo.findAnswerByQuestionAndFormCandidate(
             question.questionId,
             formCandidateId
           )
 
-        const answer = existingAnswer
+        // Descriptografar answer se existir
+        const existingAnswer = decryptAnswer(
+          existingAnswerEncrypted,
+          this.encryptionService
+        )
+
+        const answer: AnswerWithoutId = existingAnswer
           ? {
-              questionId: existingAnswer.questionId,
-              formCandidateId: existingAnswer.formCandidateId,
               answerValue: existingAnswer.answerValue,
               validAnswer: existingAnswer.validAnswer
             }
           : {
-              questionId: question.questionId,
-              formCandidateId: formCandidateId,
               answerValue: null,
               validAnswer: true
             }
