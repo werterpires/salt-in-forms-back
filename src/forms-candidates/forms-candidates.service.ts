@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException
+} from '@nestjs/common'
 import { FormsCandidatesRepo } from './forms-candidates.repo'
 import { SendPulseEmailService } from '../shared/utils-module/email-sender/sendpulse-email.service'
 import { EncryptionService } from '../shared/utils-module/encryption/encryption.service'
@@ -56,7 +60,7 @@ export class FormsCandidatesService {
         newAccessCode
       )
 
-      throw new Error(
+      throw new BadRequestException(
         '#O período de acesso expirou. Um novo código foi gerado e enviado por email.'
       )
     }
