@@ -1,4 +1,3 @@
-
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import { EmailSender } from './email-sender.interface'
 import { SendPulseService } from '../sendpulse/sendpulse.service'
@@ -37,7 +36,11 @@ export class SendPulseEmailService implements EmailSender {
     this.emailSubject = process.env.EMAIL_SUBJECT
   }
 
-  async sendEmail(recipientEmail: string, recipientName: string, body: string): Promise<void> {
+  async sendEmail(
+    recipientEmail: string,
+    recipientName: string,
+    body: string
+  ): Promise<void> {
     try {
       this.logger.log(`Enviando e-mail para ${recipientEmail}`)
 
