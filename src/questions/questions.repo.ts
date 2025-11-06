@@ -157,11 +157,7 @@ export class QuestionsRepo {
         question.answerDisplayValue &&
         typeof question.answerDisplayValue === 'string'
       ) {
-        question.answerDisplayValue = question.answerDisplayValue
-          .split('||')
-          .map((value) => {
-            return Number(value)
-          })
+        question.answerDisplayValue = question.answerDisplayValue.split('||')
       }
     })
 

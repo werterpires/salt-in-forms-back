@@ -1,17 +1,15 @@
+import { Type } from 'class-transformer'
 import {
+  IsArray,
   IsNumber,
   IsOptional,
+  IsString,
   Length,
   Min,
-  IsArray,
-  IsString,
-  ValidateNested,
-  IsDefined,
-  ValidateIf
+  ValidateNested
 } from 'class-validator'
-import { Type } from 'class-transformer'
-import { ValidationDto } from './update-question.dto'
 import { QuestionOptionDto, SubQuestionOptionDto } from './optionsDto'
+import { ValidationDto } from './update-question.dto'
 import { SubValidationDto } from './validationDto'
 
 export class CreateQuestionDto {
@@ -65,10 +63,7 @@ export class CreateQuestionDto {
 
   @IsOptional()
   @IsArray({ message: '#O valor de exibição da resposta deve ser um array.' })
-  @IsNumber(undefined, {
-    each: true,
-    message: '#Cada valor deve ser numérico.'
-  })
+  @IsString({ each: true, message: '#Cada valor deve ser uma string.' })
   answerDisplayValue?: string[]
 
   @IsOptional()
