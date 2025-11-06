@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common'
-import { QuestionsRepo } from './questions.repo'
-import { QuestionsHelper } from './questions.helper'
-import { Question, QuestionOption } from './types'
 import { CreateQuestionDto } from './dto/create-question.dto'
-import { UpdateQuestionDto } from './dto/update-question.dto'
 import { ReorderQuestionsDto } from './dto/reorder-questions.dto'
+import { UpdateQuestionDto } from './dto/update-question.dto'
+import { QuestionsHelper } from './questions.helper'
+import { QuestionsRepo } from './questions.repo'
+import { Question } from './types'
 
 @Injectable()
 export class QuestionsService {
@@ -23,6 +23,7 @@ export class QuestionsService {
     const questions = await this.questionsRepo.findAllBySectionId(formSectionId)
 
     for (const question of questions) {
+      console.log('question', question)
       // Se o tipo da pergunta não for 1, 7 ou 8, busca as options
       if (
         question.questionType !== 1 &&
@@ -92,8 +93,11 @@ export class QuestionsService {
 
   async delete(questionId: number): Promise<void> {
     // Validar se a questão pode ser excluída (verificar vínculos)
-    await QuestionsHelper.validateQuestionDeletion(questionId, this.questionsRepo)
-    
+    await QuestionsHelper.validateQuestionDeletion(
+      questionId,
+      this.questionsRepo
+    )
+
     await this.questionsRepo.deleteQuestionCompletely(questionId)
   }
 

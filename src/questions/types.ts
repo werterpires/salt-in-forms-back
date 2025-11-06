@@ -28,7 +28,7 @@ export interface QuestionOption {
 
 export interface SubQuestionOptions {
   questionOptionId?: number
-  questionId: number
+  questionId?: number
   questionOptionType: number
   questionOptionValue: string
 }
@@ -58,7 +58,7 @@ export interface Question {
   formSectionDisplayLink?: number
   questionDisplayLink?: number
   answerDisplayRule?: number
-  answerDisplayValue?: string | number[]
+  answerDisplayValue?: string | string[]
   createdAt: Date
   updatedAt: Date
   questionOptions?: QuestionOption[]

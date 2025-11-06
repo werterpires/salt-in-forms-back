@@ -12,6 +12,7 @@ export class FormSectionsService {
 
   async findAllBySFormId(sFormId: number): Promise<FormSection[]> {
     const formSections = await this.formSectionsRepo.findAllBySFormId(sFormId)
+    console.log('formSecions', formSections)
     return FormSectionsHelper.sortFormSectionsByOrder(formSections)
   }
 
@@ -33,8 +34,11 @@ export class FormSectionsService {
 
   async remove(formSectionId: number): Promise<void> {
     // Validar se a seção pode ser excluída (verificar vínculos)
-    await FormSectionsHelper.validateSectionDeletion(formSectionId, this.formSectionsRepo)
-    
+    await FormSectionsHelper.validateSectionDeletion(
+      formSectionId,
+      this.formSectionsRepo
+    )
+
     return this.formSectionsRepo.deleteFormSection(formSectionId)
   }
 

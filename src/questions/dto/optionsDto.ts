@@ -19,12 +19,19 @@ export class QuestionOptionDto {
 }
 
 export class SubQuestionOptionDto {
+  @IsOptional()
   @IsNumber({}, { message: '#O ID da questão da pergunta deve ser numérico' })
-  questionOptionId: number
-  questionId: number
+  questionOptionId?: number
+
+  @IsOptional()
+  @IsNumber(
+    {},
+    { message: '#O ID da pergunta no optionsDto deve ser numérico.' }
+  )
+  questionId?: number
 
   @Length(1, 255, {
-    message: '#O valor da opção deve ter no mínimo 1 e no.maxcdn 255 caracteres'
+    message: '#O valor da opção deve ter no mínimo 1 e no máximo 255 caracteres'
   })
   questionOptionValue: string
 
