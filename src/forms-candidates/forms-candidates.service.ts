@@ -45,8 +45,6 @@ export class FormsCandidatesService {
     const now = new Date()
     const hoursDifference = getHoursDifference(createdAt, now)
 
-    console.log('Hours difference:', hoursDifference)
-
     if (Number.isNaN(hoursDifference) || hoursDifference > 24) {
       const newAccessCode = createAccessCode()
       await this.formsCandidatesRepo.updateAccessCode(

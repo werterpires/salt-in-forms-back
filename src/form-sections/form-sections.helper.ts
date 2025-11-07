@@ -43,11 +43,10 @@ export class FormSectionsHelper {
         section.answerDisplayValue &&
         typeof section.answerDisplayValue === 'string'
       ) {
-        console.log('section.answerDisplayValue', section.answerDisplayValue)
         section.answerDisplayValue = section.answerDisplayValue.split('||')
       }
     }
-    console.log('formSections before sort', formSections)
+
     return formSections.sort((a, b) => a.formSectionOrder - b.formSectionOrder)
   }
 
