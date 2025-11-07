@@ -12,7 +12,6 @@ export class FormSectionsService {
 
   async findAllBySFormId(sFormId: number): Promise<FormSection[]> {
     const formSections = await this.formSectionsRepo.findAllBySFormId(sFormId)
-    console.log('formSecions', formSections)
     return FormSectionsHelper.sortFormSectionsByOrder(formSections)
   }
 
