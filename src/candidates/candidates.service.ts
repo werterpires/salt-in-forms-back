@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, BadRequestException } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import { CandidatesRepo } from './candidates.repo'
 import { ExternalApiService } from '../shared/utils-module/external-api/external-api.service'
@@ -30,6 +30,7 @@ import { Term } from 'src/terms/types'
 import { FormsCandidatesService } from 'src/forms-candidates/forms-candidates.service'
 import { Process } from 'src/processes/types'
 import { AnswerWithoutId } from 'src/answers/types'
+import { SignTermsDto } from './dto/sign-terms.dto'
 
 @Injectable()
 export class CandidatesService {
@@ -215,6 +216,8 @@ export class CandidatesService {
     // Buscar termos ativos para candidatos
     const activeTerms = await this.candidatesRepo.findActiveTermsForCandidate()
 
+    console.log('activeTerms', activeTerms)
+
     if (activeTerms.length > 0) {
       const activeTermIds = activeTerms.map((term) => term.termId)
 
@@ -236,6 +239,76 @@ export class CandidatesService {
       formCandidate.sFormId,
       formCandidate.formCandidateId
     )
+  }
+
+  /**
+   * Assina termos para um candidato
+   * Valida o código de acesso e verifica se os IDs dos termos correspondem aos termos pendentes
+   */
+  async signTerms(
+    accessCode: string,
+    signTermsDto: SignTermsDto
+  ): Promise<{ message: string }> {
+    const { termIds } = signTermsDto
+
+    // Validar o código de acesso e obter o formCandidateId
+    const formCandidateId =
+      await this.formsCandidatesService.validateAccessCodeAndGetFormCandidateId(
+        accessCode
+      )
+
+    // Buscar termos ativos para candidatos
+    const activeTerms = await this.candidatesRepo.findActiveTermsForCandidate()
+
+    if (activeTerms.length === 0) {
+      throw new BadRequestException('#Não há termos ativos para assinar.')
+    }
+
+    const activeTermIds = activeTerms.map((term) => term.termId)
+
+    // Buscar termos não assinados para este formCandidate
+    const unsignedTerms =
+      await this.candidatesRepo.findUnsignedTermsForFormCandidate(
+        formCandidateId,
+        activeTermIds
+      )
+
+    const unsignedTermIds = unsignedTerms.map((term) => term.termId)
+
+    // Verificar se os IDs dos termos enviados correspondem exatamente aos termos não assinados
+    if (termIds.length !== unsignedTermIds.length) {
+      throw new BadRequestException(
+        '#A quantidade de termos enviados não corresponde à quantidade de termos pendentes.'
+      )
+    }
+
+    // Verificar se todos os IDs enviados estão na lista de termos não assinados
+    for (const termId of termIds) {
+      if (!unsignedTermIds.includes(termId)) {
+        throw new BadRequestException(
+          `#O termo com ID ${termId} não está na lista de termos pendentes ou já foi assinado.`
+        )
+      }
+    }
+
+    // Verificar se todos os termos não assinados foram enviados
+    for (const unsignedTermId of unsignedTermIds) {
+      if (!termIds.includes(unsignedTermId)) {
+        throw new BadRequestException(
+          `#O termo com ID ${unsignedTermId} é obrigatório e não foi incluído na assinatura.`
+        )
+      }
+    }
+
+    // Inserir as assinaturas dos termos
+    await this.candidatesRepo.insertCandidateTermsSignatures(
+      formCandidateId,
+      termIds
+    )
+
+    return {
+      message: `Termos assinados com sucesso. Total de ${termIds.length} termo(s) assinado(s).`
+    }
   }
 
   /**

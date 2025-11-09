@@ -3,6 +3,7 @@ import { AnswersService } from './answers.service'
 import { AnswersController } from './answers.controller'
 import { AnswersRepo } from './answers.repo'
 import { FormsCandidatesModule } from '../forms-candidates/forms-candidates.module'
+import { FormsCandidatesRepo } from '../forms-candidates/forms-candidates.repo'
 import { QuestionsModule } from '../questions/questions.module'
 import { FormSectionsModule } from '../form-sections/form-sections.module'
 import { UtilsModuleModule } from '../shared/utils-module/utils-module.module'
@@ -15,6 +16,6 @@ import { UtilsModuleModule } from '../shared/utils-module/utils-module.module'
     UtilsModuleModule
   ],
   controllers: [AnswersController],
-  providers: [AnswersService, AnswersRepo]
+  providers: [AnswersService, AnswersRepo, FormsCandidatesRepo]
 })
 export class AnswersModule {}

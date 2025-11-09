@@ -1,4 +1,3 @@
-
 import { Injectable } from '@nestjs/common'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
@@ -66,5 +65,16 @@ export class FormsCandidatesRepo {
       .first()
 
     return result || null
+  }
+
+  async findCandidateIdByFormCandidateId(
+    formCandidateId: number
+  ): Promise<number | null> {
+    const result = await this.knex(db.Tables.FORMS_CANDIDATES)
+      .select(db.FormsCandidates.CANDIDATE_ID)
+      .where(db.FormsCandidates.FORM_CANDIDATE_ID, formCandidateId)
+      .first()
+
+    return result ? result.candidateId : null
   }
 }

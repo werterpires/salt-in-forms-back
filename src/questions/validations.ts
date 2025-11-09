@@ -11,6 +11,21 @@ export interface validationResult {
   errorMessage: string
 }
 
+function isValidISODateString(str: string): boolean {
+  // formato: YYYY-MM-DD
+  const regex = /^\d{4}-\d{2}-\d{2}$/
+  if (!regex.test(str)) return false
+
+  // valida se a data realmente existe (ex: 2025-02-30 não existe)
+  const [y, m, d] = str.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  return (
+    date.getFullYear() === y &&
+    date.getMonth() === m - 1 &&
+    date.getDate() === d
+  )
+}
+
 export const greaterThanOrEqual: ValidationSpcification = {
   validationType: 1,
   validationName: 'Maior ou igual a',
@@ -35,7 +50,7 @@ export const greaterThanOrEqual: ValidationSpcification = {
       val3 ||
       val4
     ) {
-      throw new BadRequestException(
+      throw new Error(
         'Parâmetros inválidos para a validação "Maior ou igual a"'
       )
     }
@@ -75,9 +90,7 @@ export const greaterThan: ValidationSpcification = {
   ): validationResult => {
     const min = Number(val1)
     if (typeof min !== 'number' || isNaN(min) || val2 || val3 || val4) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "Maior que"'
-      )
+      throw new Error('Parâmetros inválidos para a validação "Maior que"')
     }
     if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     if (typeof value !== 'number') value = parseFloat(value)
@@ -107,7 +120,7 @@ export const lessThanOrEqual: ValidationSpcification = {
   ): validationResult => {
     const max = Number(val1)
     if (typeof max !== 'number' || isNaN(max) || val2 || val3 || val4) {
-      throw new BadRequestException(
+      throw new Error(
         'Parâmetros inválidos para a validação "Menor ou igual a"'
       )
     }
@@ -141,9 +154,7 @@ export const lessThan: ValidationSpcification = {
   ): validationResult => {
     const max = Number(val1)
     if (typeof max !== 'number' || isNaN(max) || val2 || val3 || val4) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "Menor que"'
-      )
+      throw new Error('Parâmetros inválidos para a validação "Menor que"')
     }
     if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     if (typeof value !== 'number') value = parseFloat(value)
@@ -171,9 +182,7 @@ export const required: ValidationSpcification = {
     val4: any
   ): validationResult => {
     if (val1 || val2 || val3 || val4) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "Obrigatório"'
-      )
+      throw new Error('Parâmetros inválidos para a validação "Obrigatório"')
     }
     const ok = value !== undefined && value !== null && value !== ''
     return ok
@@ -200,9 +209,7 @@ export const minLength: ValidationSpcification = {
   ): validationResult => {
     const min = Number(val1)
     if (typeof min !== 'number' || isNaN(min) || val2 || val3 || val4) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "Tamanho mínimo"'
-      )
+      throw new Error('Parâmetros inválidos para a validação "Tamanho mínimo"')
     }
     //remove todos os espaços em branco do início e do fim da string e deixa só um espaço entre as palavras
 
@@ -240,9 +247,7 @@ export const maxLength: ValidationSpcification = {
   ): validationResult => {
     const max = Number(val1)
     if (typeof max !== 'number' || isNaN(max) || val2 || val3 || val4) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "Tamanho máximo"'
-      )
+      throw new Error('Parâmetros inválidos para a validação "Tamanho máximo"')
     }
     if (typeof value !== 'string')
       return { isValid: false, errorMessage: 'O valor deve ser uma string' }
@@ -274,9 +279,7 @@ export const isEmail: ValidationSpcification = {
     val4: any
   ): validationResult => {
     if (val1 || val2 || val3 || val4) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "Email válido"'
-      )
+      throw new Error('Parâmetros inválidos para a validação "Email válido"')
     }
     if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     if (typeof value !== 'string')
@@ -304,9 +307,7 @@ export const isUrl: ValidationSpcification = {
     val4: any
   ): validationResult => {
     if (val1 || val2 || val3 || val4) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "URL válida"'
-      )
+      throw new Error('Parâmetros inválidos para a validação "URL válida"')
     }
     if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     if (typeof value !== 'string')
@@ -351,7 +352,7 @@ export const valueBetweenInclusive: ValidationSpcification = {
       val3 ||
       val4
     ) {
-      throw new BadRequestException(
+      throw new Error(
         'Parâmetros inválidos para a validação "Valor entre (inclusivo)"'
       )
     }
@@ -394,7 +395,7 @@ export const valueBetweenExclusive: ValidationSpcification = {
       val3 ||
       val4
     ) {
-      throw new BadRequestException(
+      throw new Error(
         'Parâmetros inválidos para a validação "Valor entre (exclusivo)"'
       )
     }
@@ -428,20 +429,20 @@ export const minDate: ValidationSpcification = {
     val4: any
   ): validationResult => {
     if (typeof val1 !== 'string' || val2 || val3 || val4) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "Data mínima"'
-      )
+      throw new Error('Parâmetros inválidos para a validação "Data mínima"')
+    }
+    if (!isValidISODateString(val1)) {
+      return { isValid: false, errorMessage: 'Validação mal formatada' }
     }
     if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
-    const dateValue = new Date(value)
-    const minDateValue = new Date(val1)
-    if (isNaN(dateValue.getTime()) || isNaN(minDateValue.getTime())) {
+    if (!isValidISODateString(value)) {
       return {
         isValid: false,
         errorMessage: 'O valor deve ser uma data válida'
       }
     }
-    return dateValue >= minDateValue
+
+    return value >= val1
       ? { isValid: true, errorMessage: '' }
       : {
           isValid: false,
@@ -467,20 +468,20 @@ export const maxDate: ValidationSpcification = {
     val4: any
   ): validationResult => {
     if (typeof val1 !== 'string' || val2 || val3 || val4) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "Data máxima"'
-      )
+      throw new Error('Parâmetros inválidos para a validação "Data máxima"')
+    }
+    if (!isValidISODateString(val1)) {
+      return { isValid: false, errorMessage: 'Validação mal formatada' }
     }
     if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
-    const dateValue = new Date(value)
-    const maxDateValue = new Date(val1)
-    if (isNaN(dateValue.getTime()) || isNaN(maxDateValue.getTime())) {
+    if (!isValidISODateString(value)) {
       return {
         isValid: false,
         errorMessage: 'O valor deve ser uma data válida'
       }
     }
-    return dateValue <= maxDateValue
+
+    return value <= val1
       ? { isValid: true, errorMessage: '' }
       : {
           isValid: false,
@@ -504,14 +505,11 @@ export const isDate: ValidationSpcification = {
     val3: any,
     val4: any
   ): validationResult => {
-    if (val1 !== undefined || val2 || val3 || val4) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "Data válida"'
-      )
+    if (val1 || val2 || val3 || val4) {
+      throw new Error('Parâmetros inválidos para a validação "Data válida"')
     }
     if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
-    const dateValue = new Date(value)
-    return !isNaN(dateValue.getTime())
+    return isValidISODateString(value)
       ? { isValid: true, errorMessage: '' }
       : { isValid: false, errorMessage: 'Data inválida' }
   }
@@ -534,29 +532,26 @@ export const isDateBetweenInclusive: ValidationSpcification = {
     val4: any
   ): validationResult => {
     if (typeof val1 !== 'string' || typeof val2 !== 'string' || val3 || val4) {
-      throw new BadRequestException(
+      throw new Error(
         'Parâmetros inválidos para a validação "Data entre (inclusivo)"'
       )
     }
+    if (!isValidISODateString(val1) || !isValidISODateString(val2)) {
+      return { isValid: false, errorMessage: 'Validação mal formatada' }
+    }
     if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
-    const dateValue = new Date(value)
-    const minDateValue = new Date(val1)
-    const maxDateValue = new Date(val2)
-    if (
-      isNaN(dateValue.getTime()) ||
-      isNaN(minDateValue.getTime()) ||
-      isNaN(maxDateValue.getTime())
-    ) {
+
+    if (!isValidISODateString(value)) {
       return {
         isValid: false,
         errorMessage: 'O valor deve ser uma data válida'
       }
     }
-    return dateValue >= minDateValue && dateValue <= maxDateValue
+    return value >= val1 && value <= val2
       ? { isValid: true, errorMessage: '' }
       : {
           isValid: false,
-          errorMessage: `A data deve estar entre ${val1} e ${val2}`
+          errorMessage: `Escolha uma data de ${val1} até ${val2}`
         }
   }
 }
@@ -578,40 +573,39 @@ export const isDateBetweenExclusive: ValidationSpcification = {
     val4: any
   ): validationResult => {
     if (typeof val1 !== 'string' || typeof val2 !== 'string' || val3 || val4) {
-      throw new BadRequestException(
+      throw new Error(
         'Parâmetros inválidos para a validação "Data entre (exclusivo)"'
       )
     }
     if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
-    const dateValue = new Date(value)
-    const minDateValue = new Date(val1)
-    const maxDateValue = new Date(val2)
-    if (
-      isNaN(dateValue.getTime()) ||
-      isNaN(minDateValue.getTime()) ||
-      isNaN(maxDateValue.getTime())
-    ) {
+
+    if (!isValidISODateString(val1) || !isValidISODateString(val2)) {
+      return { isValid: false, errorMessage: 'Validação mal formatada' }
+    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+
+    if (!isValidISODateString(value)) {
       return {
         isValid: false,
         errorMessage: 'O valor deve ser uma data válida'
       }
     }
-    return dateValue > minDateValue && dateValue < maxDateValue
+    return value > val1 && value < val2
       ? { isValid: true, errorMessage: '' }
       : {
           isValid: false,
-          errorMessage: `A data deve estar estritamente entre ${val1} e ${val2}`
+          errorMessage: `Escolha uma data entre ${val1} e ${val2}`
         }
   }
 }
 
 export const minAge: ValidationSpcification = {
   validationType: 17,
-  validationName: 'Tempo mínimo',
+  validationName: 'Idade mínima',
   validationDescription:
-    'Verifica se o tempo entre a data atual e a data informada é maior ou igual à idade mínima especificada',
-  valueOneType: 'string',
-  valueTwoType: 'number',
+    'Verifica se a idade calculada a partir da data de nascimento é maior ou igual à idade mínima especificada',
+  valueOneType: 'number',
+  valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
   validationFunction: (
@@ -630,41 +624,44 @@ export const minAge: ValidationSpcification = {
       val3 ||
       val4
     ) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "Tempo mínimo"'
-      )
+      throw new Error('Parâmetros inválidos para a validação "Idade mínima"')
     }
     if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
-    const initialDate = new Date(value)
-    const today = new Date()
-    if (isNaN(initialDate.getTime())) {
+
+    if (!isValidISODateString(value)) {
       return {
         isValid: false,
-        errorMessage: 'O valor deve ser uma data válida'
+        errorMessage: 'O valor deve ser uma data válida no formato YYYY-MM-DD'
       }
     }
-    const age = today.getFullYear() - initialDate.getFullYear()
-    const monthDiff = today.getMonth() - initialDate.getMonth()
+
+    const birthDate = new Date(value)
+    const today = new Date()
+
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+
     if (
       monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < initialDate.getDate())
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
     ) {
-      // birthday not reached yet
+      age--
     }
+
     const isValid = age >= minAge
     return isValid
       ? { isValid: true, errorMessage: '' }
-      : { isValid: false, errorMessage: `A idade mínima é ${minAge}` }
+      : { isValid: false, errorMessage: `A idade mínima é ${minAge} anos` }
   }
 }
 
 export const maxAge: ValidationSpcification = {
   validationType: 18,
-  validationName: 'Tempo máximo',
+  validationName: 'Idade máxima',
   validationDescription:
-    'Verifica se o tempo entre a data atual e a data informada é menor ou igual à idade máxima especificada',
-  valueOneType: 'string',
-  valueTwoType: 'number',
+    'Verifica se a idade calculada a partir da data de nascimento é menor ou igual à idade máxima especificada',
+  valueOneType: 'number',
+  valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
   validationFunction: (
@@ -683,25 +680,34 @@ export const maxAge: ValidationSpcification = {
       val3 ||
       val4
     ) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "Tempo máximo"'
-      )
+      throw new Error('Parâmetros inválidos para a validação "Idade máxima"')
     }
     if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
-    const initialDate = new Date(value)
-    const today = new Date()
-    if (isNaN(initialDate.getTime())) {
+
+    if (!isValidISODateString(value)) {
       return {
         isValid: false,
-        errorMessage: 'O valor deve ser uma data válida'
+        errorMessage: 'O valor deve ser uma data válida no formato YYYY-MM-DD'
       }
     }
-    const age = today.getFullYear() - initialDate.getFullYear()
+
+    const birthDate = new Date(value)
+    const today = new Date()
+
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--
+    }
 
     const isValid = age <= maxAge
     return isValid
       ? { isValid: true, errorMessage: '' }
-      : { isValid: false, errorMessage: `A idade máxima é ${maxAge}` }
+      : { isValid: false, errorMessage: `A idade máxima é ${maxAge} anos` }
   }
 }
 
@@ -721,9 +727,7 @@ export const isNumeric: ValidationSpcification = {
     val4: any
   ): validationResult => {
     if (val1 || val2 || val3 || val4) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "Valor numérico"'
-      )
+      throw new Error('Parâmetros inválidos para a validação "Valor numérico"')
     }
     if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     if (typeof value === 'string') value = value.replace(',', '.')
@@ -750,9 +754,7 @@ export const isAlpha: ValidationSpcification = {
     val4: any
   ): validationResult => {
     if (val1 || val2 || val3 || val4) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "Apenas letras"'
-      )
+      throw new Error('Parâmetros inválidos para a validação "Apenas letras"')
     }
     if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     if (typeof value !== 'string')
@@ -783,7 +785,7 @@ export const minWords: ValidationSpcification = {
   ): validationResult => {
     const min = Number(val1)
     if (typeof min !== 'number' || isNaN(min) || val2 || val3 || val4) {
-      throw new BadRequestException(
+      throw new Error(
         'Parâmetros inválidos para a validação "Número mínimo de palavras"'
       )
     }
@@ -815,7 +817,7 @@ export const maxWords: ValidationSpcification = {
   ): validationResult => {
     const max = Number(val1)
     if (typeof max !== 'number' || isNaN(max) || val2 || val3 || val4) {
-      throw new BadRequestException(
+      throw new Error(
         'Parâmetros inválidos para a validação "Número máximo de palavras"'
       )
     }
@@ -845,7 +847,7 @@ export const isAlphaSpace: ValidationSpcification = {
     val4: any
   ): validationResult => {
     if (val1 || val2 || val3 || val4) {
-      throw new BadRequestException(
+      throw new Error(
         'Parâmetros inválidos para a validação "Apenas letras e espaços"'
       )
     }
@@ -880,7 +882,7 @@ export const isAlphaNumeric: ValidationSpcification = {
     val4: any
   ): validationResult => {
     if (val1 || val2 || val3 || val4) {
-      throw new BadRequestException(
+      throw new Error(
         'Parâmetros inválidos para a validação "Apenas letras e números"'
       )
     }
@@ -915,9 +917,7 @@ export const isFutureDate: ValidationSpcification = {
     val4: any
   ): validationResult => {
     if (val1 !== undefined || val2 || val3 || val4) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "Data futura"'
-      )
+      throw new Error('Parâmetros inválidos para a validação "Data futura"')
     }
     if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     const dateValue = new Date(value)
@@ -948,10 +948,8 @@ export const isPastDate: ValidationSpcification = {
     val3: any,
     val4: any
   ): validationResult => {
-    if (val1 || val2 || val3 || val4) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "Data passada"'
-      )
+    if (val1 !== undefined || val2 || val3 || val4) {
+      throw new Error('Parâmetros inválidos para a validação "Data passada"')
     }
     if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
     const dateValue = new Date(value)
@@ -971,7 +969,7 @@ export const isUnicEmail: ValidationSpcification = {
   validationType: 27,
   validationName: 'Email único',
   validationDescription: 'Verifica se o email é único',
-  valueOneType: 'undefined',
+  valueOneType: 'string',
   valueTwoType: 'undefined',
   valueThreeType: 'undefined',
   valueFourType: 'undefined',
@@ -982,24 +980,31 @@ export const isUnicEmail: ValidationSpcification = {
     val3: any,
     val4: any
   ): validationResult => {
-    if (val1 || val2 || val3 || val4) {
-      throw new BadRequestException(
-        'Parâmetros inválidos para a validação "Data passada"'
-      )
-    }
-    const existingEmails = val1
-    if (!Array.isArray(existingEmails) && existingEmails !== undefined) {
+    if (typeof val1 !== 'string' || val2 || val3 || val4) {
       throw new BadRequestException(
         'Parâmetros inválidos para a validação "Email único"'
       )
     }
+
     if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+
     if (typeof value !== 'string')
       return { isValid: false, errorMessage: 'O valor deve ser uma string' }
-    const isUnique = !existingEmails || !existingEmails.includes(value)
-    return isUnique
-      ? { isValid: true, errorMessage: '' }
-      : { isValid: false, errorMessage: 'Email já existe' }
+
+    // val1 contém todos os emails já utilizados pelo candidato, separados por ||
+    const usedEmails = val1
+      ? val1.split('||').map((email: string) => email.trim().toLowerCase())
+      : []
+    const currentEmail = value.trim().toLowerCase()
+
+    const isEmailAlreadyUsed = usedEmails.includes(currentEmail)
+
+    return isEmailAlreadyUsed
+      ? {
+          isValid: false,
+          errorMessage: 'Este email já foi utilizado em outro formulário'
+        }
+      : { isValid: true, errorMessage: '' }
   }
 }
 
