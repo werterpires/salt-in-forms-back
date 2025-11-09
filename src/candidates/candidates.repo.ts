@@ -553,4 +553,28 @@ export class CandidatesRepo {
       .where(db.Answers.FORM_CANDIDATE_ID, formCandidateId)
       .first()
   }
+
+  /**
+   * Insere assinaturas de termos para um candidato
+   */
+  async insertCandidateTermsSignatures(
+    formCandidateId: number,
+    termIds: number[]
+  ): Promise<void> {
+    if (termIds.length === 0) {
+      return
+    }
+
+    await this.knex.transaction(async (trx) => {
+      const termSignaturesToInsert = termIds.map((termId) => ({
+        [db.CandidatesTermsSignatures.FORM_CANDIDATE_ID]: formCandidateId,
+        [db.CandidatesTermsSignatures.TERM_ID]: termId,
+        [db.CandidatesTermsSignatures.TERM_UNSIGNED]: null
+      }))
+
+      await trx(db.Tables.CANDIDATES_TERMS_SIGNATURES).insert(
+        termSignaturesToInsert
+      )
+    })
+  }
 }
