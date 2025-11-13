@@ -61,7 +61,7 @@ export function makeProcessData(
 
   const processData = {
     [db.Processes.PROCESS_TITLE]: createProcessDto.processTitle,
-    processTotvsId: createProcessDto.processTotvsId,
+    [db.Processes.PROCESS_DATA_KEY]: createProcessDto.processDataKey,
     processBeginDate: beginDate,
     processEndDate: endDate,
     processEndAnswers: endDateAnswers,

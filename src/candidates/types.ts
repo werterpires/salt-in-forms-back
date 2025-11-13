@@ -1,8 +1,11 @@
+export type DocumentType = 'CPF' | 'PASSPORT' | 'OTHER'
+
 export interface Candidate {
   candidateId: number
   processId: number
   candidateName: string
   candidateUniqueDocument: string
+  candidateDocumentType: DocumentType
   candidateEmail: string
   candidatePhone: string
   candidateBirthdate: string
@@ -21,6 +24,7 @@ export interface CreateCandidate {
   processId: number
   candidateName: string
   candidateUniqueDocument: string
+  candidateDocumentType: DocumentType
   candidateEmail: string
   candidatePhone: string
   candidateBirthdate: string
@@ -154,4 +158,130 @@ export interface FormCandidateWithDetails {
   candidateName: string
   candidateEmail: string
   sFormType: string
+}
+
+/**
+ * Candidato Pendente (aguardando confirmação de email)
+ */
+export interface PendingCandidate {
+  pendingCandidateId: number
+  candidateName: string
+  candidateEmail: string
+  candidateDocumentType: DocumentType
+  candidateUniqueDocument: string
+  candidatePhone: string
+  orderCode: string
+  processId: number
+  confirmationToken: string
+  tokenExpiresAt: Date
+  attemptCount: number
+  createdAt: Date
+  confirmedAt: Date | null
+  invalidatedAt: Date | null
+}
+
+/**
+ * Dados para criar um candidato pendente
+ */
+export interface CreatePendingCandidate {
+  candidateName: string
+  candidateEmail: string
+  candidateDocumentType: DocumentType
+  candidateUniqueDocument: string
+  candidatePhone: string
+  orderCode: string
+  processId: number
+  confirmationToken: string
+  tokenExpiresAt: Date
+  attemptCount?: number
+}
+
+/**
+ * Dados para atualizar um candidato pendente
+ */
+export interface UpdatePendingCandidate {
+  pendingCandidateId: number
+  confirmationToken?: string
+  tokenExpiresAt?: Date
+  attemptCount?: number
+  confirmedAt?: Date
+  invalidatedAt?: Date
+}
+
+/**
+ * Estrutura de resposta da API de autenticação
+ */
+export interface AuthenticationResponse {
+  authenticated: boolean
+  created: string
+  expiration: string
+  user: {
+    id: string
+    name: string
+    email: string
+    emailConfirmed: boolean
+    avatar: { id: string | null }
+    tenants: string[]
+    roles: string[]
+  }
+  token: string
+  refreshToken: string
+  message: string
+}
+
+/**
+ * Estrutura de um item de pedido
+ */
+export interface OrderItem {
+  orderItemId: string
+  orderId: string
+  enrollmentModelId: string
+  enrollmentModelTitle: string
+  attributes: string
+  dataKey: string
+  price: number
+  totalValue: number
+}
+
+/**
+ * Estrutura de um pagamento
+ */
+export interface OrderPayment {
+  orderPaymentId: string
+  orderId: string
+  paidValue: number
+  dueDate: string
+  creationDate: string
+  paymentDate: string | null
+  paymentStatus: number
+  paymentMethodCode: number
+  pluginReceivedData: string
+  pluginTransactionId: string
+}
+
+/**
+ * Estrutura de um pedido completo
+ */
+export interface Order {
+  orderId: string
+  orderCode: number
+  customerId: string
+  customerName: string
+  creationDate: string
+  totalValue: number
+  orderStatus: number
+  dataKey: string
+  orderItems: OrderItem[]
+  orderPayments: OrderPayment[]
+}
+
+/**
+ * Estrutura de resposta da API de pedidos
+ */
+export interface GetOrdersResponse {
+  currentPageNumber: number
+  pageSize: number
+  validPage: boolean
+  totalPages: number
+  entities: Order[]
 }

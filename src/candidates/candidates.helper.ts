@@ -1,5 +1,4 @@
 import { randomBytes } from 'crypto'
-import { CreateCandidate } from './types'
 
 /**
  * Gera um código de acesso único para formulário
@@ -81,59 +80,66 @@ export function extractFieldsFromApiResponse(
  * @param encryptionService - Serviço de criptografia para dados sensíveis
  * @returns Objeto CreateCandidate ou null se houver erro
  */
-export function transformApiItemToCandidate(
-  apiItem: any,
-  processId: number,
-  encryptionService: { encrypt: (value: string) => string }
-): CreateCandidate | null {
-  try {
-    const attributes = JSON.parse(apiItem.attributes)
-    const fieldMap = extractFieldsFromApiResponse(attributes)
+/**
+ * ============================================================================
+ * FUNÇÃO LEGADA - DESABILITADA
+ * ============================================================================
+ * Usado apenas por parseApiResponseToCandidates (desabilitado)
+ * Mantido comentado para referência
+ */
+// export function transformApiItemToCandidate(
+//   apiItem: any,
+//   processId: number,
+//   encryptionService: { encrypt: (value: string) => string }
+// ): CreateCandidate | null {
+//   try {
+//     const attributes = JSON.parse(apiItem.attributes)
+//     const fieldMap = extractFieldsFromApiResponse(attributes)
 
-    // Determinar se é estrangeiro
-    const estrangeiroValue =
-      fieldMap['estrangeiro ?'] || fieldMap['estrangeiro']
-    const isForeigner = isForeignerCandidate(estrangeiroValue)
+//     // Determinar se é estrangeiro
+//     const estrangeiroValue =
+//       fieldMap['estrangeiro ?'] || fieldMap['estrangeiro']
+//     const isForeigner = isForeignerCandidate(estrangeiroValue)
 
-    const candidate: CreateCandidate = {
-      processId: processId,
-      candidateName: encryptionService.encrypt(
-        fieldMap['nome completo'] || fieldMap['nome'] || ''
-      ),
-      candidateUniqueDocument: isForeigner
-        ? fieldMap['n° passaporte'] || fieldMap['passaporte'] || ''
-        : fieldMap['cpf'] || '',
-      candidateEmail: encryptionService.encrypt(
-        fieldMap['e-mail'] || fieldMap['email'] || ''
-      ),
-      candidatePhone: encryptionService.encrypt(
-        fieldMap['telefone'] || fieldMap['phone'] || ''
-      ),
-      candidateBirthdate: encryptionService.encrypt(
-        formatDateString(
-          fieldMap['data de nascimento'] || fieldMap['nascimento'] || ''
-        )
-      ),
-      candidateForeigner: isForeigner,
-      candidateAddress: encryptionService.encrypt(
-        fieldMap['endereço'] || fieldMap['endereco'] || ''
-      ),
-      candidateAddressNumber: encryptionService.encrypt(
-        fieldMap['número'] || fieldMap['numero'] || ''
-      ),
-      candidateDistrict: encryptionService.encrypt(fieldMap['bairro'] || ''),
-      candidateCity: encryptionService.encrypt(fieldMap['cidade'] || ''),
-      candidateState: encryptionService.encrypt(fieldMap['estado'] || ''),
-      candidateZipCode: encryptionService.encrypt(fieldMap['cep'] || ''),
-      candidateCountry: encryptionService.encrypt('')
-    }
+//     const candidate: CreateCandidate = {
+//       processId: processId,
+//       candidateName: encryptionService.encrypt(
+//         fieldMap['nome completo'] || fieldMap['nome'] || ''
+//       ),
+//       candidateUniqueDocument: isForeigner
+//         ? fieldMap['n° passaporte'] || fieldMap['passaporte'] || ''
+//         : fieldMap['cpf'] || '',
+//       candidateEmail: encryptionService.encrypt(
+//         fieldMap['e-mail'] || fieldMap['email'] || ''
+//       ),
+//       candidatePhone: encryptionService.encrypt(
+//         fieldMap['telefone'] || fieldMap['phone'] || ''
+//       ),
+//       candidateBirthdate: encryptionService.encrypt(
+//         formatDateString(
+//           fieldMap['data de nascimento'] || fieldMap['nascimento'] || ''
+//         )
+//       ),
+//       candidateForeigner: isForeigner,
+//       candidateAddress: encryptionService.encrypt(
+//         fieldMap['endereço'] || fieldMap['endereco'] || ''
+//       ),
+//       candidateAddressNumber: encryptionService.encrypt(
+//         fieldMap['número'] || fieldMap['numero'] || ''
+//       ),
+//       candidateDistrict: encryptionService.encrypt(fieldMap['bairro'] || ''),
+//       candidateCity: encryptionService.encrypt(fieldMap['cidade'] || ''),
+//       candidateState: encryptionService.encrypt(fieldMap['estado'] || ''),
+//       candidateZipCode: encryptionService.encrypt(fieldMap['cep'] || ''),
+//       candidateCountry: encryptionService.encrypt('')
+//     }
 
-    return candidate
-  } catch (error) {
-    console.error('Erro ao processar item da API:', error.message, apiItem)
-    return null
-  }
-}
+//     return candidate
+//   } catch (error) {
+//     console.error('Erro ao processar item da API:', error.message, apiItem)
+//     return null
+//   }
+// }
 
 /**
  * Calcula a diferença em horas entre duas datas
