@@ -78,26 +78,31 @@ export class EmailTemplateBuilder {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4vh;
+            gap: 6vh;
             max-width: 900px;
             margin: auto;
+            height: 100vh;
+            overflow-y: auto;
           }
 
           #waving_hand_icon {
             width: 10vh;
             height: 10vh;
+            margin-bottom: 2vh;
           }
 
           h1 {
             font-size: 4vh;
             font-weight: 600;
             text-align: center;
+            margin-bottom: 2vh;
           }
 
           .content_container {
             display: flex;
             flex-direction: column;
             align-items: center;
+            margin: 2vh 0;
           }
 
           .content {
@@ -113,6 +118,7 @@ export class EmailTemplateBuilder {
             display: flex;
             justify-content: center;
             width: 100%;
+            margin: 4vh 0;
           }
 
           button {
@@ -159,6 +165,7 @@ export class EmailTemplateBuilder {
             max-width: 60vh;
             line-height: 15px;
             font-weight: 500;
+            margin: 3vh 0;
           }
 
           .info_container p {
@@ -174,6 +181,7 @@ export class EmailTemplateBuilder {
             gap: 5vh;
             background-color: #F2F2F2;
             width: 100%;
+            margin-top: 4vh;
           }
 
           .footer img {

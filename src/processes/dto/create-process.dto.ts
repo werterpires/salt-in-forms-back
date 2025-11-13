@@ -9,9 +9,9 @@ export class CreateProcessDto {
 
   @Length(5, 250, {
     message:
-      '#O id do processo de vestibular no totvs deve ter no mínimo 5 e no máximo 250 caracteres'
+      '#O identificador do tenant (data key) deve ter no mínimo 5 e no máximo 250 caracteres'
   })
-  processTotvsId: string
+  processDataKey: string
 
   @Length(10, 10, {
     message: "#A data de início do processo deve ter o formato 'YYYY-MM-DD'"

@@ -577,4 +577,94 @@ export class CandidatesRepo {
       )
     })
   }
+
+  /**
+   * Verifica se um orderCode já foi utilizado por um candidato confirmado
+   * @param orderCode Código do pedido
+   * @returns true se já foi usado, false caso contrário
+   */
+  async isOrderCodeInCandidates(orderCode: string): Promise<boolean> {
+    const result = await this.knex(db.Tables.CANDIDATES)
+      .count('* as count')
+      .where(db.Candidates.CANDIDATE_ORDER_CODE, orderCode)
+      .first()
+
+    return result ? Number(result.count) > 0 : false
+  }
+
+  /**
+   * Verifica se um candidato já existe em um processo específico
+   * Busca por documento único
+   * @param processId ID do processo
+   * @param uniqueDocument Documento único (CPF/CNPJ criptografado)
+   * @returns true se existe, false caso contrário
+   */
+  async candidateExistsInProcess(
+    processId: number,
+    uniqueDocument: string
+  ): Promise<boolean> {
+    const result = await this.knex(db.Tables.CANDIDATES)
+      .count('* as count')
+      .where(db.Candidates.PROCESS_ID, processId)
+      .where(db.Candidates.CANDIDATE_UNIQUE_DOCUMENT, uniqueDocument)
+      .first()
+
+    return result ? Number(result.count) > 0 : false
+  }
+
+  /**
+   * Busca um processo por ID
+   * @param processId ID do processo
+   * @returns Processo ou undefined
+   */
+  async findProcessById(processId: number): Promise<Process | undefined> {
+    return this.knex(db.Tables.PROCESSES)
+      .select('*')
+      .where(db.Processes.PROCESS_ID, processId)
+      .first()
+  }
+
+  /**
+   * Insere um candidato confirmado a partir de um pending candidate
+   * @param data Dados do candidato para inserir
+   * @returns ID do candidato inserido
+   */
+  async insertCandidateFromPending(data: {
+    processId: number
+    candidateName: string
+    candidateDocumentType: string
+    candidateUniqueDocument: string
+    candidateEmail: string
+    candidatePhone: string
+    candidateOrderCode: string
+  }): Promise<number> {
+    const [id] = await this.knex(db.Tables.CANDIDATES)
+      .insert({
+        [db.Candidates.PROCESS_ID]: data.processId,
+        [db.Candidates.CANDIDATE_NAME]: data.candidateName,
+        [db.Candidates.CANDIDATE_DOCUMENT_TYPE]: data.candidateDocumentType,
+        [db.Candidates.CANDIDATE_UNIQUE_DOCUMENT]: data.candidateUniqueDocument,
+        [db.Candidates.CANDIDATE_EMAIL]: data.candidateEmail,
+        [db.Candidates.CANDIDATE_PHONE]: data.candidatePhone,
+        [db.Candidates.CANDIDATE_ORDER_CODE]: data.candidateOrderCode,
+        [db.Candidates.CANDIDATE_ORDER_CODE_VALIDATED_AT]: this.knex.fn.now()
+      })
+      .returning(db.Candidates.CANDIDATE_ID)
+
+    return typeof id === 'object' ? id[db.Candidates.CANDIDATE_ID] : id
+  }
+
+  /**
+   * Busca um candidato por orderCode
+   * @param orderCode Código do pedido
+   * @returns Candidato ou undefined
+   */
+  async findCandidateByOrderCode(
+    orderCode: string
+  ): Promise<{ candidateId: number } | undefined> {
+    return this.knex(db.Tables.CANDIDATES)
+      .select(db.Candidates.CANDIDATE_ID)
+      .where(db.Candidates.CANDIDATE_ORDER_CODE, orderCode)
+      .first()
+  }
 }

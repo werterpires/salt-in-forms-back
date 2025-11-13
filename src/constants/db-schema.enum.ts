@@ -15,6 +15,7 @@ export enum Tables {
   SUB_QUESTION_OPTIONS = 'subQuestionOptions',
   SUB_VALIDATIONS = 'subValidations',
   CANDIDATES = 'candidates',
+  PENDING_CANDIDATES = 'pendingCandidates',
   FORMS_CANDIDATES = 'formsCandidates',
   ANSWERS = 'answers',
   UNIONS = 'unions',
@@ -59,6 +60,7 @@ export enum Processes {
   PROCESS_ID = 'processId',
   PROCESS_TITLE = 'processTitle',
   PROCESS_TOTVS_ID = 'processTotvsId',
+  PROCESS_DATA_KEY = 'processDataKey',
   PROCESS_BEGIN_DATE = 'processBeginDate',
   PROCESS_END_DATE = 'processEndDate',
   PROCESS_END_ANSWERS = 'processEndAnswers',
@@ -169,6 +171,7 @@ export enum Candidates {
   CANDIDATE_NAME = 'candidateName',
   CANDIDATE_UNIQUE_DOCUMENT = 'candidateUniqueDocument',
   CANDIDATE_EMAIL = 'candidateEmail',
+  CANDIDATE_DOCUMENT_TYPE = 'candidateDocumentType',
   CANDIDATE_PHONE = 'candidatePhone',
   CANDIDATE_BIRTHDATE = 'candidateBirthdate',
   CANDIDATE_FOREIGNER = 'candidateForeigner',
@@ -179,7 +182,9 @@ export enum Candidates {
   CANDIDATE_STATE = 'candidateState',
   CANDIDATE_ZIP_CODE = 'candidateZipCode',
   CANDIDATE_COUNTRY = 'candidateCountry',
-  INTERVIEW_USER_ID = 'interviewUserId'
+  INTERVIEW_USER_ID = 'interviewUserId',
+  CANDIDATE_ORDER_CODE = 'candidateOrderCode',
+  CANDIDATE_ORDER_CODE_VALIDATED_AT = 'candidateOrderCodeValidatedAt'
 }
 
 export enum FormsCandidates {
@@ -210,6 +215,23 @@ export enum Fields {
   FIELD_NAME = 'fieldName',
   FIELD_ACRONYM = 'fieldAcronym',
   UNION_ID = 'unionId'
+}
+
+export enum PendingCandidates {
+  PENDING_CANDIDATE_ID = 'pendingCandidateId',
+  CANDIDATE_NAME = 'candidateName',
+  CANDIDATE_EMAIL = 'candidateEmail',
+  CANDIDATE_DOCUMENT_TYPE = 'candidateDocumentType',
+  CANDIDATE_UNIQUE_DOCUMENT = 'candidateUniqueDocument',
+  CANDIDATE_PHONE = 'candidatePhone',
+  ORDER_CODE = 'orderCode',
+  PROCESS_ID = 'processId',
+  CONFIRMATION_TOKEN = 'confirmationToken',
+  TOKEN_EXPIRES_AT = 'tokenExpiresAt',
+  ATTEMPT_COUNT = 'attemptCount',
+  CREATED_AT = 'createdAt',
+  CONFIRMED_AT = 'confirmedAt',
+  INVALIDATED_AT = 'invalidatedAt'
 }
 
 export enum CandidatesTermsSignatures {
