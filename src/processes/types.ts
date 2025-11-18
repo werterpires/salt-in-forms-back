@@ -25,3 +25,10 @@ export interface ProcessSimple {
   [db.Processes.PROCESS_ID]: number
   [db.Processes.PROCESS_TITLE]: string
 }
+
+export interface PublicProcessDto {
+  processId: number
+  title: string
+  beginDate: Date
+  endSubscriptions: Date
+}

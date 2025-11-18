@@ -5,6 +5,7 @@ import {
   CreateProcess,
   ProcessesFilter,
   ProcessSimple,
+  PublicProcessDto,
   UpdateProcess
 } from './types'
 import * as db from '../constants/db-schema.enum'
@@ -28,7 +29,7 @@ export class ProcessesRepo {
     const query = this.knex(db.Tables.PROCESSES).select(
       db.Processes.PROCESS_ID,
       db.Processes.PROCESS_TITLE,
-      db.Processes.PROCESS_TOTVS_ID,
+      db.Processes.PROCESS_DATA_KEY,
       db.Processes.PROCESS_BEGIN_DATE,
       db.Processes.PROCESS_END_DATE,
       db.Processes.PROCESS_END_ANSWERS,
@@ -53,8 +54,8 @@ export class ProcessesRepo {
       .update({
         [db.Processes.PROCESS_TITLE]:
           updateProcessData[db.Processes.PROCESS_TITLE],
-        [db.Processes.PROCESS_TOTVS_ID]:
-          updateProcessData[db.Processes.PROCESS_TOTVS_ID],
+        [db.Processes.PROCESS_DATA_KEY]:
+          updateProcessData[db.Processes.PROCESS_DATA_KEY],
         [db.Processes.PROCESS_BEGIN_DATE]:
           updateProcessData[db.Processes.PROCESS_BEGIN_DATE],
         [db.Processes.PROCESS_END_DATE]:
@@ -97,5 +98,22 @@ export class ProcessesRepo {
     const countKey = Object.keys(results)[0]
     const count = Number(results[countKey])
     return Math.ceil(count / this.elementsPerPage) || 0
+  }
+
+  async findActiveProcesses(): Promise<PublicProcessDto[]> {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const processes = await this.knex(db.Tables.PROCESSES)
+      .select(
+        `${db.Processes.PROCESS_ID} as processId`,
+        `${db.Processes.PROCESS_TITLE} as title`,
+        `${db.Processes.PROCESS_BEGIN_DATE} as beginDate`,
+        `${db.Processes.PROCESS_END_SUBSCRIPTION} as endSubscriptions`
+      )
+      .where(db.Processes.PROCESS_BEGIN_DATE, '<=', today)
+      .andWhere(db.Processes.PROCESS_END_SUBSCRIPTION, '>=', today)
+
+    return processes
   }
 }

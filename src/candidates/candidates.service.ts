@@ -143,6 +143,8 @@ export class CandidatesService implements OnModuleInit {
       throw new BadRequestException('#Processo seletivo não encontrado.')
     }
 
+    console.log(process)
+
     if (!process.processDataKey) {
       this.loggger.error(
         `Processo ${dto.processId} não possui processDataKey configurado`

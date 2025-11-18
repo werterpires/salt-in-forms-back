@@ -1,11 +1,21 @@
 import {
   IsBoolean,
+  IsEnum,
   IsNotEmpty,
   IsString,
   Length,
   Matches
 } from 'class-validator'
 import { Type } from 'class-transformer'
+
+enum MaritalStatus {
+  SOLTEIRO = 'solteiro',
+  NAMORANDO = 'namorando',
+  NOIVO = 'noivo',
+  CASADO = 'casado',
+  DIVORCIADO = 'divorciado',
+  VIUVO = 'viúvo'
+}
 
 export class CompleteRegistrationDto {
   @IsString({ message: '#Data de nascimento deve ser uma string' })
@@ -71,4 +81,11 @@ export class CompleteRegistrationDto {
     message: '#País deve ter entre 2 e 100 caracteres'
   })
   candidateCountry: string
+
+  @IsEnum(MaritalStatus, {
+    message:
+      '#Estado civil deve ser: solteiro, namorando, noivo, casado, divorciado ou viúvo'
+  })
+  @IsNotEmpty({ message: '#Estado civil é obrigatório' })
+  candidateMaritalStatus: MaritalStatus
 }
