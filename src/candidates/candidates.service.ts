@@ -29,6 +29,7 @@ import { FormsCandidatesService } from 'src/forms-candidates/forms-candidates.se
 import { AnswerWithoutId } from 'src/answers/types'
 import { SignTermsDto } from './dto/sign-terms.dto'
 import { SelfRegisterCandidateDto } from './dto/self-register-candidate.dto'
+import { CompleteRegistrationDto } from './dto/complete-registration.dto'
 import { PendingCandidatesService } from './pending-candidates.service'
 import { ExternalOrderValidationService } from './external-order-validation.service'
 import { getConfirmationEmailTemplate } from './email-templates/confirmation-email.template'
@@ -255,21 +256,22 @@ export class CandidatesService implements OnModuleInit {
 
   /**
    * Confirma o cadastro de um candidato pendente
+   * NOVO FLUXO: Apenas confirma o email, NÃO insere em Candidates
+   * O candidato deve completar o cadastro depois via /complete-registration
    *
    * Fluxo:
    * a) Buscar pending por token
    * b) Verificar se token não expirou (< tokenExpiresAt)
    * c) Verificar se não foi invalidado (invalidatedAt === null)
-   * d) Verificar se orderCode ainda está disponível (dupla verificação)
-   * e) Inserir na tabela Candidates com orderCode e data de validação
-   * f) Marcar pending como confirmado (confirmedAt = now)
-   * g) Enviar email de confirmação de sucesso
-   * h) Retornar mensagem de sucesso
+   * d) Marcar pending como confirmado (confirmedAt = now)
+   * e) Retornar token para uso no endpoint de complementação
    *
    * @param token Token de confirmação
-   * @returns Mensagem de sucesso
+   * @returns Token e mensagem de sucesso
    */
-  async confirmRegistration(token: string): Promise<{ message: string }> {
+  async confirmRegistration(
+    token: string
+  ): Promise<{ message: string; confirmationToken: string }> {
     this.loggger.log(
       `Iniciando confirmação de registro para token: ${token.substring(0, 10)}...`
     )
@@ -282,51 +284,19 @@ export class CandidatesService implements OnModuleInit {
       `Token validado para pending candidate ID: ${pendingCandidate.pendingCandidateId}`
     )
 
-    // d) Verificar se orderCode ainda está disponível (dupla verificação)
-    const orderCodeUsed = await this.candidatesRepo.isOrderCodeInCandidates(
-      pendingCandidate.orderCode
-    )
-
-    if (orderCodeUsed) {
-      this.loggger.error(
-        `OrderCode ${pendingCandidate.orderCode} foi usado por outro candidato durante a confirmação`
+    // Verificar se já foi confirmado
+    if (pendingCandidate.confirmedAt) {
+      this.loggger.log(
+        `Pending ${pendingCandidate.pendingCandidateId} já foi confirmado anteriormente`
       )
-      throw new BadRequestException(
-        '#Este código de pedido já foi utilizado por outro candidato. Entre em contato com o suporte.'
-      )
+      return {
+        message:
+          'Email já confirmado! Por favor, complete seu cadastro com as informações adicionais.',
+        confirmationToken: token
+      }
     }
 
-    // Verificar novamente se candidato já existe no processo (race condition)
-    const candidateExists = await this.candidatesRepo.candidateExistsInProcess(
-      pendingCandidate.processId,
-      pendingCandidate.candidateUniqueDocument
-    )
-
-    if (candidateExists) {
-      this.loggger.warn(
-        `Candidato com documento já existe no processo ${pendingCandidate.processId} durante confirmação`
-      )
-      throw new BadRequestException(
-        '#Você já está cadastrado neste processo seletivo.'
-      )
-    }
-
-    // e) Inserir na tabela Candidates com orderCode e data de validação
-    this.loggger.log('Inserindo candidato confirmado na tabela Candidates')
-
-    const candidateId = await this.candidatesRepo.insertCandidateFromPending({
-      processId: pendingCandidate.processId,
-      candidateName: pendingCandidate.candidateName,
-      candidateDocumentType: pendingCandidate.candidateDocumentType,
-      candidateUniqueDocument: pendingCandidate.candidateUniqueDocument,
-      candidateEmail: pendingCandidate.candidateEmail,
-      candidatePhone: pendingCandidate.candidatePhone,
-      candidateOrderCode: pendingCandidate.orderCode
-    })
-
-    this.loggger.log(`Candidato inserido com ID: ${candidateId}`)
-
-    // f) Marcar pending como confirmado (confirmedAt = now)
+    // d) Marcar pending como confirmado (confirmedAt = now)
     await this.pendingCandidatesService.confirmPendingCandidate(
       pendingCandidate.pendingCandidateId
     )
@@ -335,8 +305,111 @@ export class CandidatesService implements OnModuleInit {
       `Pending candidate ${pendingCandidate.pendingCandidateId} marcado como confirmado`
     )
 
-    // g) Enviar email de confirmação de sucesso
-    // Descriptografar nome e email antes de enviar
+    // e) Retornar token para uso no endpoint de complementação
+    return {
+      message:
+        'Email confirmado com sucesso! Por favor, complete seu cadastro com as informações adicionais.',
+      confirmationToken: token
+    }
+  }
+
+  /**
+   * Completa o cadastro de um candidato após confirmação de email
+   *
+   * Fluxo:
+   * a) Buscar e validar token de confirmação
+   * b) Verificar se pending foi confirmado (confirmedAt !== null)
+   * c) Verificar se orderCode ainda está disponível
+   * d) Verificar se candidato já existe no processo
+   * e) Inserir na tabela Candidates com TODOS os campos
+   * f) Enviar email de cadastro completo
+   * g) Retornar mensagem de sucesso
+   *
+   * @param token Token de confirmação
+   * @param dto Dados complementares do candidato
+   * @returns Mensagem de sucesso
+   */
+  async completeRegistration(
+    token: string,
+    dto: CompleteRegistrationDto
+  ): Promise<{ message: string }> {
+    this.loggger.log(
+      `Iniciando complementação de cadastro para token: ${token.substring(0, 10)}...`
+    )
+
+    // a) Buscar e validar token
+    const pendingCandidate =
+      await this.pendingCandidatesService.validateConfirmationToken(token)
+
+    this.loggger.log(
+      `Token validado para pending candidate ID: ${pendingCandidate.pendingCandidateId}`
+    )
+
+    // b) Verificar se pending foi confirmado
+    if (!pendingCandidate.confirmedAt) {
+      this.loggger.warn(
+        `Pending ${pendingCandidate.pendingCandidateId} ainda não foi confirmado`
+      )
+      throw new BadRequestException(
+        '#Você precisa confirmar seu email antes de completar o cadastro.'
+      )
+    }
+
+    // c) Verificar se orderCode ainda está disponível (dupla verificação)
+    const orderCodeUsed = await this.candidatesRepo.isOrderCodeInCandidates(
+      pendingCandidate.orderCode
+    )
+
+    if (orderCodeUsed) {
+      this.loggger.error(
+        `OrderCode ${pendingCandidate.orderCode} já foi usado durante complementação`
+      )
+      throw new BadRequestException(
+        '#Este cadastro já foi completado anteriormente ou o código de pedido foi utilizado por outro candidato.'
+      )
+    }
+
+    // d) Verificar se candidato já existe no processo (race condition)
+    const candidateExists = await this.candidatesRepo.candidateExistsInProcess(
+      pendingCandidate.processId,
+      pendingCandidate.candidateUniqueDocument
+    )
+
+    if (candidateExists) {
+      this.loggger.warn(
+        `Candidato com documento já existe no processo ${pendingCandidate.processId} durante complementação`
+      )
+      throw new BadRequestException(
+        '#Você já está cadastrado neste processo seletivo.'
+      )
+    }
+
+    // e) Inserir na tabela Candidates com TODOS os campos
+    this.loggger.log('Inserindo candidato completo na tabela Candidates')
+
+    const candidateId = await this.candidatesRepo.insertCompleteCandidate({
+      processId: pendingCandidate.processId,
+      candidateName: pendingCandidate.candidateName,
+      candidateDocumentType: pendingCandidate.candidateDocumentType,
+      candidateUniqueDocument: pendingCandidate.candidateUniqueDocument,
+      candidateEmail: pendingCandidate.candidateEmail,
+      candidatePhone: pendingCandidate.candidatePhone,
+      candidateOrderCode: pendingCandidate.orderCode,
+      candidateBirthdate: dto.candidateBirthdate,
+      candidateForeigner: dto.candidateForeigner,
+      candidateAddress: dto.candidateAddress,
+      candidateAddressNumber: dto.candidateAddressNumber,
+      candidateDistrict: dto.candidateDistrict,
+      candidateCity: dto.candidateCity,
+      candidateState: dto.candidateState,
+      candidateZipCode: dto.candidateZipCode,
+      candidateCountry: dto.candidateCountry,
+      candidateMaritalStatus: dto.candidateMaritalStatus
+    })
+
+    this.loggger.log(`Candidato inserido com ID: ${candidateId}`)
+
+    // f) Enviar email de cadastro completo
     const decryptedName = this.encryptionService.decrypt(
       pendingCandidate.candidateName
     )
@@ -346,10 +419,14 @@ export class CandidatesService implements OnModuleInit {
 
     await this.sendRegistrationConfirmedEmail(decryptedName, decryptedEmail)
 
-    // h) Retornar mensagem de sucesso
+    this.loggger.log(
+      `Email de cadastro completo enviado para ${decryptedEmail}`
+    )
+
+    // g) Retornar mensagem de sucesso
     return {
       message:
-        'Cadastro confirmado com sucesso! Em breve você receberá o link para acessar o formulário.'
+        'Cadastro completado com sucesso! Em breve você receberá o link para acessar o formulário.'
     }
   }
 

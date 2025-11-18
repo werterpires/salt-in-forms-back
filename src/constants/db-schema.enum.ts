@@ -182,6 +182,7 @@ export enum Candidates {
   CANDIDATE_STATE = 'candidateState',
   CANDIDATE_ZIP_CODE = 'candidateZipCode',
   CANDIDATE_COUNTRY = 'candidateCountry',
+  CANDIDATE_MARITAL_STATUS = 'candidateMaritalStatus',
   INTERVIEW_USER_ID = 'interviewUserId',
   CANDIDATE_ORDER_CODE = 'candidateOrderCode',
   CANDIDATE_ORDER_CODE_VALIDATED_AT = 'candidateOrderCodeValidatedAt'

@@ -65,7 +65,8 @@ const knex = KnexModule.forRoot(
           } else if (field.type === 'DATE' && field.length > 1) {
             return field.string() // 1 = true, 0 = false
           } else if (field.type === 'DATETIME' && field.length > 1) {
-            return field.string().substring(0, 10) // 1 = true, 0 = false
+            const value = field.string()
+            return value ? value.substring(0, 10) : null
           }
           return next()
         }

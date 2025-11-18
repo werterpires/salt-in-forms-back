@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { Module, forwardRef } from '@nestjs/common'
 import { AnswersService } from './answers.service'
 import { AnswersController } from './answers.controller'
 import { AnswersRepo } from './answers.repo'
@@ -10,12 +10,13 @@ import { UtilsModuleModule } from '../shared/utils-module/utils-module.module'
 
 @Module({
   imports: [
-    FormsCandidatesModule,
+    forwardRef(() => FormsCandidatesModule),
     QuestionsModule,
     FormSectionsModule,
     UtilsModuleModule
   ],
   controllers: [AnswersController],
-  providers: [AnswersService, AnswersRepo, FormsCandidatesRepo]
+  providers: [AnswersService, AnswersRepo, FormsCandidatesRepo],
+  exports: [AnswersRepo]
 })
 export class AnswersModule {}

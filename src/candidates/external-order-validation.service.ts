@@ -128,7 +128,7 @@ export class ExternalOrderValidationService {
   ): Promise<OrderValidationResult> {
     try {
       this.logger.log(
-        `Validando orderCode: ${orderCode} para tenant: ${dataKey}`
+        `Validando orderCode: ${orderCode} para o vestibular: ${dataKey}`
       )
 
       // Garantir que temos um token válido
@@ -140,7 +140,7 @@ export class ExternalOrderValidationService {
       }
 
       // Buscar pedido específico (página 1, tamanho 1, filtrado por orderCode)
-      const endpoint = `${apiUrl}/AdminArea/GetTenantOrders/${dataKey}/1/1?orderCode=${orderCode}`
+      const endpoint = `${apiUrl}/AdminArea/GetTenantOrders/FAAMA/1/1?orderCode=${orderCode}`
 
       this.logger.log(`Fazendo requisição para: ${endpoint}`)
 
@@ -163,27 +163,35 @@ export class ExternalOrderValidationService {
       }
 
       const order = response.data.entities[0]
+      console.log('order', order)
+
+      if (order.orderItems[0].enrollmentModelId != dataKey) {
+        throw new BadRequestException(
+          '#O código de pedido não é valido para esta edição de vestivular.'
+        )
+      }
 
       this.logger.log(
         `Pedido encontrado: ${order.orderId}, Status: ${order.orderStatus}`
       )
 
       // Verificar se o pedido está pago (status 30 = pago)
-      const isPaid = order.orderPayments?.some(
-        (payment) => payment.paymentStatus === 30
-      )
+      // const isPaid = order.orderPayments?.some(
+      //   (payment) => payment.paymentStatus === 30
+      // )
 
-      if (!isPaid) {
-        this.logger.warn(
-          `Pedido ${order.orderId} não está pago. Status dos pagamentos: ${JSON.stringify(
-            order.orderPayments?.map((p) => p.paymentStatus)
-          )}`
-        )
-        return {
-          isValid: false,
-          message: '#Pedido não está pago ou confirmado'
-        }
-      }
+      //Se o order code aparecer aqui ele já estará pago (em conversa com Adriell)
+      // if (!isPaid) {
+      //   this.logger.warn(
+      //     `Pedido ${order.orderId} não está pago. Status dos pagamentos: ${JSON.stringify(
+      //       order.orderPayments?.map((p) => p.paymentStatus)
+      //     )}`
+      //   )
+      //   return {
+      //     isValid: false,
+      //     message: '#Pedido não está pago ou confirmado'
+      //   }
+      // }
 
       // Verificar se o orderCode do pedido corresponde ao informado
       if (order.orderCode.toString() !== orderCode) {

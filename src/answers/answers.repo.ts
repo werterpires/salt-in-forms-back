@@ -76,6 +76,20 @@ export class AnswersRepo {
       })
   }
 
+  async findAllAnswersByFormCandidateId(
+    formCandidateId: number
+  ): Promise<Answer[]> {
+    return this.knex(db.Tables.ANSWERS)
+      .select(
+        db.Answers.ANSWER_ID,
+        db.Answers.QUESTION_ID,
+        db.Answers.FORM_CANDIDATE_ID,
+        db.Answers.ANSWER_VALUE,
+        db.Answers.VALID_ANSWER
+      )
+      .where(db.Answers.FORM_CANDIDATE_ID, formCandidateId)
+  }
+
   async insertAnswerInTransaction(
     answer: CreateAnswer,
     trx: Knex.Transaction

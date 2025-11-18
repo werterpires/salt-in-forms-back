@@ -3,6 +3,7 @@ import { CandidatesService } from './candidates.service'
 import { IsPublic } from '../shared/auth/decorators/is-public.decorator'
 import { SignTermsDto } from './dto/sign-terms.dto'
 import { SelfRegisterCandidateDto } from './dto/self-register-candidate.dto'
+import { CompleteRegistrationDto } from './dto/complete-registration.dto'
 import { ResendConfirmationDto } from './dto/resend-confirmation.dto'
 import { Roles } from '../users/decorators/roles.decorator'
 import { ERoles } from '../constants/roles.const'
@@ -23,7 +24,7 @@ export class CandidatesController {
 
   /**
    * 6.2 - Confirmar cadastro via token
-   * Endpoint público para confirmar email e completar cadastro
+   * Endpoint público para confirmar email (não completa o cadastro)
    */
   @IsPublic()
   @Get('confirm-registration/:token')
@@ -32,7 +33,20 @@ export class CandidatesController {
   }
 
   /**
-   * 6.3 - Reenviar email de confirmação
+   * 6.3 - Completar cadastro após confirmação de email
+   * Endpoint público para fornecer dados adicionais do candidato
+   */
+  @IsPublic()
+  @Post('complete-registration/:token')
+  async completeRegistration(
+    @Param('token') token: string,
+    @Body() dto: CompleteRegistrationDto
+  ) {
+    return await this.candidatesService.completeRegistration(token, dto)
+  }
+
+  /**
+   * 6.4 - Reenviar email de confirmação
    * Endpoint público para reenviar email com mesmo token
    */
   @IsPublic()
@@ -42,7 +56,7 @@ export class CandidatesController {
   }
 
   /**
-   * 6.4 - Verificar status de cadastro (admin only - debug)
+   * 6.5 - Verificar status de cadastro (admin only - debug)
    * Endpoint administrativo para verificar status de um orderCode
    */
   @Roles(ERoles.ADMIN, ERoles.SEC)
