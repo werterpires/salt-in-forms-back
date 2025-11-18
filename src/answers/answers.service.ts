@@ -35,6 +35,12 @@ export class AnswersService {
         createAnswerDto.accessCode
       )
 
+    // Validar período de resposta e status do formulário
+    const currentStatus =
+      await this.formsCandidatesService.validateFormCandidateForAnswer(
+        formCandidateId
+      )
+
     // Primeira validação: verificar se já existe answer e se está habilitada
     const existingAnswerEncrypted: Answer | undefined =
       await this.answersRepo.findAnswerByQuestionAndFormCandidate(
@@ -223,6 +229,12 @@ export class AnswersService {
 
       return results
     })
+
+    // Se o status for menor que STARTED (4), atualizar para STARTED
+    await this.formsCandidatesService.updateToStartedIfNeeded(
+      formCandidateId,
+      currentStatus
+    )
 
     return response
   }

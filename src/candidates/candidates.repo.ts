@@ -3,7 +3,12 @@ import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
 import * as db from '../constants/db-schema.enum'
 import { Process } from 'src/processes/types'
-import { CreateCandidate, CreateFormCandidate, FormCandidate } from './types'
+import {
+  CreateCandidate,
+  CreateFormCandidate,
+  FormCandidate,
+  InsertCompleteCandidate
+} from './types'
 import { ERoles } from '../constants/roles.const'
 import { Term } from 'src/terms/types'
 import { Answer } from 'src/answers/types'
@@ -666,5 +671,41 @@ export class CandidatesRepo {
       .select(db.Candidates.CANDIDATE_ID)
       .where(db.Candidates.CANDIDATE_ORDER_CODE, orderCode)
       .first()
+  }
+
+  /**
+   * Insere um candidato completo com todos os campos
+   * (usado após complementação de cadastro)
+   *
+   * @param data Dados completos do candidato
+   * @returns ID do candidato inserido
+   */
+  async insertCompleteCandidate(
+    data: InsertCompleteCandidate
+  ): Promise<number> {
+    const [id] = await this.knex(db.Tables.CANDIDATES)
+      .insert({
+        [db.Candidates.PROCESS_ID]: data.processId,
+        [db.Candidates.CANDIDATE_NAME]: data.candidateName,
+        [db.Candidates.CANDIDATE_DOCUMENT_TYPE]: data.candidateDocumentType,
+        [db.Candidates.CANDIDATE_UNIQUE_DOCUMENT]: data.candidateUniqueDocument,
+        [db.Candidates.CANDIDATE_EMAIL]: data.candidateEmail,
+        [db.Candidates.CANDIDATE_PHONE]: data.candidatePhone,
+        [db.Candidates.CANDIDATE_ORDER_CODE]: data.candidateOrderCode,
+        [db.Candidates.CANDIDATE_ORDER_CODE_VALIDATED_AT]: this.knex.fn.now(),
+        [db.Candidates.CANDIDATE_BIRTHDATE]: data.candidateBirthdate,
+        [db.Candidates.CANDIDATE_FOREIGNER]: data.candidateForeigner,
+        [db.Candidates.CANDIDATE_ADDRESS]: data.candidateAddress,
+        [db.Candidates.CANDIDATE_ADDRESS_NUMBER]: data.candidateAddressNumber,
+        [db.Candidates.CANDIDATE_DISTRICT]: data.candidateDistrict,
+        [db.Candidates.CANDIDATE_CITY]: data.candidateCity,
+        [db.Candidates.CANDIDATE_STATE]: data.candidateState,
+        [db.Candidates.CANDIDATE_ZIP_CODE]: data.candidateZipCode,
+        [db.Candidates.CANDIDATE_COUNTRY]: data.candidateCountry,
+        [db.Candidates.CANDIDATE_MARITAL_STATUS]: data.candidateMaritalStatus
+      })
+      .returning(db.Candidates.CANDIDATE_ID)
+
+    return typeof id === 'object' ? id[db.Candidates.CANDIDATE_ID] : id
   }
 }

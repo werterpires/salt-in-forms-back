@@ -197,6 +197,29 @@ export interface CreatePendingCandidate {
 }
 
 /**
+ * Dados para inserir candidato completo (com todos os campos)
+ */
+export interface InsertCompleteCandidate {
+  processId: number
+  candidateName: string
+  candidateDocumentType: DocumentType
+  candidateUniqueDocument: string
+  candidateEmail: string
+  candidatePhone: string
+  candidateOrderCode: string
+  candidateBirthdate: string
+  candidateForeigner: boolean
+  candidateAddress: string
+  candidateAddressNumber: string
+  candidateDistrict: string
+  candidateCity: string
+  candidateState: string
+  candidateZipCode: string
+  candidateCountry: string
+  candidateMaritalStatus: string
+}
+
+/**
  * Dados para atualizar um candidato pendente
  */
 export interface UpdatePendingCandidate {
