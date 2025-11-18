@@ -21,7 +21,7 @@ export class CandidatesRepo {
       .select(
         db.Processes.PROCESS_ID,
         db.Processes.PROCESS_TITLE,
-        db.Processes.PROCESS_TOTVS_ID,
+        db.Processes.PROCESS_DATA_KEY,
         db.Processes.PROCESS_BEGIN_DATE,
         db.Processes.PROCESS_END_DATE,
         db.Processes.PROCESS_END_ANSWERS,
@@ -39,7 +39,7 @@ export class CandidatesRepo {
       .select(
         db.Processes.PROCESS_ID,
         db.Processes.PROCESS_TITLE,
-        db.Processes.PROCESS_TOTVS_ID,
+        db.Processes.PROCESS_DATA_KEY,
         db.Processes.PROCESS_BEGIN_DATE,
         db.Processes.PROCESS_END_DATE,
         db.Processes.PROCESS_END_ANSWERS,

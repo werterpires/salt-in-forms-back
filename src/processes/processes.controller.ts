@@ -15,7 +15,8 @@ import { Roles } from 'src/users/decorators/roles.decorator'
 import { ERoles } from 'src/constants/roles.const'
 import * as db from 'src/constants/db-schema.enum'
 import { Paginator } from 'src/shared/types/types'
-import { ProcessesFilter, ProcessStatus } from './types'
+import { ProcessesFilter, ProcessStatus, PublicProcessDto } from './types'
+import { IsPublic } from 'src/shared/auth/decorators/is-public.decorator'
 
 @Controller('processes')
 export class ProcessesController {
@@ -56,6 +57,12 @@ export class ProcessesController {
   @Put()
   async update(@Body() updateProcessDto: UpdateProcessDto) {
     return await this.processesService.updateProcess(updateProcessDto)
+  }
+
+  @IsPublic()
+  @Get('public/active')
+  async findActiveProcesses(): Promise<PublicProcessDto[]> {
+    return await this.processesService.findActiveProcesses()
   }
 
   @Roles(ERoles.ADMIN)
