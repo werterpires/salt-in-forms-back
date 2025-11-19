@@ -7,13 +7,15 @@ import { FormsCandidatesModule } from '../forms-candidates/forms-candidates.modu
 import { ExternalOrderValidationService } from './external-order-validation.service'
 import { PendingCandidatesRepo } from './pending-candidates.repo'
 import { PendingCandidatesService } from './pending-candidates.service'
+import { UsersRepo } from '../users/users.repo'
 
 const services = [
   CandidatesService,
   CandidatesRepo,
   ExternalOrderValidationService,
   PendingCandidatesRepo,
-  PendingCandidatesService
+  PendingCandidatesService,
+  UsersRepo
 ]
 
 @Module({

@@ -4,7 +4,7 @@ import { CreateUserDto } from './dtos/create-user.dto'
 import { Roles } from './decorators/roles.decorator'
 import { ERoles } from 'src/constants/roles.const'
 import * as db from '../constants/db-schema.enum'
-import { UserFilter } from './types'
+import { InterviewerBasicInfo, UserFilter } from './types'
 import { UpdateUserDto } from './dtos/update-user.dto'
 import { UpdateOwnUserDto } from './dtos/update-own-user.dto'
 import { CurrentUser } from './decorators/current-user.decorator'
@@ -52,16 +52,6 @@ export class UsersController {
       db.Users
     )
 
-    // const paginator: Paginator<typeof db.Users> = {
-    //   column: Object.values(db.Users).includes(column as db.Users)
-    //     ? (column as db.Users)
-    //     : db.Users.USER_NAME,
-    //   direction: Object.values(Direction).includes(direction as Direction)
-    //     ? (direction as Direction)
-    //     : Direction.ASC,
-    //   page: +page || 1
-    // }
-
     const filters: UserFilter = {
       roleId: +roleId || undefined,
       userEmail,
@@ -94,5 +84,11 @@ export class UsersController {
   @Put()
   update(@Body() UpdateUserDto: UpdateUserDto) {
     return this.usersService.updateUser(UpdateUserDto)
+  }
+
+  @Roles(ERoles.ADMIN)
+  @Get('interviewers/active')
+  findActiveInterviewers(): Promise<InterviewerBasicInfo[]> {
+    return this.usersService.findActiveInterviewers()
   }
 }

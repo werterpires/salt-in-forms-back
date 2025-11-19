@@ -4,6 +4,7 @@ import { CronJob } from 'cron'
 import { CandidatesRepo } from './candidates.repo'
 import { ExternalApiService } from '../shared/utils-module/external-api/external-api.service'
 import { EncryptionService } from '../shared/utils-module/encryption/encryption.service'
+import { UsersRepo } from '../users/users.repo'
 import {
   CreateFormCandidate,
   FormToAnswer,
@@ -12,8 +13,11 @@ import {
   SubQuestionToAnswer,
   ProcessInAnswerPeriod,
   SFormBasic,
-  FormCandidateWithDetails
+  FormCandidateWithDetails,
+  CandidateBasicInfo
 } from './types'
+import { FindAllResponse, Paginator } from '../shared/types/types'
+import * as db from '../constants/db-schema.enum'
 import { CustomLoggerService } from 'src/shared/utils-module/custom-logger/custom-logger.service'
 import { SendPulseEmailService } from '../shared/utils-module/email-sender/sendpulse-email.service'
 import {
@@ -46,7 +50,8 @@ export class CandidatesService implements OnModuleInit {
     private readonly formsCandidatesService: FormsCandidatesService,
     private readonly pendingCandidatesService: PendingCandidatesService,
     private readonly externalOrderValidationService: ExternalOrderValidationService,
-    private readonly schedulerRegistry: SchedulerRegistry
+    private readonly schedulerRegistry: SchedulerRegistry,
+    private readonly usersRepo: UsersRepo
   ) {}
 
   /**
@@ -523,6 +528,98 @@ export class CandidatesService implements OnModuleInit {
 
     if (candidateId) {
       response.candidateId = candidateId
+    }
+
+    return response
+  }
+
+  /**
+   * Busca todos os candidatos de um processo com paginação
+   * Retorna informações básicas com dados descriptografados
+   *
+   * @param processId ID do processo
+   * @param orderBy Objeto Paginator com informações de paginação e ordenação
+   * @returns FindAllResponse com array de candidatos e quantidade de páginas
+   */
+  async getCandidatesByProcess(
+    processId: number,
+    orderBy: Paginator<typeof db.Candidates>
+  ): Promise<FindAllResponse<CandidateBasicInfo>> {
+    this.loggger.log(`Buscando candidatos do processo ${processId}`)
+
+    // Buscar todos os formulários do processo
+    const sForms = await this.candidatesRepo.findSFormsByProcessId(processId)
+
+    // Buscar candidatos do repositório (dados criptografados)
+    const candidates = await this.candidatesRepo.findCandidatesByProcessId(
+      processId,
+      orderBy
+    )
+
+    // Descriptografar dados sensíveis e buscar forms para cada candidato
+    const candidatesDecrypted: CandidateBasicInfo[] = []
+
+    for (const candidate of candidates) {
+      const forms: { formTitle: string; formStatus: number | null }[] = []
+
+      // Processar apenas formulários do tipo "candidate"
+      for (const sForm of sForms) {
+        if (sForm.sFormType === 'candidate') {
+          // Buscar FormCandidate para este candidato e formulário
+          const formCandidate =
+            await this.candidatesRepo.findFormCandidateByCandidateAndForm(
+              candidate.candidateId,
+              sForm.sFormId
+            )
+
+          forms.push({
+            formTitle: sForm.sFormName,
+            formStatus: formCandidate ? formCandidate.formCandidateStatus : null
+          })
+        }
+
+        // TODO: Implementar lógica para formulários do tipo "normal" e "ministerial"
+        // Para estes tipos, será necessário:
+        // - "normal": buscar resposta da pergunta vinculada (emailQuestionId) e validar email
+        // - "ministerial": implementar lógica específica conforme regras de negócio
+      }
+
+      // Buscar nome do entrevistador se existir interviewUserId
+      let interviewer: string | null = null
+      if (candidate.interviewUserId) {
+        interviewer = await this.candidatesRepo.findUserNameById(
+          candidate.interviewUserId
+        )
+      }
+
+      candidatesDecrypted.push({
+        candidateName: this.encryptionService.decrypt(candidate.candidateName),
+        candidateUniqueDocument: candidate.candidateUniqueDocument,
+        candidateDocumentType: candidate.candidateDocumentType,
+        candidateEmail: this.encryptionService.decrypt(
+          candidate.candidateEmail
+        ),
+        candidatePhone: this.encryptionService.decrypt(
+          candidate.candidatePhone
+        ),
+        candidateBirthdate: candidate.candidateBirthdate,
+        candidateMaritalStatus: candidate.candidateMaritalStatus,
+        interviewer,
+        forms
+      })
+    }
+
+    // Buscar quantidade total de páginas
+    const pagesQuantity =
+      await this.candidatesRepo.findCandidatesQuantityByProcessId(processId)
+
+    this.loggger.log(
+      `Total de ${candidatesDecrypted.length} candidatos encontrados na página ${orderBy.page}`
+    )
+
+    const response: FindAllResponse<CandidateBasicInfo> = {
+      data: candidatesDecrypted,
+      pagesQuantity
     }
 
     return response
@@ -1341,6 +1438,261 @@ export class CandidatesService implements OnModuleInit {
       }
       // Formulários "normal" e "ministerial" serão processados em outro cron
       // quando a tabela de respostas estiver disponível
+    }
+  }
+
+  /**
+   * Distribui candidatos entre entrevistadores ativos de forma balanceada
+   * Prioriza distribuição equitativa de estado civil, seguida de faixa etária
+   *
+   * @param processId ID do processo
+   * @returns Resultado da distribuição com estatísticas
+   */
+  async distributeInterviewers(processId: number) {
+    // 1) Verificar se o processo já terminou o período de resposta
+    const process = await this.candidatesRepo.findProcessById(processId)
+
+    if (!process) {
+      throw new BadRequestException('Processo não encontrado')
+    }
+
+    const today = new Date()
+    const endAnswersDate = new Date(process.processEndAnswers)
+
+    if (endAnswersDate >= today) {
+      throw new BadRequestException(
+        'O período de respostas do processo ainda não terminou'
+      )
+    }
+
+    // 2) Buscar entrevistadores ativos
+    const interviewers = await this.candidatesRepo.findActiveInterviewers()
+
+    if (interviewers.length === 0) {
+      throw new BadRequestException('Não há entrevistadores ativos disponíveis')
+    }
+
+    // 3) Buscar candidatos do processo
+    const candidates =
+      await this.candidatesRepo.findCandidatesForDistribution(processId)
+
+    if (candidates.length === 0) {
+      throw new BadRequestException('Não há candidatos neste processo')
+    }
+
+    // 4) Distribuir candidatos entre entrevistadores
+    const assignments = this.calculateDistribution(candidates, interviewers)
+
+    // 5) Salvar distribuição no banco
+    await this.candidatesRepo.updateCandidatesInterviewers(assignments)
+
+    return {
+      message: 'Candidatos distribuídos com sucesso',
+      statistics: {
+        totalCandidates: candidates.length,
+        totalInterviewers: interviewers.length,
+        candidatesPerInterviewer: Math.ceil(
+          candidates.length / interviewers.length
+        )
+      }
+    }
+  }
+
+  /**
+   * Calcula a distribuição ótima de candidatos entre entrevistadores
+   * Balanceia estado civil (prioridade 1) e faixa etária (prioridade 2)
+   *
+   * @param candidates Lista de candidatos
+   * @param interviewers Lista de IDs de entrevistadores
+   * @returns Array de atribuições {candidateId, interviewUserId}
+   */
+  private calculateDistribution(
+    candidates: Array<{
+      candidateId: number
+      candidateBirthdate: string
+      candidateMaritalStatus: string | null
+    }>,
+    interviewers: number[]
+  ): Array<{ candidateId: number; interviewUserId: number }> {
+    // Classificar candidatos por estado civil e idade
+    const categorizedCandidates = this.categorizeCandidates(candidates)
+
+    // Inicializar contadores para cada entrevistador
+    const interviewerStats = interviewers.map((id) => ({
+      interviewUserId: id,
+      counters: {
+        casado: { jovem: 0, adulto: 0, senior: 0 },
+        solteiro: { jovem: 0, adulto: 0, senior: 0 },
+        noivo: { jovem: 0, adulto: 0, senior: 0 },
+        namorando: { jovem: 0, adulto: 0, senior: 0 },
+        divorciado: { jovem: 0, adulto: 0, senior: 0 },
+        viuvo: { jovem: 0, adulto: 0, senior: 0 },
+        indefinido: { jovem: 0, adulto: 0, senior: 0 }
+      },
+      total: 0
+    }))
+
+    const assignments: Array<{ candidateId: number; interviewUserId: number }> =
+      []
+
+    // Processar cada categoria de estado civil
+    const maritalStatuses = [
+      'casado',
+      'solteiro',
+      'noivo',
+      'namorando',
+      'divorciado',
+      'viuvo',
+      'indefinido'
+    ]
+
+    for (const maritalStatus of maritalStatuses) {
+      const categoryGroups = categorizedCandidates[maritalStatus]
+
+      // Processar cada faixa etária dentro do estado civil
+      for (const ageGroup of ['jovem', 'adulto', 'senior'] as const) {
+        const candidatesInGroup = categoryGroups[ageGroup]
+
+        // Distribuir candidatos deste grupo
+        for (const candidate of candidatesInGroup) {
+          // Encontrar entrevistador com menor quantidade desta categoria específica
+          const selectedInterviewer = interviewerStats.reduce((prev, curr) => {
+            const prevCount = prev.counters[maritalStatus][ageGroup]
+            const currCount = curr.counters[maritalStatus][ageGroup]
+
+            // Se empate, escolher quem tem menos total
+            if (prevCount === currCount) {
+              return prev.total <= curr.total ? prev : curr
+            }
+
+            return prevCount < currCount ? prev : curr
+          })
+
+          // Atribuir candidato ao entrevistador
+          assignments.push({
+            candidateId: candidate.candidateId,
+            interviewUserId: selectedInterviewer.interviewUserId
+          })
+
+          // Atualizar contadores
+          selectedInterviewer.counters[maritalStatus][ageGroup]++
+          selectedInterviewer.total++
+        }
+      }
+    }
+
+    return assignments
+  }
+
+  /**
+   * Categoriza candidatos por estado civil e faixa etária
+   *
+   * @param candidates Lista de candidatos
+   * @returns Objeto com candidatos categorizados
+   */
+  private categorizeCandidates(
+    candidates: Array<{
+      candidateId: number
+      candidateBirthdate: string
+      candidateMaritalStatus: string | null
+    }>
+  ) {
+    const categorized: {
+      [maritalStatus: string]: {
+        jovem: typeof candidates
+        adulto: typeof candidates
+        senior: typeof candidates
+      }
+    } = {
+      casado: { jovem: [], adulto: [], senior: [] },
+      solteiro: { jovem: [], adulto: [], senior: [] },
+      noivo: { jovem: [], adulto: [], senior: [] },
+      namorando: { jovem: [], adulto: [], senior: [] },
+      divorciado: { jovem: [], adulto: [], senior: [] },
+      viuvo: { jovem: [], adulto: [], senior: [] },
+      indefinido: { jovem: [], adulto: [], senior: [] }
+    }
+
+    for (const candidate of candidates) {
+      const age = this.calculateAge(candidate.candidateBirthdate)
+      const ageGroup = this.getAgeGroup(age)
+      const maritalStatus =
+        candidate.candidateMaritalStatus?.toLowerCase() || 'indefinido'
+
+      const category = categorized[maritalStatus] || categorized.indefinido
+
+      category[ageGroup].push(candidate)
+    }
+
+    return categorized
+  }
+
+  /**
+   * Calcula idade a partir da data de nascimento
+   *
+   * @param birthdate Data de nascimento (string)
+   * @returns Idade em anos
+   */
+  private calculateAge(birthdate: string): number {
+    const birth = new Date(birthdate)
+    const today = new Date()
+    let age = today.getFullYear() - birth.getFullYear()
+    const monthDiff = today.getMonth() - birth.getMonth()
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
+      age--
+    }
+
+    return age
+  }
+
+  /**
+   * Define faixa etária baseada na idade
+   *
+   * @param age Idade em anos
+   * @returns Categoria etária (jovem, adulto, senior)
+   */
+  private getAgeGroup(age: number): 'jovem' | 'adulto' | 'senior' {
+    if (age < 24) return 'jovem'
+    if (age < 30) return 'adulto'
+    return 'senior'
+  }
+
+  /**
+   * Atribui um entrevistador a um candidato específico
+   * Valida se o usuário existe, é entrevistador e está ativo
+   *
+   * @param userId ID do entrevistador
+   * @param candidateId ID do candidato
+   * @returns Mensagem de sucesso
+   */
+  async assignInterviewerToCandidate(
+    userId: number,
+    candidateId: number
+  ): Promise<{ message: string }> {
+    // Verificar se o candidato existe
+    const candidate = await this.candidatesRepo.findCandidateById(candidateId)
+    if (!candidate) {
+      throw new BadRequestException('Candidato não encontrado')
+    }
+
+    // Verificar se o usuário é um entrevistador ativo
+    const isActiveInterviewer = await this.usersRepo.isActiveInterviewer(userId)
+
+    if (!isActiveInterviewer) {
+      throw new BadRequestException(
+        'Usuário não encontrado, não é entrevistador ou não está ativo'
+      )
+    }
+
+    // Atribuir entrevistador ao candidato
+    await this.candidatesRepo.assignInterviewerToCandidate(candidateId, userId)
+
+    return {
+      message: 'Entrevistador atribuído ao candidato com sucesso'
     }
   }
 }
