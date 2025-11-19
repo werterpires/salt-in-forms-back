@@ -308,3 +308,26 @@ export interface GetOrdersResponse {
   totalPages: number
   entities: Order[]
 }
+
+/**
+ * Informações sobre o formulário do candidato
+ */
+export interface CandidateFormInfo {
+  formTitle: string
+  formStatus: number | null
+}
+
+/**
+ * Informações básicas do candidato para listagem
+ */
+export interface CandidateBasicInfo {
+  candidateName: string
+  candidateUniqueDocument: string
+  candidateDocumentType: DocumentType
+  candidateEmail: string
+  candidatePhone: string
+  candidateBirthdate: string
+  candidateMaritalStatus: string
+  interviewer: string | null
+  forms: CandidateFormInfo[]
+}

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body } from '@nestjs/common'
+import { Controller, Get, Post, Param, Body, Query } from '@nestjs/common'
 import { CandidatesService } from './candidates.service'
 import { IsPublic } from '../shared/auth/decorators/is-public.decorator'
 import { SignTermsDto } from './dto/sign-terms.dto'
@@ -7,6 +7,9 @@ import { CompleteRegistrationDto } from './dto/complete-registration.dto'
 import { ResendConfirmationDto } from './dto/resend-confirmation.dto'
 import { Roles } from '../users/decorators/roles.decorator'
 import { ERoles } from '../constants/roles.const'
+import { FindAllResponse, Paginator } from '../shared/types/types'
+import * as db from '../constants/db-schema.enum'
+import { CandidateBasicInfo } from './types'
 
 @Controller('candidates')
 export class CandidatesController {
@@ -65,6 +68,32 @@ export class CandidatesController {
     return this.candidatesService.getRegistrationStatus(orderCode)
   }
 
+  /**
+   * 6.6 - Buscar todos os candidatos de um processo
+   * Endpoint protegido para ADMIN e SEC
+   */
+  @Roles(ERoles.ADMIN, ERoles.SEC)
+  @Get('process/:processId')
+  async getCandidatesByProcess(
+    @Param('processId') processId: string,
+    @Query('direction') direction: string,
+    @Query('page') page: string,
+    @Query('column') column: string
+  ): Promise<FindAllResponse<CandidateBasicInfo>> {
+    const paginator = new Paginator<typeof db.Candidates>(
+      +page,
+      direction,
+      column,
+      db.Candidates.CANDIDATE_NAME,
+      db.Candidates
+    )
+
+    return await this.candidatesService.getCandidatesByProcess(
+      Number(processId),
+      paginator
+    )
+  }
+
   @IsPublic()
   @Get(':uniqueCode')
   async validateAccessCode(@Param('uniqueCode') uniqueCode: string) {
@@ -78,5 +107,31 @@ export class CandidatesController {
     @Body() signTermsDto: SignTermsDto
   ) {
     return this.candidatesService.signTerms(uniqueCode, signTermsDto)
+  }
+
+  /**
+   * 6.7 - Distribuir candidatos entre entrevistadores
+   * Endpoint administrativo (ADMIN only) para distribuir candidatos entre entrevistadores ativos
+   */
+  @Roles(ERoles.ADMIN)
+  @Post('distribute-interviewers/:processId')
+  async distributeInterviewers(@Param('processId') processId: string) {
+    return this.candidatesService.distributeInterviewers(Number(processId))
+  }
+
+  /**
+   * 6.8 - Atribuir entrevistador a um candidato
+   * Endpoint administrativo (ADMIN only) para atribuir um entrevistador específico a um candidato
+   */
+  @Roles(ERoles.ADMIN)
+  @Post('assign-interviewer')
+  async assignInterviewer(
+    @Body('userId') userId: number,
+    @Body('candidateId') candidateId: number
+  ) {
+    return this.candidatesService.assignInterviewerToCandidate(
+      userId,
+      candidateId
+    )
   }
 }

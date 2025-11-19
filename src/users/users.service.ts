@@ -8,7 +8,7 @@ import { FindAllResponse, Paginator } from 'src/shared/types/types'
 import { CreateUserDto } from './dtos/create-user.dto'
 import { UpdateOwnUserDto } from './dtos/update-own-user.dto'
 import { UpdateUserDto } from './dtos/update-user.dto'
-import { CreateUser, User, UserFilter } from './types'
+import { CreateUser, InterviewerBasicInfo, User, UserFilter } from './types'
 import { areValidRoles, generateInviteCode } from './users.helper'
 import { UsersRepo } from './users.repo'
 import { UpdatePasswordDto } from './dtos/update-pass.dto'
@@ -175,5 +175,14 @@ export class UsersService {
     })
 
     await this.emailService.sendEmail(recipientEmail, recipientName, body)
+  }
+
+  async findActiveInterviewers(): Promise<InterviewerBasicInfo[]> {
+    const interviewers = await this.usersRepo.findActiveInterviewers()
+
+    return interviewers.map((interviewer) => ({
+      userId: interviewer.userId,
+      userName: this.encryptionService.decrypt(interviewer.userName)
+    }))
   }
 }

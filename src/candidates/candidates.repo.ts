@@ -12,9 +12,12 @@ import {
 import { ERoles } from '../constants/roles.const'
 import { Term } from 'src/terms/types'
 import { Answer } from 'src/answers/types'
+import { Paginator } from '../shared/types/types'
 
 @Injectable()
 export class CandidatesRepo {
+  elementsPerPage = 20
+
   constructor(@InjectConnection('knexx') private readonly knex: Knex) {}
 
   async findProcessInSubscription(): Promise<Process[]> {
@@ -238,6 +241,93 @@ export class CandidatesRepo {
       .select('*')
       .where(db.Candidates.CANDIDATE_ID, candidateId)
       .first()
+  }
+
+  /**
+   * Busca informações básicas de todos os candidatos de um processo com paginação
+   *
+   * @param processId - ID do processo
+   * @param orderBy - Objeto Paginator com informações de paginação e ordenação
+   * @returns Array com informações básicas dos candidatos (dados criptografados)
+   */
+  async findCandidatesByProcessId(
+    processId: number,
+    orderBy: Paginator<typeof db.Candidates>
+  ) {
+    const query = this.knex(db.Tables.CANDIDATES)
+      .select(
+        db.Candidates.CANDIDATE_ID,
+        db.Candidates.CANDIDATE_NAME,
+        db.Candidates.CANDIDATE_UNIQUE_DOCUMENT,
+        db.Candidates.CANDIDATE_DOCUMENT_TYPE,
+        db.Candidates.CANDIDATE_EMAIL,
+        db.Candidates.CANDIDATE_PHONE,
+        db.Candidates.CANDIDATE_BIRTHDATE,
+        db.Candidates.CANDIDATE_MARITAL_STATUS,
+        db.Candidates.INTERVIEW_USER_ID
+      )
+      .where(db.Candidates.PROCESS_ID, processId)
+
+    query.orderBy(orderBy.column, orderBy.direction)
+
+    query
+      .limit(this.elementsPerPage)
+      .offset((orderBy.page - 1 || 0) * this.elementsPerPage)
+
+    return await query
+  }
+
+  /**
+   * Conta o total de candidatos de um processo
+   *
+   * @param processId - ID do processo
+   * @returns Número total de páginas
+   */
+  async findCandidatesQuantityByProcessId(processId: number) {
+    const query = this.knex(db.Tables.CANDIDATES)
+      .where(db.Candidates.PROCESS_ID, processId)
+      .countDistinct(db.Candidates.CANDIDATE_ID)
+
+    const [results] = await query
+    const countKey = Object.keys(results)[0]
+    const count = Number(results[countKey])
+    return Math.ceil(count / this.elementsPerPage) || 0
+  }
+
+  /**
+   * Busca FormCandidate por candidateId e sFormId
+   *
+   * @param candidateId - ID do candidato
+   * @param sFormId - ID do formulário
+   * @returns FormCandidate ou undefined
+   */
+  async findFormCandidateByCandidateAndForm(
+    candidateId: number,
+    sFormId: number
+  ) {
+    return this.knex(db.Tables.FORMS_CANDIDATES)
+      .select(
+        db.FormsCandidates.FORM_CANDIDATE_ID,
+        db.FormsCandidates.FORM_CANDIDATE_STATUS
+      )
+      .where(db.FormsCandidates.CANDIDATE_ID, candidateId)
+      .where(db.FormsCandidates.S_FORM_ID, sFormId)
+      .first()
+  }
+
+  /**
+   * Busca nome do usuário por userId
+   *
+   * @param userId - ID do usuário
+   * @returns Nome do usuário ou null
+   */
+  async findUserNameById(userId: number): Promise<string | null> {
+    const user = await this.knex(db.Tables.USERS)
+      .select(db.Users.USER_NAME)
+      .where(db.Users.USER_ID, userId)
+      .first()
+
+    return user ? user[db.Users.USER_NAME] : null
   }
 
   async updateFormCandidateStatus(
@@ -707,5 +797,84 @@ export class CandidatesRepo {
       .returning(db.Candidates.CANDIDATE_ID)
 
     return typeof id === 'object' ? id[db.Candidates.CANDIDATE_ID] : id
+  }
+
+  /**
+   * Busca todos os usuários ativos com papel de entrevistador
+   * @returns Array de IDs de usuários entrevistadores ativos
+   */
+  async findActiveInterviewers(): Promise<number[]> {
+    const interviewers = await this.knex(db.Tables.USERS_ROLES)
+      .select(`${db.Tables.USERS_ROLES}.${db.UsersRoles.USER_ID}`)
+      .innerJoin(
+        db.Tables.USERS,
+        `${db.Tables.USERS}.${db.Users.USER_ID}`,
+        `${db.Tables.USERS_ROLES}.${db.UsersRoles.USER_ID}`
+      )
+      .where(`${db.Tables.USERS_ROLES}.${db.UsersRoles.ROLE_ID}`, ERoles.INTERV)
+      .where(`${db.Tables.USERS_ROLES}.${db.UsersRoles.USER_ROLE_ACTIVE}`, true)
+      .where(`${db.Tables.USERS}.${db.Users.USER_ACTIVE}`, true)
+      .distinct()
+
+    return interviewers.map((row) => row[db.UsersRoles.USER_ID])
+  }
+
+  /**
+   * Busca todos os candidatos de um processo com informações de idade e estado civil
+   * @param processId ID do processo
+   * @returns Array de candidatos com dados necessários para distribuição
+   */
+  async findCandidatesForDistribution(processId: number): Promise<
+    Array<{
+      candidateId: number
+      candidateBirthdate: string
+      candidateMaritalStatus: string | null
+    }>
+  > {
+    return this.knex(db.Tables.CANDIDATES)
+      .select(
+        db.Candidates.CANDIDATE_ID,
+        db.Candidates.CANDIDATE_BIRTHDATE,
+        db.Candidates.CANDIDATE_MARITAL_STATUS
+      )
+      .where(db.Candidates.PROCESS_ID, processId)
+  }
+
+  /**
+   * Atualiza o entrevistador de múltiplos candidatos em lote
+   * @param assignments Array de objetos {candidateId, interviewUserId}
+   */
+  async updateCandidatesInterviewers(
+    assignments: Array<{ candidateId: number; interviewUserId: number }>
+  ): Promise<void> {
+    if (assignments.length === 0) {
+      return
+    }
+
+    await this.knex.transaction(async (trx) => {
+      for (const assignment of assignments) {
+        await trx(db.Tables.CANDIDATES)
+          .where(db.Candidates.CANDIDATE_ID, assignment.candidateId)
+          .update({
+            [db.Candidates.INTERVIEW_USER_ID]: assignment.interviewUserId
+          })
+      }
+    })
+  }
+
+  /**
+   * Atribui um entrevistador a um candidato específico
+   * @param candidateId ID do candidato
+   * @param interviewUserId ID do entrevistador
+   */
+  async assignInterviewerToCandidate(
+    candidateId: number,
+    interviewUserId: number
+  ): Promise<void> {
+    await this.knex(db.Tables.CANDIDATES)
+      .where(db.Candidates.CANDIDATE_ID, candidateId)
+      .update({
+        [db.Candidates.INTERVIEW_USER_ID]: interviewUserId
+      })
   }
 }
