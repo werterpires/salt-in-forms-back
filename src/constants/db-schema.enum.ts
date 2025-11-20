@@ -20,7 +20,8 @@ export enum Tables {
   ANSWERS = 'answers',
   UNIONS = 'unions',
   FIELDS = 'fields',
-  CANDIDATES_TERMS_SIGNATURES = 'candidatesTermsSignatures'
+  CANDIDATES_TERMS_SIGNATURES = 'candidatesTermsSignatures',
+  RATES = 'rates'
 }
 
 export enum Users {
@@ -240,4 +241,13 @@ export enum CandidatesTermsSignatures {
   FORM_CANDIDATE_ID = 'formCandidateId',
   TERM_ID = 'termId',
   TERM_UNSIGNED = 'termUnsigned'
+}
+
+export enum Rates {
+  RATE_ID = 'rateId',
+  CANDIDATE_ID = 'candidateId',
+  INTERVIEWER_ID = 'interviewerId',
+  RATE_VALUE = 'rateValue',
+  RATE_COMMENT = 'rateComment',
+  QUESTION_AREA_ID = 'questionAreaId'
 }
