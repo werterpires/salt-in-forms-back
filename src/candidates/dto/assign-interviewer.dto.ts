@@ -1,9 +1,11 @@
-import { IsNumber } from 'class-validator'
+import { IsInt, IsPositive } from 'class-validator'
 
 export class AssignInterviewerDto {
-  @IsNumber()
+  @IsInt({ message: 'userId deve ser um número inteiro' })
+  @IsPositive({ message: 'userId deve ser um número positivo' })
   userId: number
 
-  @IsNumber()
+  @IsInt({ message: 'candidateId deve ser um número inteiro' })
+  @IsPositive({ message: 'candidateId deve ser um número positivo' })
   candidateId: number
 }

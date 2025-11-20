@@ -5,6 +5,7 @@ import { SignTermsDto } from './dto/sign-terms.dto'
 import { SelfRegisterCandidateDto } from './dto/self-register-candidate.dto'
 import { CompleteRegistrationDto } from './dto/complete-registration.dto'
 import { ResendConfirmationDto } from './dto/resend-confirmation.dto'
+import { AssignInterviewerDto } from './dto/assign-interviewer.dto'
 import { Roles } from '../users/decorators/roles.decorator'
 import { ERoles } from '../constants/roles.const'
 import { FindAllResponse, Paginator } from '../shared/types/types'
@@ -125,13 +126,10 @@ export class CandidatesController {
    */
   @Roles(ERoles.ADMIN)
   @Post('assign-interviewer')
-  async assignInterviewer(
-    @Body('userId') userId: number,
-    @Body('candidateId') candidateId: number
-  ) {
+  async assignInterviewer(@Body() dto: AssignInterviewerDto) {
     return this.candidatesService.assignInterviewerToCandidate(
-      userId,
-      candidateId
+      dto.userId,
+      dto.candidateId
     )
   }
 }

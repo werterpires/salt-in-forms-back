@@ -245,7 +245,7 @@ export class UsersRepo {
 
   async isActiveInterviewer(userId: number): Promise<boolean> {
     const result = await this.knex(db.Tables.USERS_ROLES)
-      .select(db.UsersRoles.USER_ID)
+      .select(`${db.Tables.USERS_ROLES}.${db.UsersRoles.USER_ID} as user_id`)
       .innerJoin(
         db.Tables.USERS,
         `${db.Tables.USERS}.${db.Users.USER_ID}`,

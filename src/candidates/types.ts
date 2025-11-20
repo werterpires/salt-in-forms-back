@@ -148,6 +148,7 @@ export interface ProcessInAnswerPeriod {
 export interface SFormBasic {
   sFormId: number
   sFormType: string
+  emailQuestionId?: number | null
 }
 
 export interface FormCandidateWithDetails {
@@ -158,6 +159,35 @@ export interface FormCandidateWithDetails {
   candidateName: string
   candidateEmail: string
   sFormType: string
+}
+
+/**
+ * Contexto completo para processar formCandidates ministeriais
+ * Retorna todas as informações necessárias em uma única query
+ */
+export interface MinisterialFormCandidateContext {
+  formCandidateId: number
+  candidateId: number
+  sFormId: number
+  emailQuestionId: number
+  formCandidateAccessCode: string
+  candidateName: string
+  candidateFormCandidateIds: number[] // Todos os formCandidateIds do mesmo candidato
+}
+
+/**
+ * Contexto para processar formCandidates do tipo "normal"
+ * Versão simplificada sem necessidade de agregar formCandidateIds
+ */
+export interface NormalFormCandidateContext {
+  formCandidateId: number
+  candidateId: number
+  sFormId: number
+  emailQuestionId: number
+  formCandidateAccessCode: string
+  candidateName: string
+  // Todos os formCandidateIds do candidato para buscar a resposta
+  candidateFormCandidateIds: number[]
 }
 
 /**
@@ -321,6 +351,7 @@ export interface CandidateFormInfo {
  * Informações básicas do candidato para listagem
  */
 export interface CandidateBasicInfo {
+  candidateId: number
   candidateName: string
   candidateUniqueDocument: string
   candidateDocumentType: DocumentType
