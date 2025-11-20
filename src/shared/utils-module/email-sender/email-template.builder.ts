@@ -106,11 +106,11 @@ export class EmailTemplateBuilder {
           }
 
           .content {
-            font-size: 2vh;
+            font-size: 16px;
             text-align: center;
-            max-width: 60vh;
-            margin-bottom: 2vh;
-            line-height: 2.5vh;
+            max-width: 600px;
+            margin-bottom: 16px;
+            line-height: 24px;
             font-weight: 500;
           }
 
@@ -160,16 +160,16 @@ export class EmailTemplateBuilder {
           }
 
           .info_container {
-            font-size: 12px;
+            font-size: 14px;
             text-align: center;
-            max-width: 60vh;
-            line-height: 15px;
+            max-width: 600px;
+            line-height: 22px;
             font-weight: 500;
-            margin: 3vh 0;
+            margin: 24px 0;
           }
 
           .info_container p {
-            margin-bottom: 8px;
+            margin-bottom: 12px;
           }
 
           .footer {

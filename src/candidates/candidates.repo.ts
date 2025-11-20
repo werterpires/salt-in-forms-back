@@ -126,7 +126,7 @@ export class CandidatesRepo {
       .select(db.Candidates.CANDIDATE_ID)
       .where(db.Candidates.PROCESS_ID, processId)
 
-    const candidateIds = candidatesInProcess.map(
+    const candidateIds: number[] = candidatesInProcess.map(
       (c) => c[db.Candidates.CANDIDATE_ID]
     )
 
@@ -820,7 +820,8 @@ export class CandidatesRepo {
   }
 
   /**
-   * Busca todos os candidatos de um processo com informações de idade e estado civil
+   * Busca candidatos de um processo para distribuição entre entrevistadores
+   * Apenas retorna candidatos que possuem TODOS os formulários com status COMPLETED (8) ou UNUSEFULL (0)
    * @param processId ID do processo
    * @returns Array de candidatos com dados necessários para distribuição
    */
@@ -831,13 +832,42 @@ export class CandidatesRepo {
       candidateMaritalStatus: string | null
     }>
   > {
-    return this.knex(db.Tables.CANDIDATES)
+    // Buscar candidatos que possuem apenas FormsCandidates com status 0 ou 8
+    // Exclui candidatos que possuem algum FormCandidate com status diferente
+    const candidatesWithInvalidForms = await this.knex(
+      db.Tables.FORMS_CANDIDATES
+    )
+      .select(
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID}`
+      )
+      .innerJoin(
+        db.Tables.CANDIDATES,
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_ID}`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID}`
+      )
+      .where(`${db.Tables.CANDIDATES}.${db.Candidates.PROCESS_ID}`, processId)
+      .whereNotIn(db.FormsCandidates.FORM_CANDIDATE_STATUS, [0, 8])
+      .groupBy(
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID}`
+      )
+
+    const excludedCandidateIds = candidatesWithInvalidForms.map(
+      (row) => row[db.FormsCandidates.CANDIDATE_ID]
+    )
+
+    const query = this.knex(db.Tables.CANDIDATES)
       .select(
         db.Candidates.CANDIDATE_ID,
         db.Candidates.CANDIDATE_BIRTHDATE,
         db.Candidates.CANDIDATE_MARITAL_STATUS
       )
       .where(db.Candidates.PROCESS_ID, processId)
+
+    if (excludedCandidateIds.length > 0) {
+      query.whereNotIn(db.Candidates.CANDIDATE_ID, excludedCandidateIds)
+    }
+
+    return query
   }
 
   /**

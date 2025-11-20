@@ -1,4 +1,5 @@
 export enum FormCandidateStatus {
+  UNUSEFULL = 0,
   GENERATED = 1,
   MAILED = 2,
   REMAILED = 3,

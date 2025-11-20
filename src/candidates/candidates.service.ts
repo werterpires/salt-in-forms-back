@@ -1,33 +1,21 @@
-import { Injectable, BadRequestException, OnModuleInit } from '@nestjs/common'
-import { Cron, SchedulerRegistry } from '@nestjs/schedule'
-import { CronJob } from 'cron'
+import { Injectable, BadRequestException } from '@nestjs/common'
+import { Cron } from '@nestjs/schedule'
 import { CandidatesRepo } from './candidates.repo'
 import { ExternalApiService } from '../shared/utils-module/external-api/external-api.service'
 import { EncryptionService } from '../shared/utils-module/encryption/encryption.service'
 import { UsersRepo } from '../users/users.repo'
 import {
-  CreateFormCandidate,
   FormToAnswer,
   SectionToAnswer,
   QuestionToAnswer,
   SubQuestionToAnswer,
-  ProcessInAnswerPeriod,
-  SFormBasic,
-  FormCandidateWithDetails,
   CandidateBasicInfo
 } from './types'
 import { FindAllResponse, Paginator } from '../shared/types/types'
 import * as db from '../constants/db-schema.enum'
 import { CustomLoggerService } from 'src/shared/utils-module/custom-logger/custom-logger.service'
 import { SendPulseEmailService } from '../shared/utils-module/email-sender/sendpulse-email.service'
-import {
-  createAccessCode,
-  prepareCandidateEmailData,
-  getFrontendUrl,
-  decryptAnswer
-} from './candidates.helper'
-import { FormCandidateStatus } from 'src/constants/form-candidate-status.const'
-import { getCandidateFormAccessEmailTemplate } from './email-templates/candidate-form-access.template'
+import { getFrontendUrl, decryptAnswer } from './candidates.helper'
 import { Term } from 'src/terms/types'
 import { FormsCandidatesService } from 'src/forms-candidates/forms-candidates.service'
 import { AnswerWithoutId } from 'src/answers/types'
@@ -40,7 +28,7 @@ import { getConfirmationEmailTemplate } from './email-templates/confirmation-ema
 import { getRegistrationConfirmedTemplate } from './email-templates/registration-confirmed.template'
 
 @Injectable()
-export class CandidatesService implements OnModuleInit {
+export class CandidatesService {
   constructor(
     private readonly candidatesRepo: CandidatesRepo,
     private readonly externalApiService: ExternalApiService,
@@ -50,63 +38,9 @@ export class CandidatesService implements OnModuleInit {
     private readonly formsCandidatesService: FormsCandidatesService,
     private readonly pendingCandidatesService: PendingCandidatesService,
     private readonly externalOrderValidationService: ExternalOrderValidationService,
-    private readonly schedulerRegistry: SchedulerRegistry,
     private readonly usersRepo: UsersRepo
   ) {}
 
-  /**
-   * Inicializa os crons dinâmicos baseados em variáveis de ambiente
-   */
-  onModuleInit() {
-    this.registerDynamicCrons()
-  }
-
-  /**
-   * Registra crons com frequências configuráveis via .env
-   */
-  private registerDynamicCrons() {
-    // Cron de processamento de candidatos (a cada 30 minutos por padrão)
-    const processCandidatesFrequency =
-      process.env.PROCESS_CANDIDATES_CRON_FREQUENCY || '*/30 * * * *'
-
-    const processCandidatesJob = new CronJob(
-      processCandidatesFrequency,
-      async () => {
-        await this.handleProcessesInAnswerPeriod()
-      }
-    )
-
-    this.schedulerRegistry.addCronJob(
-      'handleProcessesInAnswerPeriod',
-      processCandidatesJob
-    )
-    processCandidatesJob.start()
-
-    this.loggger.log(
-      `Cron 'handleProcessesInAnswerPeriod' registrado com frequência: ${processCandidatesFrequency}`
-    )
-  }
-
-  /**
-   * Auto-cadastro de candidato com validação de orderCode
-   *
-   * Fluxo:
-   * a) Verificar se orderCode já foi usado em Candidates (confirmados)
-   * b) Verificar se candidato já existe no processo (por documento)
-   * c) Buscar processo e validar processDataKey
-   * d) Validar orderCode na API externa
-   * e) Verificar se existe pending não confirmado com este orderCode
-   *    - Se existe E email é diferente: invalidar token antigo, criar novo
-   *    - Se existe E email é igual: apenas reenviar email com mesmo token
-   * f) Gerar token de confirmação único (UUID ou similar)
-   * g) Calcular data de expiração (now + CONFIRMATION_TOKEN_EXPIRATION)
-   * h) Criptografar dados sensíveis (email, documento, telefone)
-   * i) Inserir em PendingCandidates
-   * j) Enviar email de confirmação
-   *
-   * @param dto Dados do candidato para auto-cadastro
-   * @returns Mensagem de sucesso
-   */
   async selfRegisterCandidate(
     dto: SelfRegisterCandidateDto
   ): Promise<{ message: string }> {
@@ -259,21 +193,6 @@ export class CandidatesService implements OnModuleInit {
     }
   }
 
-  /**
-   * Confirma o cadastro de um candidato pendente
-   * NOVO FLUXO: Apenas confirma o email, NÃO insere em Candidates
-   * O candidato deve completar o cadastro depois via /complete-registration
-   *
-   * Fluxo:
-   * a) Buscar pending por token
-   * b) Verificar se token não expirou (< tokenExpiresAt)
-   * c) Verificar se não foi invalidado (invalidatedAt === null)
-   * d) Marcar pending como confirmado (confirmedAt = now)
-   * e) Retornar token para uso no endpoint de complementação
-   *
-   * @param token Token de confirmação
-   * @returns Token e mensagem de sucesso
-   */
   async confirmRegistration(
     token: string
   ): Promise<{ message: string; confirmationToken: string }> {
@@ -318,22 +237,6 @@ export class CandidatesService implements OnModuleInit {
     }
   }
 
-  /**
-   * Completa o cadastro de um candidato após confirmação de email
-   *
-   * Fluxo:
-   * a) Buscar e validar token de confirmação
-   * b) Verificar se pending foi confirmado (confirmedAt !== null)
-   * c) Verificar se orderCode ainda está disponível
-   * d) Verificar se candidato já existe no processo
-   * e) Inserir na tabela Candidates com TODOS os campos
-   * f) Enviar email de cadastro completo
-   * g) Retornar mensagem de sucesso
-   *
-   * @param token Token de confirmação
-   * @param dto Dados complementares do candidato
-   * @returns Mensagem de sucesso
-   */
   async completeRegistration(
     token: string,
     dto: CompleteRegistrationDto
@@ -435,17 +338,6 @@ export class CandidatesService implements OnModuleInit {
     }
   }
 
-  /**
-   * Obtém status de cadastro para um orderCode (admin only - debug)
-   *
-   * Retorna informações sobre:
-   * - Se orderCode está em Candidates (confirmado)
-   * - Se orderCode está em PendingCandidates (pendente)
-   * - Detalhes do pending (se existir)
-   *
-   * @param orderCode Código do pedido
-   * @returns Status detalhado do cadastro
-   */
   async getRegistrationStatus(orderCode: string): Promise<{
     orderCode: string
     isConfirmed: boolean
@@ -533,14 +425,6 @@ export class CandidatesService implements OnModuleInit {
     return response
   }
 
-  /**
-   * Busca todos os candidatos de um processo com paginação
-   * Retorna informações básicas com dados descriptografados
-   *
-   * @param processId ID do processo
-   * @param orderBy Objeto Paginator com informações de paginação e ordenação
-   * @returns FindAllResponse com array de candidatos e quantidade de páginas
-   */
   async getCandidatesByProcess(
     processId: number,
     orderBy: Paginator<typeof db.Candidates>
@@ -593,6 +477,7 @@ export class CandidatesService implements OnModuleInit {
       }
 
       candidatesDecrypted.push({
+        candidateId: candidate.candidateId,
         candidateName: this.encryptionService.decrypt(candidate.candidateName),
         candidateUniqueDocument: candidate.candidateUniqueDocument,
         candidateDocumentType: candidate.candidateDocumentType,
@@ -625,17 +510,6 @@ export class CandidatesService implements OnModuleInit {
     return response
   }
 
-  /**
-   * Reenvia email de confirmação para um candidato pendente
-   *
-   * Fluxo:
-   * - Buscar pending por orderCode
-   * - Verificar se ainda está válido (não confirmado, não invalidado, não expirado)
-   * - Reenviar email com o mesmo token
-   *
-   * @param dto Dados para reenvio (orderCode)
-   * @returns Mensagem de sucesso
-   */
   async resendConfirmation(dto: {
     orderCode: string
   }): Promise<{ message: string }> {
@@ -712,12 +586,6 @@ export class CandidatesService implements OnModuleInit {
     }
   }
 
-  /**
-   * Envia email de confirmação de cadastro
-   * @param candidateName Nome do candidato
-   * @param candidateEmail Email do candidato (não criptografado)
-   * @param confirmationToken Token de confirmação
-   */
   private async sendConfirmationEmail(
     candidateName: string,
     candidateEmail: string,
@@ -725,7 +593,7 @@ export class CandidatesService implements OnModuleInit {
   ): Promise<void> {
     try {
       const frontendUrl = getFrontendUrl()
-      const confirmationLink = `${frontendUrl}/confirm-registration/${confirmationToken}`
+      const confirmationLink = `${frontendUrl}/#/confirm-registration/${confirmationToken}`
 
       // Obter tempo de expiração do .env (padrão: 60 minutos)
       const expirationMinutes = Number(
@@ -750,16 +618,9 @@ export class CandidatesService implements OnModuleInit {
         `Erro ao enviar email de confirmação para ${candidateEmail}:`,
         error.stack
       )
-      // Não lança erro aqui para não falhar o cadastro se o email falhar
-      // O candidato pode tentar reenviar depois
     }
   }
 
-  /**
-   * Envia email de cadastro confirmado com sucesso
-   * @param candidateName Nome do candidato
-   * @param candidateEmail Email do candidato (não criptografado)
-   */
   private async sendRegistrationConfirmedEmail(
     candidateName: string,
     candidateEmail: string
@@ -785,11 +646,6 @@ export class CandidatesService implements OnModuleInit {
     }
   }
 
-  /**
-   * 8.1 - Limpa candidatos pendentes expirados
-   * Executa a cada 6 horas
-   * Deleta pendings não confirmados antigos e confirmados antigos
-   */
   @Cron('0 */6 * * *')
   async cleanExpiredPendingCandidates() {
     this.loggger.info(
@@ -805,75 +661,6 @@ export class CandidatesService implements OnModuleInit {
         error.stack
       )
     }
-  }
-
-  /**
-   * 8.2 - Processa candidatos de processos que estão no período de respostas
-   * Gera códigos de acesso e envia emails apenas para formulários do tipo "candidate"
-   * Frequência configurável via PROCESS_CANDIDATES_CRON_FREQUENCY (padrão: a cada 30 minutos)
-   * Agora processa apenas candidatos já confirmados (não busca mais da API)
-   */
-  async handleProcessesInAnswerPeriod() {
-    this.loggger.info(
-      '\n=== Iniciando cron: Processar candidatos no período de respostas ==='
-    )
-
-    const startTime = new Date()
-
-    const processes: ProcessInAnswerPeriod[] =
-      await this.candidatesRepo.findProcessesInAnswerPeriod()
-
-    this.loggger.info(
-      `\n=== Total de processos encontrados: ${processes.length} ===`
-    )
-
-    for (const process of processes) {
-      // Buscar formulários do processo
-      const sForms: SFormBasic[] =
-        await this.candidatesRepo.findSFormsByProcessId(process.processId)
-
-      // Buscar candidatos que não estão na tabela FormsCandidates
-      const candidatesNotInFormsCandidates: number[] =
-        await this.candidatesRepo.findCandidatesNotInFormsCandidatesByProcessId(
-          process.processId
-        )
-
-      if (candidatesNotInFormsCandidates.length > 0 && sForms.length > 0) {
-        const formsCandidatesData: CreateFormCandidate[] = []
-
-        // Gerar códigos de acesso para cada combinação candidato-formulário
-        for (const candidateId of candidatesNotInFormsCandidates) {
-          for (const sForm of sForms) {
-            formsCandidatesData.push({
-              candidateId: candidateId,
-              sFormId: sForm.sFormId,
-              formCandidateStatus: FormCandidateStatus.GENERATED,
-              formCandidateAccessCode: createAccessCode()
-            })
-          }
-        }
-
-        // Inserir FormsCandidates em batch e obter IDs gerados
-        const insertedIds: number[] =
-          await this.candidatesRepo.insertFormsCandidatesInBatch(
-            formsCandidatesData
-          )
-
-        this.loggger.info(
-          `\n=== ${formsCandidatesData.length} códigos de acesso gerados ===`
-        )
-
-        // Enviar emails apenas para formulários do tipo "candidate"
-        await this.sendEmailsForCandidateForms(insertedIds)
-      }
-    }
-
-    const endTime = new Date()
-    const duration = (endTime.getTime() - startTime.getTime()) / 1000
-
-    this.loggger.info(
-      `\n=== Finalizando cron: Processamento concluído em ${duration}s ===`
-    )
   }
 
   /**
@@ -956,37 +743,6 @@ export class CandidatesService implements OnModuleInit {
   //     await this.sendImportSummaryEmail(0, 0, 0)
   //   }
   // }
-
-  /**
-   * Cron para processar formulários do tipo "normal" e "ministerial"
-   * TODO: Implementar quando a tabela de respostas estiver disponível
-   *
-   * Lógica necessária:
-   * 1. Buscar candidatos que completaram formulário "candidate"
-   * 2. Para formulários "normal": buscar resposta da pergunta vinculada (emailQuestionId)
-   * 3. Enviar email para o endereço encontrado na resposta
-   * 4. Para formulários "ministerial": implementar lógica específica
-   */
-  @Cron('0 */2 * * *') // A cada 2 horas
-  handleNormalAndMinisterialForms() {
-    this.loggger.info(
-      '\n=== ATENÇÃO: Cron de formulários "normal" e "ministerial" não implementado ==='
-    )
-    this.loggger.info(
-      'Motivo: Tabela de respostas das questions ainda não está disponível'
-    )
-    this.loggger.info('Quando implementar, este cron deve:')
-    this.loggger.info(
-      '1. Buscar candidatos que completaram o formulário "candidate"'
-    )
-    this.loggger.info(
-      '2. Para formulários "normal": buscar resposta da pergunta vinculada (emailQuestionId)'
-    )
-    this.loggger.info('3. Enviar email para o endereço encontrado na resposta')
-    this.loggger.info(
-      '4. Para formulários "ministerial": implementar lógica específica'
-    )
-  }
 
   /**
    * Valida um código de acesso
@@ -1238,79 +994,11 @@ export class CandidatesService implements OnModuleInit {
   }
 
   /**
-   * Envia email para candidato do tipo "candidate"
-   * Método unificado usado tanto no primeiro envio quanto no reenvio
-   */
-  private async sendCandidateFormEmail(
-    candidateName: string,
-    candidateEmail: string,
-    accessCode: string,
-    frontendUrl: string,
-    emailTemplate: (name: string, link: string, code: string) => string,
-    emailType: 'primeiro acesso' | 'reenvio'
-  ): Promise<void> {
-    try {
-      const { recipientName, recipientEmail, html } = prepareCandidateEmailData(
-        candidateName,
-        candidateEmail,
-        accessCode,
-        frontendUrl,
-        this.encryptionService,
-        emailTemplate
-      )
-
-      await this.sendPulseEmailService.sendEmail(
-        recipientEmail,
-        recipientName,
-        html
-      )
-
-      this.loggger.info(
-        `Email de ${emailType} enviado para ${recipientName} (${recipientEmail})`
-      )
-    } catch (error) {
-      this.loggger.error(`Erro ao enviar email de ${emailType}:`, error.stack)
-    }
-  }
-
-  private async sendEmailsForCandidateForms(formsCandidatesIds: number[]) {
-    const frontendUrl = getFrontendUrl()
-
-    // Buscar todos os dados de uma vez (query otimizada com JOIN)
-    const formsCandidatesData: FormCandidateWithDetails[] =
-      await this.candidatesRepo.findCandidatesWithFormsCandidatesByIds(
-        formsCandidatesIds
-      )
-
-    for (const formCandidateData of formsCandidatesData) {
-      // Processar apenas formulários do tipo "candidate"
-      if (formCandidateData.sFormType === 'candidate') {
-        await this.sendCandidateFormEmail(
-          formCandidateData.candidateName,
-          formCandidateData.candidateEmail,
-          formCandidateData.formCandidateAccessCode,
-          frontendUrl,
-          getCandidateFormAccessEmailTemplate,
-          'primeiro acesso'
-        )
-
-        // Atualizar status para MAILED após envio bem-sucedido
-        await this.candidatesRepo.updateFormCandidateStatus(
-          formCandidateData.candidateId,
-          formCandidateData.sFormId,
-          FormCandidateStatus.MAILED
-        )
-
-        this.loggger.info('Status atualizado para MAILED')
-      }
-      // Formulários "normal" e "ministerial" serão processados em outro cron
-      // quando a tabela de respostas estiver disponível
-    }
-  }
-
-  /**
    * Distribui candidatos entre entrevistadores ativos de forma balanceada
    * Prioriza distribuição equitativa de estado civil, seguida de faixa etária
+   *
+   * IMPORTANTE: Apenas candidatos com TODOS os formulários nos status COMPLETED (8) ou UNUSEFULL (0)
+   * são incluídos na distribuição. Candidatos com formulários em outros status são ignorados.
    *
    * @param processId ID do processo
    * @returns Resultado da distribuição com estatísticas
@@ -1543,7 +1231,7 @@ export class CandidatesService implements OnModuleInit {
     // Verificar se o candidato existe
     const candidate = await this.candidatesRepo.findCandidateById(candidateId)
     if (!candidate) {
-      throw new BadRequestException('Candidato não encontrado')
+      throw new BadRequestException('#Candidato não encontrado')
     }
 
     // Verificar se o usuário é um entrevistador ativo
@@ -1551,7 +1239,7 @@ export class CandidatesService implements OnModuleInit {
 
     if (!isActiveInterviewer) {
       throw new BadRequestException(
-        'Usuário não encontrado, não é entrevistador ou não está ativo'
+        '#Usuário não encontrado, não é entrevistador ou não está ativo'
       )
     }
 
@@ -1559,7 +1247,7 @@ export class CandidatesService implements OnModuleInit {
     await this.candidatesRepo.assignInterviewerToCandidate(candidateId, userId)
 
     return {
-      message: 'Entrevistador atribuído ao candidato com sucesso'
+      message: '#Entrevistador atribuído ao candidato com sucesso'
     }
   }
 }

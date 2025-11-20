@@ -298,4 +298,65 @@ export class MinisterialsRepo {
       }
     })
   }
+
+  /**
+   * Busca ministerial ativo por nome do campo
+   * Query otimizada com JOIN entre fields e ministerials
+   * Retorna apenas ministeriais ativos com pelo menos um email válido
+   *
+   * @param fieldName - Nome do campo (field)
+   * @returns Ministerial com informações de contato ou undefined
+   */
+  async findActiveMinisterialByFieldName(fieldName: string): Promise<
+    | {
+        ministerialId: number
+        ministerialName: string
+        ministerialPrimaryEmail: string | null
+        ministerialAlternativeEmail: string | null
+      }
+    | undefined
+  > {
+    const result = await this.knex(db.Tables.MINISTERIALS)
+      .select(
+        `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ID} as ministerialId`,
+        `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_NAME} as ministerialName`,
+        `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_PRIMARY_EMAIL} as ministerialPrimaryEmail`,
+        `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ALTERNATIVE_EMAIL} as ministerialAlternativeEmail`
+      )
+      .innerJoin(
+        db.Tables.FIELDS,
+        `${db.Tables.MINISTERIALS}.${db.Ministerials.FIELD_ID}`,
+        `${db.Tables.FIELDS}.${db.Fields.FIELD_ID}`
+      )
+      .where(`${db.Tables.FIELDS}.${db.Fields.FIELD_NAME}`, fieldName)
+      .where(
+        `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ACTIVE}`,
+        true
+      )
+      .whereNotNull(
+        `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_NAME}`
+      )
+      .where(function () {
+        this.whereNotNull(
+          `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_PRIMARY_EMAIL}`
+        )
+          .andWhere(
+            `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_PRIMARY_EMAIL}`,
+            '!=',
+            ''
+          )
+          .orWhere(function () {
+            this.whereNotNull(
+              `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ALTERNATIVE_EMAIL}`
+            ).andWhere(
+              `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ALTERNATIVE_EMAIL}`,
+              '!=',
+              ''
+            )
+          })
+      })
+      .first()
+
+    return result
+  }
 }
