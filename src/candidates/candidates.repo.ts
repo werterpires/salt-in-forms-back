@@ -907,4 +907,28 @@ export class CandidatesRepo {
         [db.Candidates.INTERVIEW_USER_ID]: interviewUserId
       })
   }
+
+  /**
+   * Busca candidatos de um processo atribuídos a um entrevistador específico
+   * Retorna informações básicas de identificação (dados criptografados)
+   *
+   * @param processId - ID do processo
+   * @param interviewUserId - ID do entrevistador
+   * @returns Array com informações básicas dos candidatos (dados criptografados)
+   */
+  async findCandidatesByProcessAndInterviewer(
+    processId: number,
+    interviewUserId: number
+  ) {
+    return this.knex(db.Tables.CANDIDATES)
+      .select(
+        db.Candidates.CANDIDATE_ID,
+        db.Candidates.CANDIDATE_NAME,
+        db.Candidates.CANDIDATE_EMAIL,
+        db.Candidates.CANDIDATE_UNIQUE_DOCUMENT
+      )
+      .where(db.Candidates.PROCESS_ID, processId)
+      .where(db.Candidates.INTERVIEW_USER_ID, interviewUserId)
+      .orderBy(db.Candidates.CANDIDATE_NAME, 'asc')
+  }
 }

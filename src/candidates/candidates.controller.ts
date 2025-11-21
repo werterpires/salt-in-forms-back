@@ -11,6 +11,8 @@ import { ERoles } from '../constants/roles.const'
 import { FindAllResponse, Paginator } from '../shared/types/types'
 import * as db from '../constants/db-schema.enum'
 import { CandidateBasicInfo } from './types'
+import { CurrentUser } from '../users/decorators/current-user.decorator'
+import { ValidateUser } from '../shared/auth/types'
 
 @Controller('candidates')
 export class CandidatesController {
@@ -130,6 +132,22 @@ export class CandidatesController {
     return this.candidatesService.assignInterviewerToCandidate(
       dto.userId,
       dto.candidateId
+    )
+  }
+
+  /**
+   * 6.9 - Listar candidatos do entrevistador em um processo
+   * Endpoint para entrevistadores visualizarem seus candidatos em um processo específico
+   */
+  @Roles(ERoles.INTERV)
+  @Get('interviewer/:processId')
+  async getCandidatesByInterviewer(
+    @Param('processId') processId: string,
+    @CurrentUser() user: ValidateUser
+  ) {
+    return await this.candidatesService.getCandidatesByInterviewer(
+      Number(processId),
+      user.userId
     )
   }
 }
