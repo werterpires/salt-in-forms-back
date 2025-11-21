@@ -1250,4 +1250,39 @@ export class CandidatesService {
       message: '#Entrevistador atribuído ao candidato com sucesso'
     }
   }
+
+  /**
+   * Busca candidatos de um processo atribuídos ao entrevistador atual
+   * Retorna apenas informações de identificação básica
+   *
+   * @param processId ID do processo
+   * @param interviewUserId ID do entrevistador (obtido do token JWT)
+   * @returns Array de CandidateIdentification
+   */
+  async getCandidatesByInterviewer(processId: number, interviewUserId: number) {
+    this.loggger.log(
+      `Buscando candidatos do processo ${processId} para entrevistador ${interviewUserId}`
+    )
+
+    // Buscar candidatos do entrevistador no processo
+    const candidates =
+      await this.candidatesRepo.findCandidatesByProcessAndInterviewer(
+        processId,
+        interviewUserId
+      )
+
+    // Descriptografar dados sensíveis
+    const candidatesDecrypted = candidates.map((candidate) => ({
+      candidateId: candidate.candidateId,
+      candidateName: this.encryptionService.decrypt(candidate.candidateName),
+      candidateEmail: this.encryptionService.decrypt(candidate.candidateEmail),
+      candidateUniqueDocument: candidate.candidateUniqueDocument
+    }))
+
+    this.loggger.log(
+      `Total de ${candidatesDecrypted.length} candidatos encontrados para o entrevistador`
+    )
+
+    return candidatesDecrypted
+  }
 }

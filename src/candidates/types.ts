@@ -362,3 +362,10 @@ export interface CandidateBasicInfo {
   interviewer: string | null
   forms: CandidateFormInfo[]
 }
+
+export interface CandidateIdentification {
+  candidateId: number
+  candidateName: string
+  candidateEmail: string
+  candidateUniqueDocument: string
+}

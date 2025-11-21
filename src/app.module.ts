@@ -25,6 +25,7 @@ import { CandidatesModule } from './candidates/candidates.module'
 import { AnswersModule } from './answers/answers.module'
 import { FormsCandidatesModule } from './forms-candidates/forms-candidates.module'
 import { FieldsModule } from './fields/fields.module'
+import { RatesModule } from './rates/rates.module';
 
 config()
 
@@ -101,7 +102,8 @@ const knex = KnexModule.forRoot(
     CandidatesModule,
     AnswersModule,
     FormsCandidatesModule,
-    FieldsModule
+    FieldsModule,
+    RatesModule
   ],
   controllers: [],
   providers: [
