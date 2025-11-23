@@ -143,4 +143,33 @@ export class RatesService {
       interviewForms
     }
   }
+
+  /**
+   * Atualiza o comentário de uma resposta
+   * Verifica se a resposta pertence a um candidato do entrevistador atual
+   *
+   * @param answerId - ID da resposta
+   * @param answerComment - Comentário a ser salvo
+   * @param interviewUserId - ID do entrevistador (do token JWT)
+   */
+  async updateAnswerComment(
+    answerId: number,
+    answerComment: string,
+    interviewUserId: number
+  ): Promise<void> {
+    // Verificar se a resposta pertence a um candidato do entrevistador
+    const isOwned = await this.ratesRepo.isAnswerOwnedByInterviewer(
+      answerId,
+      interviewUserId
+    )
+
+    if (!isOwned) {
+      throw new ForbiddenException(
+        '#Você não tem permissão para comentar esta resposta'
+      )
+    }
+
+    // Atualizar o comentário
+    await this.ratesRepo.updateAnswerComment(answerId, answerComment)
+  }
 }
