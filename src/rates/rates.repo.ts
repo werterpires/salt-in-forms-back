@@ -123,4 +123,52 @@ export class RatesRepo {
 
     return !!result
   }
+
+  /**
+   * Verifica se uma resposta pertence a um candidato de um entrevistador específico
+   *
+   * @param answerId - ID da resposta
+   * @param interviewUserId - ID do entrevistador
+   * @returns true se a resposta pertence ao candidato do entrevistador
+   */
+  async isAnswerOwnedByInterviewer(
+    answerId: number,
+    interviewUserId: number
+  ): Promise<boolean> {
+    const result = await this.knex(db.Tables.ANSWERS)
+      .innerJoin(
+        db.Tables.FORMS_CANDIDATES,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ID}`,
+        `${db.Tables.ANSWERS}.${db.Answers.FORM_CANDIDATE_ID}`
+      )
+      .innerJoin(
+        db.Tables.CANDIDATES,
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_ID}`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID}`
+      )
+      .select(`${db.Tables.ANSWERS}.${db.Answers.ANSWER_ID}`)
+      .where(`${db.Tables.ANSWERS}.${db.Answers.ANSWER_ID}`, answerId)
+      .where(
+        `${db.Tables.CANDIDATES}.${db.Candidates.INTERVIEW_USER_ID}`,
+        interviewUserId
+      )
+      .first()
+
+    return !!result
+  }
+
+  /**
+   * Atualiza o comentário de uma resposta
+   *
+   * @param answerId - ID da resposta
+   * @param answerComment - Comentário a ser salvo
+   */
+  async updateAnswerComment(
+    answerId: number,
+    answerComment: string
+  ): Promise<void> {
+    await this.knex(db.Tables.ANSWERS)
+      .where(db.Answers.ANSWER_ID, answerId)
+      .update({ [db.Answers.ANSWER_COMMENT]: answerComment })
+  }
 }
