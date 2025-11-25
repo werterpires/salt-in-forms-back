@@ -18,6 +18,7 @@ import * as db from 'src/constants/db-schema.enum'
 import { SendPulseEmailService } from 'src/shared/utils-module/email-sender/sendpulse-email.service'
 import { RoleDetails } from 'src/constants/roles.const'
 import { EmailTemplateBuilder } from 'src/shared/utils-module/email-sender/email-template.builder'
+import { getPasswordChangedEmailTemplate } from 'src/shared/auth/email-templates/password-changed.template'
 
 @Injectable()
 export class UsersService {
@@ -123,6 +124,17 @@ export class UsersService {
     const passwordHash = await bcrypt.hash(updatePasswordDto.newPassword, 10)
 
     await this.usersRepo.updatePassword(userId, passwordHash)
+
+    // Enviar email de notificação sobre alteração de senha
+    const user = await this.usersRepo.findUserById(userId)
+    const userName = this.encryptionService.decrypt(user.userName)
+    const timestamp = new Date().toLocaleString('pt-BR', {
+      dateStyle: 'short',
+      timeStyle: 'medium'
+    })
+    const emailHtml = getPasswordChangedEmailTemplate(userName, timestamp)
+
+    await this.emailService.sendEmail(user.userEmail, userName, emailHtml)
   }
 
   private getFrontendAdmUrl(): string {
