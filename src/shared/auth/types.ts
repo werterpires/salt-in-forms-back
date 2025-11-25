@@ -21,6 +21,12 @@ export interface UserToken {
   accessToken: string
 }
 
+export interface LoginResponse {
+  requires2FA?: boolean
+  userEmail?: string
+  accessToken?: string
+}
+
 export interface UserPayload {
   userEmail: string
   sub: number

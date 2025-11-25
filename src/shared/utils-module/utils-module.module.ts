@@ -4,13 +4,15 @@ import { EncryptionService } from './encryption/encryption.service'
 import { ExternalApiService } from './external-api/external-api.service'
 import { SendPulseService } from './sendpulse/sendpulse.service'
 import { SendPulseEmailService } from './email-sender/sendpulse-email.service'
+import { TwoFactorCacheService } from './two-factor-cache/two-factor-cache.service'
 
 const services = [
   CustomLoggerService,
   EncryptionService,
   ExternalApiService,
   SendPulseService,
-  SendPulseEmailService
+  SendPulseEmailService,
+  TwoFactorCacheService
 ]
 @Global()
 @Module({
