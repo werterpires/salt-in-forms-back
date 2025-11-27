@@ -10,6 +10,7 @@ import {
 import { Type } from 'class-transformer'
 import { QuestionOptionDto, SubQuestionOptionDto } from './optionsDto'
 import { SubValidationDto } from './validationDto'
+import { QuestionScoreDto } from './question-score.dto'
 
 export class ValidationDto {
   @IsNumber({}, { message: '#O tipo da validação deve ser numérico.' })
@@ -89,6 +90,11 @@ export class UpdateQuestionDto {
   @ValidateNested({ each: true })
   @Type(() => UpdateSubQuestionDto)
   subQuestions?: UpdateSubQuestionDto[]
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => QuestionScoreDto)
+  questionScore?: QuestionScoreDto
 }
 
 export class UpdateSubQuestionDto {

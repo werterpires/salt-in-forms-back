@@ -42,6 +42,15 @@ export class QuestionsService {
       question.validations =
         await QuestionsHelper.transformValidations(validations)
 
+      // Buscar questionScore
+      const questionScore =
+        await this.questionsRepo.findQuestionScoreByQuestionId(
+          question.questionId
+        )
+      if (questionScore) {
+        question.questionScore = questionScore
+      }
+
       // Buscar subQuestions
       const subQuestions =
         await this.questionsRepo.findSubQuestionsByQuestionId(
@@ -141,6 +150,15 @@ export class QuestionsService {
     question.validations =
       await QuestionsHelper.transformValidations(validations)
 
+    // Buscar questionScore
+    const questionScore =
+      await this.questionsRepo.findQuestionScoreByQuestionId(
+        question.questionId
+      )
+    if (questionScore) {
+      question.questionScore = questionScore
+    }
+
     // Buscar subQuestions
     const subQuestions = await this.questionsRepo.findSubQuestionsByQuestionId(
       question.questionId
@@ -198,6 +216,15 @@ export class QuestionsService {
       )
       question.validations =
         await QuestionsHelper.transformValidations(validations)
+
+      // Buscar questionScore
+      const questionScore =
+        await this.questionsRepo.findQuestionScoreByQuestionId(
+          question.questionId
+        )
+      if (questionScore) {
+        question.questionScore = questionScore
+      }
 
       // Buscar subQuestions
       const subQuestions =

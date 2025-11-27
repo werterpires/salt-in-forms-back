@@ -10,6 +10,7 @@ export enum Tables {
   FORM_SECTIONS = 'formSections',
   QUESTIONS = 'questions',
   QUESTION_OPTIONS = 'questionOptions',
+  QUESTION_SCORES = 'questionScores',
   VALIDATIONS = 'validations',
   SUB_QUESTIONS = 'subQuestions',
   SUB_QUESTION_OPTIONS = 'subQuestionOptions',
@@ -65,7 +66,8 @@ export enum Processes {
   PROCESS_BEGIN_DATE = 'processBeginDate',
   PROCESS_END_DATE = 'processEndDate',
   PROCESS_END_ANSWERS = 'processEndAnswers',
-  PROCESS_END_SUBSCRIPTION = 'processEndSubscription'
+  PROCESS_END_SUBSCRIPTION = 'processEndSubscription',
+  CUTOFF_SCORE = 'cutoffScore'
 }
 
 export enum SForms {
@@ -186,7 +188,8 @@ export enum Candidates {
   CANDIDATE_MARITAL_STATUS = 'candidateMaritalStatus',
   INTERVIEW_USER_ID = 'interviewUserId',
   CANDIDATE_ORDER_CODE = 'candidateOrderCode',
-  CANDIDATE_ORDER_CODE_VALIDATED_AT = 'candidateOrderCodeValidatedAt'
+  CANDIDATE_ORDER_CODE_VALIDATED_AT = 'candidateOrderCodeValidatedAt',
+  APPROVED = 'approved'
 }
 
 export enum FormsCandidates {
@@ -250,4 +253,14 @@ export enum Rates {
   RATE_VALUE = 'rateValue',
   RATE_COMMENT = 'rateComment',
   QUESTION_AREA_ID = 'questionAreaId'
+}
+
+export enum QuestionScores {
+  QUESTION_SCORE_ID = 'questionScoreId',
+  QUESTION_ID = 'questionId',
+  SCORE_TYPE = 'scoreType',
+  OPTION_SCORES_JSON = 'optionScoresJson',
+  DATE_COMPARISON_TYPE = 'dateComparisonType',
+  CUTOFF_DATE = 'cutoffDate',
+  DATE_SCORE = 'dateScore'
 }
