@@ -96,12 +96,10 @@ Foi implementado um sistema de pontuação eliminatória para vestibulares. Algu
   "questionDisplayRule": 1,
   "questionOptions": [
     {
-      "questionOptionId": 10,  // importante para vincular ao score
       "questionOptionType": 1,
       "questionOptionValue": "18-25 anos"
     },
     {
-      "questionOptionId": 11,
       "questionOptionType": 1,
       "questionOptionValue": "26-35 anos"
     }
@@ -113,8 +111,8 @@ Foi implementado um sistema de pontuação eliminatória para vestibulares. Algu
     
     // Para OPTION_BASED (questões tipo SINGLE_CHOICE):
     "optionScoresJson": {
-      "10": 0,      // se escolher opção ID 10: 0 pontos
-      "11": 3.5     // se escolher opção ID 11: 3.5 pontos
+      "18-25 anos": 0,      // se escolher "18-25 anos": 0 pontos
+      "26-35 anos": 3.5     // se escolher "26-35 anos": 3.5 pontos
     }
   }
 }
@@ -131,9 +129,9 @@ Foi implementado um sistema de pontuação eliminatória para vestibulares. Algu
   "questionScore": {
     "scoreType": "OPTION_BASED",
     "optionScoresJson": {
-      "optionId1": scoreValue1,  // ex: "10": 2.5
-      "optionId2": scoreValue2,  // ex: "11": 0
-      "optionId3": scoreValue3   // ex: "12": 5
+      "arroz": 0,         // se escolher a opção "arroz": 0 pontos
+      "feijão": 2.5,      // se escolher a opção "feijão": 2.5 pontos
+      "Chocolate": 5      // se escolher a opção "Chocolate": 5 pontos
     }
   }
 }
@@ -142,13 +140,13 @@ Foi implementado um sistema de pontuação eliminatória para vestibulares. Algu
 **Regras:**
 - ✅ `scoreType` deve ser `"OPTION_BASED"`
 - ✅ `optionScoresJson` é **obrigatório** quando scoreType é OPTION_BASED
-- ✅ As chaves do objeto devem ser IDs de opções que existem em `questionOptions`
+- ✅ As chaves do objeto devem ser os **valores** (`questionOptionValue`) das opções que existem em `questionOptions`
 - ✅ Opções não mencionadas terão score 0 (implícito)
 - ✅ Scores podem ser decimais (ex: 2.5, 3.75)
 
 **Validações:**
-- Se uma chave do `optionScoresJson` referenciar um `questionOptionId` que não existe na questão, retorna erro:
-  - `#A opção com ID {optionId} não existe nesta questão`
+- Se uma chave do `optionScoresJson` referenciar um valor de opção que não existe na questão, retorna erro:
+  - `#A opção "{optionValue}" não existe nesta questão`
 
 ---
 
@@ -219,9 +217,9 @@ Foi implementado um sistema de pontuação eliminatória para vestibulares. Algu
 - Se `questionScore` contiver dados, o score antigo é **deletado** e um novo é **criado** (replace completo)
 - Se a propriedade `questionScore` não vier no payload, o score existente é **mantido**
 
-**Validação de IDs no update:**
-- No update, as `questionOptions` são enviadas completas (incluindo IDs das existentes)
-- Se o `optionScoresJson` referenciar um ID que não está no array de `questionOptions` enviado, retorna erro
+**Validação de valores no update:**
+- No update, as `questionOptions` são enviadas completas
+- Se o `optionScoresJson` referenciar um valor que não está no array de `questionOptions` enviado, retorna erro
 - Isso garante consistência: se uma opção foi removida, ela não pode mais ter score
 
 ---
@@ -254,8 +252,8 @@ Foi implementado um sistema de pontuação eliminatória para vestibulares. Algu
     "questionId": 123,
     "scoreType": "OPTION_BASED",
     "optionScoresJson": {
-      "10": 0,
-      "11": 3.5
+      "18-25 anos": 0,
+      "26-35 anos": 3.5
     },
     "dateComparisonType": null,
     "cutoffDate": null,
@@ -288,10 +286,10 @@ Se tentar criar/atualizar com `questionScore` em outros tipos de questão, retor
 ### Validações para OPTION_BASED:
 
 ✅ `optionScoresJson` deve ser um objeto
-✅ As chaves devem ser IDs de opções existentes na questão
-❌ Erro se referenciar ID inexistente:
+✅ As chaves devem ser **valores** (`questionOptionValue`) de opções existentes na questão
+❌ Erro se referenciar valor inexistente:
 ```
-#A opção com ID {optionId} não existe nesta questão
+#A opção "{optionValue}" não existe nesta questão
 ```
 
 ---
@@ -357,19 +355,17 @@ enum EQuestionsTypes {
     {
       "questionOptionType": 1,
       "questionOptionValue": "Sim"
-      // Assumindo que após criação terá ID 100
     },
     {
       "questionOptionType": 1,
       "questionOptionValue": "Não"
-      // Assumindo que após criação terá ID 101
     }
   ],
   "questionScore": {
     "scoreType": "OPTION_BASED",
     "optionScoresJson": {
-      "100": 5,   // Sim = 5 pontos de penalidade
-      "101": 0    // Não = 0 pontos
+      "Sim": 5,   // Sim = 5 pontos de penalidade
+      "Não": 0    // Não = 0 pontos
     }
   }
 }
