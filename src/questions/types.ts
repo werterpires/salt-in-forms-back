@@ -1,5 +1,6 @@
 import { CreateSubQuestionDto } from './dto/create-question.dto'
 import { QuestionOptionDto } from './dto/optionsDto'
+import { QuestionScoreDto } from './dto/question-score.dto'
 import { validationResult } from './validations'
 
 // Representa uma validação associada a uma questão
@@ -64,6 +65,7 @@ export interface Question {
   questionOptions?: QuestionOption[]
   validations?: Validation[]
   subQuestions?: SubQuestion[]
+  questionScore?: QuestionScoreDto
 }
 
 export interface SubQuestion {
@@ -91,6 +93,7 @@ export interface CreateQuestion {
   validations?: Validation[]
   subQuestions?: CreateSubQuestionDto[]
   questionOptions?: QuestionOptionDto[]
+  questionScore?: QuestionScoreDto
 }
 
 export interface UpdateQuestion {
@@ -107,6 +110,7 @@ export interface UpdateQuestion {
   validations?: Validation[]
   subQuestions?: SubQuestion[]
   questionOptions?: QuestionOption[]
+  questionScore?: QuestionScoreDto
 }
 
 export interface QuestionWithDisplayRules {

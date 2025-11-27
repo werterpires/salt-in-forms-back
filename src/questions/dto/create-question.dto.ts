@@ -11,6 +11,7 @@ import {
 import { QuestionOptionDto, SubQuestionOptionDto } from './optionsDto'
 import { ValidationDto } from './update-question.dto'
 import { SubValidationDto } from './validationDto'
+import { QuestionScoreDto } from './question-score.dto'
 
 export class CreateQuestionDto {
   @IsNumber({}, { message: '#O ID da seção deve ser numérico.' })
@@ -77,6 +78,11 @@ export class CreateQuestionDto {
   @ValidateNested({ each: true })
   @Type(() => CreateSubQuestionDto)
   subQuestions?: CreateSubQuestionDto[]
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => QuestionScoreDto)
+  questionScore?: QuestionScoreDto
 }
 
 export class CreateSubQuestionDto {
