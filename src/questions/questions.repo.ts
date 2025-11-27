@@ -822,13 +822,7 @@ export class QuestionsRepo {
 
     if (!questionScore) return null
 
-    // Parse JSON if exists
-    if (questionScore[db.QuestionScores.OPTION_SCORES_JSON]) {
-      questionScore[db.QuestionScores.OPTION_SCORES_JSON] = JSON.parse(
-        questionScore[db.QuestionScores.OPTION_SCORES_JSON]
-      )
-    }
-
+    // No need to parse JSON - Knex already returns JSONB as object
     return questionScore
   }
 

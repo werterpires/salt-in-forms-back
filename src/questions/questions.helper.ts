@@ -876,18 +876,18 @@ export class QuestionsHelper {
         )
       }
 
-      // Verificar se todas as opções referenciadas existem
+      // Verificar se todas as opções referenciadas existem pelo valor
       if (questionOptions && questionOptions.length > 0) {
-        const optionIds = questionOptions
-          .filter((opt) => opt.questionOptionId)
-          .map((opt) => opt.questionOptionId!.toString())
+        const optionValues = questionOptions.map(
+          (opt) => opt.questionOptionValue
+        )
 
-        const scoreOptionIds = Object.keys(questionScore.optionScoresJson)
+        const scoreOptionValues = Object.keys(questionScore.optionScoresJson)
 
-        for (const scoreOptionId of scoreOptionIds) {
-          if (!optionIds.includes(scoreOptionId)) {
+        for (const scoreOptionValue of scoreOptionValues) {
+          if (!optionValues.includes(scoreOptionValue)) {
             throw new BadRequestException(
-              `#A opção com ID ${scoreOptionId} não existe nesta questão`
+              `#A opção "${scoreOptionValue}" não existe nesta questão`
             )
           }
         }
