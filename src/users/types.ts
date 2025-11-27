@@ -31,3 +31,8 @@ export interface UserFilter {
   userActive?: boolean
   roleId?: number
 }
+
+export interface InterviewerBasicInfo {
+  userId: number
+  userName: string
+}

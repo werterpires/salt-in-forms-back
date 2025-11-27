@@ -1,4 +1,4 @@
-import { Length } from 'class-validator'
+import { IsNumber, IsOptional, Length, Min } from 'class-validator'
 
 export class CreateProcessDto {
   @Length(5, 150, {
@@ -9,9 +9,9 @@ export class CreateProcessDto {
 
   @Length(5, 250, {
     message:
-      '#O id do processo de vestibular no totvs deve ter no mínimo 5 e no máximo 250 caracteres'
+      '#O identificador do tenant (data key) deve ter no mínimo 5 e no máximo 250 caracteres'
   })
-  processTotvsId: string
+  processDataKey: string
 
   @Length(10, 10, {
     message: "#A data de início do processo deve ter o formato 'YYYY-MM-DD'"
@@ -34,4 +34,16 @@ export class CreateProcessDto {
       "#A data de fim para inscrições do processo deve ter o formato 'YYYY-MM-DD'"
   })
   processEndSubscription: string
+
+  @IsOptional()
+  @IsNumber(
+    {},
+    {
+      message: '#A pontuação de corte deve ser numérica.'
+    }
+  )
+  @Min(0, {
+    message: '#A pontuação de corte deve ser maior ou igual a 0.'
+  })
+  cutoffScore?: number
 }

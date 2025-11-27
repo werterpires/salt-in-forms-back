@@ -93,6 +93,23 @@ export class QuestionsRepo {
         }
       }
 
+      // Inserir questionScore, se houver
+      if (createQuestionData.questionScore) {
+        await this.createQuestionScore(
+          {
+            questionId,
+            scoreType: createQuestionData.questionScore.scoreType,
+            optionScoresJson:
+              createQuestionData.questionScore.optionScoresJson || null,
+            dateComparisonType:
+              createQuestionData.questionScore.dateComparisonType || null,
+            cutoffDate: createQuestionData.questionScore.cutoffDate || null,
+            dateScore: createQuestionData.questionScore.dateScore || null
+          },
+          trx
+        )
+      }
+
       if (
         !createQuestionData.subQuestions ||
         createQuestionData.subQuestions.length === 0
@@ -157,11 +174,7 @@ export class QuestionsRepo {
         question.answerDisplayValue &&
         typeof question.answerDisplayValue === 'string'
       ) {
-        question.answerDisplayValue = question.answerDisplayValue
-          .split('||')
-          .map((value) => {
-            return Number(value)
-          })
+        question.answerDisplayValue = question.answerDisplayValue.split('||')
       }
     })
 
@@ -636,6 +649,27 @@ export class QuestionsRepo {
           }
         }
       }
+
+      // Handle questionScore
+      // Se questionScore é undefined, deletar o existente
+      // Se questionScore existe, deletar o antigo e criar o novo (replace)
+      await this.deleteQuestionScore(updateQuestionData.questionId, trx)
+
+      if (updateQuestionData.questionScore) {
+        await this.createQuestionScore(
+          {
+            questionId: updateQuestionData.questionId,
+            scoreType: updateQuestionData.questionScore.scoreType,
+            optionScoresJson:
+              updateQuestionData.questionScore.optionScoresJson || null,
+            dateComparisonType:
+              updateQuestionData.questionScore.dateComparisonType || null,
+            cutoffDate: updateQuestionData.questionScore.cutoffDate || null,
+            dateScore: updateQuestionData.questionScore.dateScore || null
+          },
+          trx
+        )
+      }
     })
   }
 
@@ -743,5 +777,63 @@ export class QuestionsRepo {
       }
     }
     return updateData
+  }
+
+  // Question Score methods
+  async createQuestionScore(
+    questionScoreData: {
+      questionId: number
+      scoreType: string
+      optionScoresJson?: Record<string, number> | null
+      dateComparisonType?: string | null
+      cutoffDate?: string | null
+      dateScore?: number | null
+    },
+    trx?: Knex.Transaction
+  ): Promise<number> {
+    const knexInstance = trx || this.knex
+
+    const [questionScoreId] = await knexInstance(
+      db.Tables.QUESTION_SCORES
+    ).insert({
+      [db.QuestionScores.QUESTION_ID]: questionScoreData.questionId,
+      [db.QuestionScores.SCORE_TYPE]: questionScoreData.scoreType,
+      [db.QuestionScores.OPTION_SCORES_JSON]: questionScoreData.optionScoresJson
+        ? JSON.stringify(questionScoreData.optionScoresJson)
+        : null,
+      [db.QuestionScores.DATE_COMPARISON_TYPE]:
+        questionScoreData.dateComparisonType || null,
+      [db.QuestionScores.CUTOFF_DATE]: questionScoreData.cutoffDate || null,
+      [db.QuestionScores.DATE_SCORE]: questionScoreData.dateScore || null
+    })
+
+    return questionScoreId
+  }
+
+  async findQuestionScoreByQuestionId(
+    questionId: number,
+    trx?: Knex.Transaction
+  ): Promise<any | null> {
+    const knexInstance = trx || this.knex
+
+    const questionScore = await knexInstance(db.Tables.QUESTION_SCORES)
+      .where(db.QuestionScores.QUESTION_ID, questionId)
+      .first()
+
+    if (!questionScore) return null
+
+    // No need to parse JSON - Knex already returns JSONB as object
+    return questionScore
+  }
+
+  async deleteQuestionScore(
+    questionId: number,
+    trx?: Knex.Transaction
+  ): Promise<void> {
+    const knexInstance = trx || this.knex
+
+    await knexInstance(db.Tables.QUESTION_SCORES)
+      .where(db.QuestionScores.QUESTION_ID, questionId)
+      .del()
   }
 }

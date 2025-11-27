@@ -6,6 +6,7 @@ import { MinisterialsRepo } from './ministerials.repo'
 const services = [MinisterialsService, MinisterialsRepo]
 @Module({
   controllers: [MinisterialsController],
-  providers: services
+  providers: services,
+  exports: [MinisterialsRepo]
 })
 export class MinisterialsModule {}

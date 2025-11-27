@@ -32,6 +32,7 @@ export interface CreateUnion {
 
 export interface Union extends CreateUnion {
   unionId: number
+  fields?: Field[]
 }
 
 export interface MinisterialsFilter {

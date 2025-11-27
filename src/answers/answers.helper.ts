@@ -17,19 +17,25 @@ export class AnswersHelper {
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 19, 20, 21, 22, 23, 24
   ]
 
-  private static readonly MULTIPLE_CHOICE_VALID_VALIDATIONS_TYPES: number[] = []
-  private static readonly SINGLE_CHOICE_VALID_VALIDATIONS_TYPES: number[] = []
+  private static readonly MULTIPLE_CHOICE_VALID_VALIDATIONS_TYPES: number[] = [
+    5
+  ]
+  private static readonly SINGLE_CHOICE_VALID_VALIDATIONS_TYPES: number[] = [5]
   private static readonly LIKERT_SCALE_VALID_VALIDATIONS_TYPES: number[] = []
   private static readonly SINGLE_CHOICE_MATRIX_VALID_VALIDATIONS_TYPES: number[] =
-    []
+    [5]
   private static readonly MULTIPLE_CHOICE_MATRIX_VALID_VALIDATIONS_TYPES: number[] =
-    []
-  private static readonly DATE_VALID_VALIDATIONS_TYPES: number[] = []
-  private static readonly TIME_VALID_VALIDATIONS_TYPES: number[] = []
+    [5]
+  private static readonly DATE_VALID_VALIDATIONS_TYPES: number[] = [
+    5, 12, 13, 14, 15, 16
+  ]
+  private static readonly TIME_VALID_VALIDATIONS_TYPES: number[] = [
+    5, 17, 18, 25, 26
+  ]
   private static readonly MULTIPLE_RESPONSES_VALID_VALIDATIONS_TYPES: number[] =
-    []
-  private static readonly EMAIL_VALID_VALIDATIONS_TYPES: number[] = []
-  private static readonly FIELDS_VALID_VALIDATIONS_TYPES: number[] = []
+    [5]
+  private static readonly EMAIL_VALID_VALIDATIONS_TYPES: number[] = [5, 8, 27]
+  private static readonly FIELDS_VALID_VALIDATIONS_TYPES: number[] = [5]
 
   static getValidValidationsTypesByQuestionType(
     questionType: number
@@ -88,6 +94,66 @@ export class AnswersHelper {
         validation.valueTwo,
         validation.valueThree,
         validation.valueFour
+      )
+
+      if (!result.isValid && result.errorMessage) {
+        errorMessages.push(result.errorMessage)
+      }
+    }
+
+    if (errorMessages.length > 0) {
+      throw new BadRequestException(`#${errorMessages[0]}`)
+    }
+  }
+
+  static async validateAnswerWithEmailUniqueness(
+    answerValue: string,
+    validations: Validation[],
+    questionType: number,
+    candidateId: number,
+    currentFormCandidateId: number,
+    answersRepo: any,
+    encryptionService: EncryptionService
+  ): Promise<void> {
+    const errorMessages: string[] = []
+
+    for (const validation of validations) {
+      const spec = VALIDATION_SPECIFICATIONS_BY_TYPE[validation.validationType]
+
+      if (!spec) {
+        continue
+      }
+
+      let valueOne = validation.valueOne
+      const valueTwo = validation.valueTwo
+      const valueThree = validation.valueThree
+      const valueFour = validation.valueFour
+
+      // Se for validação de email único (tipo 27) e questão de email (tipo 10)
+      if (validation.validationType === 27 && questionType === 10) {
+        // Buscar todos os emails já utilizados pelo candidato
+        const existingEmailAnswers =
+          await answersRepo.findEmailAnswersByCandidateId(candidateId)
+
+        // Descriptografar os emails e criar string concatenada
+        const usedEmails = existingEmailAnswers
+          .map((answer: Answer) =>
+            answer.answerValue
+              ? this.decryptAnswerValue(answer.answerValue, encryptionService)
+              : ''
+          )
+          .filter((email: string) => email && email.trim() !== '')
+          .join('||')
+
+        valueOne = usedEmails
+      }
+
+      const result = spec.validationFunction(
+        answerValue,
+        valueOne,
+        valueTwo,
+        valueThree,
+        valueFour
       )
 
       if (!result.isValid && result.errorMessage) {

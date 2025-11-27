@@ -10,16 +10,19 @@ export enum Tables {
   FORM_SECTIONS = 'formSections',
   QUESTIONS = 'questions',
   QUESTION_OPTIONS = 'questionOptions',
+  QUESTION_SCORES = 'questionScores',
   VALIDATIONS = 'validations',
   SUB_QUESTIONS = 'subQuestions',
   SUB_QUESTION_OPTIONS = 'subQuestionOptions',
   SUB_VALIDATIONS = 'subValidations',
   CANDIDATES = 'candidates',
+  PENDING_CANDIDATES = 'pendingCandidates',
   FORMS_CANDIDATES = 'formsCandidates',
   ANSWERS = 'answers',
   UNIONS = 'unions',
   FIELDS = 'fields',
-  CANDIDATES_TERMS_SIGNATURES = 'candidatesTermsSignatures'
+  CANDIDATES_TERMS_SIGNATURES = 'candidatesTermsSignatures',
+  RATES = 'rates'
 }
 
 export enum Users {
@@ -59,10 +62,12 @@ export enum Processes {
   PROCESS_ID = 'processId',
   PROCESS_TITLE = 'processTitle',
   PROCESS_TOTVS_ID = 'processTotvsId',
+  PROCESS_DATA_KEY = 'processDataKey',
   PROCESS_BEGIN_DATE = 'processBeginDate',
   PROCESS_END_DATE = 'processEndDate',
   PROCESS_END_ANSWERS = 'processEndAnswers',
-  PROCESS_END_SUBSCRIPTION = 'processEndSubscription'
+  PROCESS_END_SUBSCRIPTION = 'processEndSubscription',
+  CUTOFF_SCORE = 'cutoffScore'
 }
 
 export enum SForms {
@@ -169,6 +174,7 @@ export enum Candidates {
   CANDIDATE_NAME = 'candidateName',
   CANDIDATE_UNIQUE_DOCUMENT = 'candidateUniqueDocument',
   CANDIDATE_EMAIL = 'candidateEmail',
+  CANDIDATE_DOCUMENT_TYPE = 'candidateDocumentType',
   CANDIDATE_PHONE = 'candidatePhone',
   CANDIDATE_BIRTHDATE = 'candidateBirthdate',
   CANDIDATE_FOREIGNER = 'candidateForeigner',
@@ -179,7 +185,11 @@ export enum Candidates {
   CANDIDATE_STATE = 'candidateState',
   CANDIDATE_ZIP_CODE = 'candidateZipCode',
   CANDIDATE_COUNTRY = 'candidateCountry',
-  INTERVIEW_USER_ID = 'interviewUserId'
+  CANDIDATE_MARITAL_STATUS = 'candidateMaritalStatus',
+  INTERVIEW_USER_ID = 'interviewUserId',
+  CANDIDATE_ORDER_CODE = 'candidateOrderCode',
+  CANDIDATE_ORDER_CODE_VALIDATED_AT = 'candidateOrderCodeValidatedAt',
+  APPROVED = 'approved'
 }
 
 export enum FormsCandidates {
@@ -212,9 +222,45 @@ export enum Fields {
   UNION_ID = 'unionId'
 }
 
+export enum PendingCandidates {
+  PENDING_CANDIDATE_ID = 'pendingCandidateId',
+  CANDIDATE_NAME = 'candidateName',
+  CANDIDATE_EMAIL = 'candidateEmail',
+  CANDIDATE_DOCUMENT_TYPE = 'candidateDocumentType',
+  CANDIDATE_UNIQUE_DOCUMENT = 'candidateUniqueDocument',
+  CANDIDATE_PHONE = 'candidatePhone',
+  ORDER_CODE = 'orderCode',
+  PROCESS_ID = 'processId',
+  CONFIRMATION_TOKEN = 'confirmationToken',
+  TOKEN_EXPIRES_AT = 'tokenExpiresAt',
+  ATTEMPT_COUNT = 'attemptCount',
+  CREATED_AT = 'createdAt',
+  CONFIRMED_AT = 'confirmedAt',
+  INVALIDATED_AT = 'invalidatedAt'
+}
+
 export enum CandidatesTermsSignatures {
   CANDIDATE_TERM_SIGNATURE_ID = 'candidateTermSignatureId',
   FORM_CANDIDATE_ID = 'formCandidateId',
   TERM_ID = 'termId',
   TERM_UNSIGNED = 'termUnsigned'
+}
+
+export enum Rates {
+  RATE_ID = 'rateId',
+  CANDIDATE_ID = 'candidateId',
+  INTERVIEWER_ID = 'interviewerId',
+  RATE_VALUE = 'rateValue',
+  RATE_COMMENT = 'rateComment',
+  QUESTION_AREA_ID = 'questionAreaId'
+}
+
+export enum QuestionScores {
+  QUESTION_SCORE_ID = 'questionScoreId',
+  QUESTION_ID = 'questionId',
+  SCORE_TYPE = 'scoreType',
+  OPTION_SCORES_JSON = 'optionScoresJson',
+  DATE_COMPARISON_TYPE = 'dateComparisonType',
+  CUTOFF_DATE = 'cutoffDate',
+  DATE_SCORE = 'dateScore'
 }

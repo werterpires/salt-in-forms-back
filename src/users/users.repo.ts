@@ -218,11 +218,45 @@ export class UsersRepo {
     return Math.ceil(count / this.elementsPerPage) || 0
   }
 
+  async findActiveInterviewers() {
+    return await this.knex(db.Tables.USERS_ROLES)
+      .select(
+        `${db.Tables.USERS}.${db.Users.USER_ID}`,
+        `${db.Tables.USERS}.${db.Users.USER_NAME}`
+      )
+      .innerJoin(
+        db.Tables.USERS,
+        `${db.Tables.USERS}.${db.Users.USER_ID}`,
+        `${db.Tables.USERS_ROLES}.${db.UsersRoles.USER_ID}`
+      )
+      .where(`${db.Tables.USERS_ROLES}.${db.UsersRoles.ROLE_ID}`, 3)
+      .where(`${db.Tables.USERS_ROLES}.${db.UsersRoles.USER_ROLE_ACTIVE}`, true)
+      .where(`${db.Tables.USERS}.${db.Users.USER_ACTIVE}`, true)
+      .distinct()
+  }
+
   async findRolesByUserId(userId: number) {
     const rolesConsult = await this.knex(db.Tables.USERS_ROLES)
       .select(db.UsersRoles.ROLE_ID)
       .where(db.UsersRoles.USER_ID, userId)
 
     return rolesConsult.map((r) => r.roleId)
+  }
+
+  async isActiveInterviewer(userId: number): Promise<boolean> {
+    const result = await this.knex(db.Tables.USERS_ROLES)
+      .select(`${db.Tables.USERS_ROLES}.${db.UsersRoles.USER_ID} as user_id`)
+      .innerJoin(
+        db.Tables.USERS,
+        `${db.Tables.USERS}.${db.Users.USER_ID}`,
+        `${db.Tables.USERS_ROLES}.${db.UsersRoles.USER_ID}`
+      )
+      .where(`${db.Tables.USERS_ROLES}.${db.UsersRoles.USER_ID}`, userId)
+      .where(`${db.Tables.USERS_ROLES}.${db.UsersRoles.ROLE_ID}`, 3)
+      .where(`${db.Tables.USERS_ROLES}.${db.UsersRoles.USER_ROLE_ACTIVE}`, true)
+      .where(`${db.Tables.USERS}.${db.Users.USER_ACTIVE}`, true)
+      .first()
+
+    return !!result
   }
 }

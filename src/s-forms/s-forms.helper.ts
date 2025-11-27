@@ -13,6 +13,7 @@ import { CreateSFormDto } from './dto/create-s-form.dto'
 import { BadRequestException } from '@nestjs/common'
 import { UpdateSFormDto } from './dto/update-s-form.dto'
 import { CopySFormDto } from './dto/copy-s-form.dto'
+import { EQuestionsTypes } from 'src/constants/questions-types.enum'
 
 export function applyFilters(filters: SFormFilter, query: Knex.QueryBuilder) {
   if (filters.sFormName) {
@@ -126,14 +127,13 @@ export async function validateCreateDto(
   }
 
   // Validar emailQuestionId baseado no tipo
-  if (sFormType === 'normal') {
+  if (sFormType === 'normal' || sFormType === 'ministerial') {
     if (!emailQuestionId) {
       throw new BadRequestException(
         `#Formulários do tipo normal devem ter um emailQuestionId.`
       )
     }
 
-    // Validar se a questão é do tipo email
     const question = await questionsRepo.findById(emailQuestionId)
     if (!question) {
       throw new BadRequestException(
@@ -141,34 +141,50 @@ export async function validateCreateDto(
       )
     }
 
-    if (question.questionType !== 10) {
+    // Validar se a questão é do tipo email
+    if (
+      question.questionType != EQuestionsTypes.EMAIL &&
+      sFormType === 'normal'
+    ) {
       // EQuestionsTypes.EMAIL
       throw new BadRequestException(
         `#O emailQuestionId deve ser de uma questão do tipo Email.`
       )
     }
+
+    if (
+      question.questionType != EQuestionsTypes.FIELDS &&
+      sFormType === 'ministerial'
+    ) {
+      // EQuestionsTypes.FIELDS
+      throw new BadRequestException(
+        `#O emailQuestionId deve ser de uma questão do tipo FIELDS.`
+      )
+    }
   } else {
     if (emailQuestionId) {
       throw new BadRequestException(
-        `#Formulários que não são do tipo normal não podem ter emailQuestionId.`
+        `#Formulários do tipo candidato não podem ter emailQuestionId.`
       )
     }
   }
 
-  if (sFormType == 'ministerial') {
-    if (sForms.some((form) => form.sFormType === 'ministerial')) {
-      throw new BadRequestException(
-        `#O processo já possui um formulário do tipo ministerial.`
-      )
-    }
+  if (
+    sFormType == 'ministerial' &&
+    sForms.some((form) => form.sFormType === 'ministerial')
+  ) {
+    throw new BadRequestException(
+      `#O processo já possui um formulário do tipo ministerial.`
+    )
   }
 
-  if (sFormType == 'candidate') {
-    if (sForms.some((form) => form.sFormType === 'candidate')) {
-      throw new BadRequestException(
-        `#O processo já possui um formulário do tipo candidato.`
-      )
-    }
+  if (
+    sFormType == 'candidate' &&
+    sForms.some((form) => form.sFormType === 'candidate')
+  ) {
+    throw new BadRequestException(
+      `#O processo já possui um formulário do tipo candidato.`
+    )
   }
 }
 

@@ -1,22 +1,31 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException
+} from '@nestjs/common'
 import { UserFromJwt } from 'src/shared/auth/types'
 import { FindAllResponse, Paginator } from 'src/shared/types/types'
 import { CreateUserDto } from './dtos/create-user.dto'
 import { UpdateOwnUserDto } from './dtos/update-own-user.dto'
 import { UpdateUserDto } from './dtos/update-user.dto'
-import { CreateUser, User, UserFilter } from './types'
+import { CreateUser, InterviewerBasicInfo, User, UserFilter } from './types'
 import { areValidRoles, generateInviteCode } from './users.helper'
 import { UsersRepo } from './users.repo'
 import { UpdatePasswordDto } from './dtos/update-pass.dto'
 import * as bcrypt from 'bcrypt'
 import { EncryptionService } from 'src/shared/utils-module/encryption/encryption.service'
 import * as db from 'src/constants/db-schema.enum'
+import { SendPulseEmailService } from 'src/shared/utils-module/email-sender/sendpulse-email.service'
+import { RoleDetails } from 'src/constants/roles.const'
+import { EmailTemplateBuilder } from 'src/shared/utils-module/email-sender/email-template.builder'
+import { getPasswordChangedEmailTemplate } from 'src/shared/auth/email-templates/password-changed.template'
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly usersRepo: UsersRepo,
-    private readonly encryptionService: EncryptionService
+    private readonly encryptionService: EncryptionService,
+    private readonly emailService: SendPulseEmailService
   ) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
@@ -32,6 +41,14 @@ export class UsersService {
 
     const userId = await this.usersRepo.createUser(createUserData)
     const user = await this.usersRepo.findUserById(userId)
+
+    // Envia e-mail de convite
+    await this.sendInviteEmail(
+      createUserDto.userEmail,
+      createUserDto.userName,
+      createUserDto.userRoles,
+      createUserData.userInviteCode
+    )
     return user
   }
 
@@ -42,6 +59,16 @@ export class UsersService {
     }
     const inviteCode = generateInviteCode()
     await this.usersRepo.reinviteUser(userId, inviteCode)
+
+    // Busca dados do usuário e envia novo e-mail de convite
+    const user = await this.usersRepo.findUserById(userId)
+    const userNameDecrypted = this.encryptionService.decrypt(user.userName)
+    await this.sendInviteEmail(
+      user.userEmail,
+      userNameDecrypted,
+      user.userRoles,
+      inviteCode
+    )
   }
 
   async findAllUsers(
@@ -97,5 +124,77 @@ export class UsersService {
     const passwordHash = await bcrypt.hash(updatePasswordDto.newPassword, 10)
 
     await this.usersRepo.updatePassword(userId, passwordHash)
+
+    // Enviar email de notificação sobre alteração de senha
+    const user = await this.usersRepo.findUserById(userId)
+    const userName = this.encryptionService.decrypt(user.userName)
+    const timestamp = new Date().toLocaleString('pt-BR', {
+      dateStyle: 'short',
+      timeStyle: 'medium'
+    })
+    const emailHtml = getPasswordChangedEmailTemplate(userName, timestamp)
+
+    await this.emailService.sendEmail(user.userEmail, userName, emailHtml)
+  }
+
+  private getFrontendAdmUrl(): string {
+    const url = process.env.FRONTEND_ADM_URL
+    if (!url) {
+      throw new InternalServerErrorException(
+        'FRONTEND_ADM_URL não está definido no .env'
+      )
+    }
+    return url
+  }
+
+  private buildInviteLink(inviteCode: string): string {
+    const base = this.getFrontendAdmUrl()
+    const baseNormalized = base.endsWith('/') ? base.slice(0, -1) : base
+    return `${baseNormalized}/#/logon/${inviteCode}`
+  }
+
+  private formatRolesPtBr(roleIds: number[]): string {
+    const names = roleIds
+      .map((id) => RoleDetails[id as keyof typeof RoleDetails]?.roleName)
+      .filter(Boolean)
+    if (names.length === 0) return ''
+    if (names.length === 1) return names[0]
+    if (names.length === 2) return `${names[0]} e ${names[1]}`
+    return names.slice(0, -1).join(', ') + ' e ' + names[names.length - 1]
+  }
+
+  private async sendInviteEmail(
+    recipientEmail: string,
+    recipientName: string,
+    roleIds: number[],
+    inviteCode: string
+  ) {
+    const link = this.buildInviteLink(inviteCode)
+    const rolesText = this.formatRolesPtBr(roleIds)
+
+    const contentBeforeButton = [
+      `Você foi convidado para fazer parte do <strong>SaltInForms</strong>${rolesText ? ` como <strong>${rolesText}</strong>` : ''}.`,
+      'Para aceitar o convite e configurar seu acesso, clique no botão abaixo:'
+    ]
+
+    const body = EmailTemplateBuilder.build({
+      recipientName,
+      contentBeforeButton,
+      button: {
+        text: 'Acessar Convite',
+        url: link
+      }
+    })
+
+    await this.emailService.sendEmail(recipientEmail, recipientName, body)
+  }
+
+  async findActiveInterviewers(): Promise<InterviewerBasicInfo[]> {
+    const interviewers = await this.usersRepo.findActiveInterviewers()
+
+    return interviewers.map((interviewer) => ({
+      userId: interviewer.userId,
+      userName: this.encryptionService.decrypt(interviewer.userName)
+    }))
   }
 }

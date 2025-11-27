@@ -53,6 +53,10 @@ export class AuthRepo {
       .where(Users.USER_EMAIL, email)
       .first()
 
+    if (!user) {
+      return undefined
+    }
+
     const userRoles = await this.knex<ValidateUser>(Tables.USERS_ROLES)
       .select(UsersRoles.ROLE_ID)
       .where(UsersRoles.USER_ID, user.userId)
@@ -155,5 +159,35 @@ export class AuthRepo {
         })
       }
     })
+  }
+
+  async findActiveAdminEmails(): Promise<
+    Array<{ userEmail: string; userName: string }>
+  > {
+    const admins = await this.knex(Tables.USERS)
+      .select(Users.USER_EMAIL, Users.USER_NAME)
+      .where(Users.USER_ACTIVE, true)
+      .whereExists(function () {
+        this.select('*')
+          .from(Tables.USERS_ROLES)
+          .whereRaw(
+            `${Tables.USERS_ROLES}.${UsersRoles.USER_ID} = ${Tables.USERS}.${Users.USER_ID}`
+          )
+          .andWhere(UsersRoles.ROLE_ID, 1) // ERoles.ADMIN = 1
+      })
+
+    return admins
+  }
+
+  async updatePasswordAndDeactivateUser(
+    userId: number,
+    passwordHash: string
+  ): Promise<void> {
+    await this.knex(Tables.USERS)
+      .where(Users.USER_ID, userId)
+      .update({
+        [Users.USER_PASSWORD]: passwordHash,
+        [Users.USER_ACTIVE]: false
+      })
   }
 }

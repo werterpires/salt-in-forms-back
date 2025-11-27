@@ -8,7 +8,8 @@ import { KnexModule } from 'nest-knexjs'
 import { toSnakeCase } from './shared/utils'
 import camelcaseKeys from 'camelcase-keys'
 import { ScheduleModule } from '@nestjs/schedule'
-import { ConfigModule } from '@nestjs/config'
+
+import { config } from 'dotenv'
 import { AuthModule } from './shared/auth/auth.module'
 import { UsersModule } from './users/users.module'
 import { JwtAuthGuard } from './shared/auth/guards/jwt-auth.guard'
@@ -23,6 +24,10 @@ import { QuestionsModule } from './questions/questions.module'
 import { CandidatesModule } from './candidates/candidates.module'
 import { AnswersModule } from './answers/answers.module'
 import { FormsCandidatesModule } from './forms-candidates/forms-candidates.module'
+import { FieldsModule } from './fields/fields.module'
+import { RatesModule } from './rates/rates.module';
+
+config()
 
 const throttler = ThrottlerModule.forRoot({
   throttlers: [
@@ -61,7 +66,8 @@ const knex = KnexModule.forRoot(
           } else if (field.type === 'DATE' && field.length > 1) {
             return field.string() // 1 = true, 0 = false
           } else if (field.type === 'DATETIME' && field.length > 1) {
-            return field.string().substring(0, 10) // 1 = true, 0 = false
+            const value = field.string()
+            return value ? value.substring(0, 10) : null
           }
           return next()
         }
@@ -80,10 +86,6 @@ const knex = KnexModule.forRoot(
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env'
-    }),
     UtilsModuleModule,
     throttler,
     knex,
@@ -99,7 +101,9 @@ const knex = KnexModule.forRoot(
     QuestionsModule,
     CandidatesModule,
     AnswersModule,
-    FormsCandidatesModule
+    FormsCandidatesModule,
+    FieldsModule,
+    RatesModule
   ],
   controllers: [],
   providers: [

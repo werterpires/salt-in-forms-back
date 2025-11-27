@@ -76,6 +76,20 @@ export class AnswersRepo {
       })
   }
 
+  async findAllAnswersByFormCandidateId(
+    formCandidateId: number
+  ): Promise<Answer[]> {
+    return this.knex(db.Tables.ANSWERS)
+      .select(
+        db.Answers.ANSWER_ID,
+        db.Answers.QUESTION_ID,
+        db.Answers.FORM_CANDIDATE_ID,
+        db.Answers.ANSWER_VALUE,
+        db.Answers.VALID_ANSWER
+      )
+      .where(db.Answers.FORM_CANDIDATE_ID, formCandidateId)
+  }
+
   async insertAnswerInTransaction(
     answer: CreateAnswer,
     trx: Knex.Transaction
@@ -100,5 +114,46 @@ export class AnswersRepo {
       .update({
         [db.Answers.ANSWER_VALUE]: answerValue
       })
+  }
+
+  async findEmailAnswersByCandidateId(
+    candidateId: number,
+    excludeFormCandidateId?: number
+  ): Promise<Answer[]> {
+    const query = this.knex(db.Tables.ANSWERS)
+      .select(
+        db.Answers.ANSWER_ID,
+        db.Answers.QUESTION_ID,
+        db.Answers.FORM_CANDIDATE_ID,
+        db.Answers.ANSWER_VALUE,
+        db.Answers.VALID_ANSWER
+      )
+      .innerJoin(
+        db.Tables.FORMS_CANDIDATES,
+        `${db.Tables.ANSWERS}.${db.Answers.FORM_CANDIDATE_ID}`,
+        '=',
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ID}`
+      )
+      .innerJoin(
+        db.Tables.QUESTIONS,
+        `${db.Tables.ANSWERS}.${db.Answers.QUESTION_ID}`,
+        '=',
+        `${db.Tables.QUESTIONS}.${db.Questions.QUESTION_ID}`
+      )
+      .where(
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID}`,
+        candidateId
+      )
+      .andWhere(`${db.Tables.QUESTIONS}.${db.Questions.QUESTION_TYPE}`, 10) // EMAIL type
+
+    if (excludeFormCandidateId) {
+      query.andWhere(
+        `${db.Tables.ANSWERS}.${db.Answers.FORM_CANDIDATE_ID}`,
+        '!=',
+        excludeFormCandidateId
+      )
+    }
+
+    return query
   }
 }

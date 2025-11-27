@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common'
 import { AnswersRepo } from './answers.repo'
 import { CreateAnswerDto } from './dto/create-answer.dto'
 import { FormsCandidatesService } from '../forms-candidates/forms-candidates.service'
+import { FormsCandidatesRepo } from '../forms-candidates/forms-candidates.repo'
 import { transformCreateAnswerDto } from '../forms-candidates/forms-candidates.helper'
 import {
   Answer,
@@ -20,6 +21,7 @@ export class AnswersService {
   constructor(
     private readonly answersRepo: AnswersRepo,
     private readonly formsCandidatesService: FormsCandidatesService,
+    private readonly formsCandidatesRepo: FormsCandidatesRepo,
     private readonly questionsRepo: QuestionsRepo,
     private readonly formSectionsRepo: FormSectionsRepo,
     private readonly encryptionService: EncryptionService
@@ -31,6 +33,12 @@ export class AnswersService {
     const formCandidateId: number =
       await this.formsCandidatesService.validateAccessCodeAndGetFormCandidateId(
         createAnswerDto.accessCode
+      )
+
+    // Validar período de resposta e status do formulário
+    const currentStatus =
+      await this.formsCandidatesService.validateFormCandidateForAnswer(
+        formCandidateId
       )
 
     // Primeira validação: verificar se já existe answer e se está habilitada
@@ -67,7 +75,39 @@ export class AnswersService {
       question.questionType
     )
 
-    AnswersHelper.validateAnswer(createAnswerDto.answerValue, validValidations)
+    // Buscar candidateId para validação de email único
+    const candidateId =
+      await this.formsCandidatesRepo.findCandidateIdByFormCandidateId(
+        formCandidateId
+      )
+
+    if (!candidateId) {
+      throw new BadRequestException('#Candidato não encontrado.')
+    }
+
+    // Verificar se há validação de email único
+    const hasEmailUniqueValidation = validValidations.some(
+      (validation) => validation.validationType === 27
+    )
+
+    if (hasEmailUniqueValidation && question.questionType === 10) {
+      // Usar validação com verificação de email único
+      await AnswersHelper.validateAnswerWithEmailUniqueness(
+        createAnswerDto.answerValue,
+        validValidations,
+        question.questionType,
+        candidateId,
+        formCandidateId,
+        this.answersRepo,
+        this.encryptionService
+      )
+    } else {
+      // Usar validação normal
+      AnswersHelper.validateAnswer(
+        createAnswerDto.answerValue,
+        validValidations
+      )
+    }
 
     // Buscar dependentes da questão
     const sectionsUsingQuestion =
@@ -189,6 +229,12 @@ export class AnswersService {
 
       return results
     })
+
+    // Se o status for menor que STARTED (4), atualizar para STARTED
+    await this.formsCandidatesService.updateToStartedIfNeeded(
+      formCandidateId,
+      currentStatus
+    )
 
     return response
   }

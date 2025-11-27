@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common'
-import { QuestionsRepo } from './questions.repo'
-import { QuestionsHelper } from './questions.helper'
-import { Question, QuestionOption } from './types'
 import { CreateQuestionDto } from './dto/create-question.dto'
-import { UpdateQuestionDto } from './dto/update-question.dto'
 import { ReorderQuestionsDto } from './dto/reorder-questions.dto'
+import { UpdateQuestionDto } from './dto/update-question.dto'
+import { QuestionsHelper } from './questions.helper'
+import { QuestionsRepo } from './questions.repo'
+import { Question } from './types'
 
 @Injectable()
 export class QuestionsService {
@@ -41,6 +41,15 @@ export class QuestionsService {
       )
       question.validations =
         await QuestionsHelper.transformValidations(validations)
+
+      // Buscar questionScore
+      const questionScore =
+        await this.questionsRepo.findQuestionScoreByQuestionId(
+          question.questionId
+        )
+      if (questionScore) {
+        question.questionScore = questionScore
+      }
 
       // Buscar subQuestions
       const subQuestions =
@@ -92,8 +101,11 @@ export class QuestionsService {
 
   async delete(questionId: number): Promise<void> {
     // Validar se a questão pode ser excluída (verificar vínculos)
-    await QuestionsHelper.validateQuestionDeletion(questionId, this.questionsRepo)
-    
+    await QuestionsHelper.validateQuestionDeletion(
+      questionId,
+      this.questionsRepo
+    )
+
     await this.questionsRepo.deleteQuestionCompletely(questionId)
   }
 
@@ -137,6 +149,15 @@ export class QuestionsService {
     )
     question.validations =
       await QuestionsHelper.transformValidations(validations)
+
+    // Buscar questionScore
+    const questionScore =
+      await this.questionsRepo.findQuestionScoreByQuestionId(
+        question.questionId
+      )
+    if (questionScore) {
+      question.questionScore = questionScore
+    }
 
     // Buscar subQuestions
     const subQuestions = await this.questionsRepo.findSubQuestionsByQuestionId(
@@ -195,6 +216,15 @@ export class QuestionsService {
       )
       question.validations =
         await QuestionsHelper.transformValidations(validations)
+
+      // Buscar questionScore
+      const questionScore =
+        await this.questionsRepo.findQuestionScoreByQuestionId(
+          question.questionId
+        )
+      if (questionScore) {
+        question.questionScore = questionScore
+      }
 
       // Buscar subQuestions
       const subQuestions =

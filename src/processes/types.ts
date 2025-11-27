@@ -1,7 +1,7 @@
 import * as db from '../constants/db-schema.enum'
 export interface CreateProcess {
   [db.Processes.PROCESS_TITLE]: string
-  [db.Processes.PROCESS_TOTVS_ID]: string
+  [db.Processes.PROCESS_DATA_KEY]: string
   [db.Processes.PROCESS_BEGIN_DATE]: Date
   [db.Processes.PROCESS_END_DATE]: Date
   [db.Processes.PROCESS_END_ANSWERS]: Date
@@ -24,4 +24,11 @@ export type ProcessStatus = 'draft' | 'active' | 'completed'
 export interface ProcessSimple {
   [db.Processes.PROCESS_ID]: number
   [db.Processes.PROCESS_TITLE]: string
+}
+
+export interface PublicProcessDto {
+  processId: number
+  title: string
+  beginDate: Date
+  endSubscriptions: Date
 }

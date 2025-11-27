@@ -33,8 +33,11 @@ export class FormSectionsService {
 
   async remove(formSectionId: number): Promise<void> {
     // Validar se a seção pode ser excluída (verificar vínculos)
-    await FormSectionsHelper.validateSectionDeletion(formSectionId, this.formSectionsRepo)
-    
+    await FormSectionsHelper.validateSectionDeletion(
+      formSectionId,
+      this.formSectionsRepo
+    )
+
     return this.formSectionsRepo.deleteFormSection(formSectionId)
   }
 

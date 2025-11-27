@@ -17,6 +17,8 @@ import { AnswersDisplayRules } from 'src/constants/answer_display_rule'
 import { EQuestionsTypes } from '../constants/questions-types.enum'
 import { EQuestionOptionsTypes } from '../constants/questions-options-types.enum'
 import { QuestionOptionDto } from './dto/optionsDto'
+import { QuestionScoreDto } from './dto/question-score.dto'
+import { EScoreType } from '../constants/score-types.enum'
 
 export class QuestionsHelper {
   static async transformCreateDto(
@@ -43,7 +45,8 @@ export class QuestionsHelper {
       answerDisplayValue,
       validations: createQuestionDto.validations,
       questionOptions: createQuestionDto.questionOptions,
-      subQuestions: createQuestionDto.subQuestions
+      subQuestions: createQuestionDto.subQuestions,
+      questionScore: createQuestionDto.questionScore
     }
   }
 
@@ -88,6 +91,7 @@ export class QuestionsHelper {
     }
 
     updateQuestionData.questionOptions = questionOptions
+    updateQuestionData.questionScore = updateQuestionDto.questionScore
 
     return updateQuestionData
   }
@@ -111,6 +115,13 @@ export class QuestionsHelper {
 
     // Validar subQuestões
     await this.validateSubquestions(createQuestionDto)
+
+    // Validar questionScore
+    await this.validateQuestionScore(
+      createQuestionDto.questionType,
+      createQuestionDto.questionScore,
+      createQuestionDto.questionOptions
+    )
   }
 
   static async validateSubquestions(
@@ -197,6 +208,13 @@ export class QuestionsHelper {
     // Validar opções da pergunta
     this.validateQuestionOptions(
       updateQuestionDto.questionType,
+      updateQuestionDto.questionOptions
+    )
+
+    // Validar questionScore
+    await this.validateQuestionScore(
+      updateQuestionDto.questionType,
+      updateQuestionDto.questionScore,
       updateQuestionDto.questionOptions
     )
     // Validar as validações da questão (se existirem)
@@ -823,6 +841,83 @@ export class QuestionsHelper {
             `#Não podem existir valores duplicados nas opções do tipo ${type}`
           )
         }
+      }
+    }
+  }
+
+  static async validateQuestionScore(
+    questionType: number,
+    questionScore: QuestionScoreDto | undefined,
+    questionOptions?: QuestionOptionDto[]
+  ): Promise<void> {
+    // Se não há questionScore, não há o que validar
+    if (!questionScore) {
+      return
+    }
+
+    // QuestionScore só pode ser usado com SINGLE_CHOICE (3) ou DATE (7)
+    if (
+      (questionType as EQuestionsTypes) !== EQuestionsTypes.SINGLE_CHOICE &&
+      (questionType as EQuestionsTypes) !== EQuestionsTypes.DATE
+    ) {
+      throw new BadRequestException(
+        '#A pontuação de questão só pode ser definida para perguntas do tipo Escolha Única (SINGLE_CHOICE) ou Data (DATE)'
+      )
+    }
+
+    // Validações específicas para OPTION_BASED
+    if (
+      questionScore.scoreType === EScoreType.OPTION_BASED &&
+      (questionType as EQuestionsTypes) === EQuestionsTypes.SINGLE_CHOICE
+    ) {
+      if (!questionScore.optionScoresJson) {
+        throw new BadRequestException(
+          '#Para pontuação baseada em opções, optionScoresJson deve ser fornecido'
+        )
+      }
+
+      // Verificar se todas as opções referenciadas existem pelo valor
+      if (questionOptions && questionOptions.length > 0) {
+        const optionValues = questionOptions.map(
+          (opt) => opt.questionOptionValue
+        )
+
+        const scoreOptionValues = Object.keys(questionScore.optionScoresJson)
+
+        for (const scoreOptionValue of scoreOptionValues) {
+          if (!optionValues.includes(scoreOptionValue)) {
+            throw new BadRequestException(
+              `#A opção "${scoreOptionValue}" não existe nesta questão`
+            )
+          }
+        }
+      }
+    }
+
+    // Validações específicas para DATE_BASED
+    if (
+      questionScore.scoreType === EScoreType.DATE_BASED &&
+      (questionType as EQuestionsTypes) === EQuestionsTypes.DATE
+    ) {
+      if (!questionScore.dateComparisonType) {
+        throw new BadRequestException(
+          '#Para pontuação baseada em data, dateComparisonType deve ser fornecido'
+        )
+      }
+
+      if (!questionScore.cutoffDate) {
+        throw new BadRequestException(
+          '#Para pontuação baseada em data, cutoffDate deve ser fornecida'
+        )
+      }
+
+      if (
+        questionScore.dateScore === undefined ||
+        questionScore.dateScore === null
+      ) {
+        throw new BadRequestException(
+          '#Para pontuação baseada em data, dateScore deve ser fornecido'
+        )
       }
     }
   }

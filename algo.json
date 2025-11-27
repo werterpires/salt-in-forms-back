@@ -1,0 +1,43 @@
+{
+  "orderId": "fa61fbc2-b4d7-4bfc-407b-08dddb8245db",
+  "orderCode": 10834,
+  "customerId": "ff68690d-88e5-4f04-b6df-0734b75b2c15",
+  "customerName": "ANA CLARA RIBEIRO PEREIRA",
+  "creationDate": "2025-11-18T12:42:41.08",
+  "dueDate": null,
+  "totalValue": 0.01,
+  "isRecurrence": null,
+  "recurrenceCount": null,
+  "recurrenceTimes": null,
+  "orderStatus": 10,
+  "dataKey": "FAAMA",
+  "orderItems": [
+    {
+      "orderItemId": "d3d8f47b-81ee-437b-e155-08dddb8245e4",
+      "orderId": "fa61fbc2-b4d7-4bfc-407b-08dddb8245db",
+      "enrollmentModelId": "717b4e7d-568e-4403-025a-08ddde7a60ec",
+      "enrollmentModelTitle": "Teste - Matricula Salt 2",
+      "allowIssuingCertificate": null,
+      "attributes": "[{\"Label\":\"Nome\",\"InputType\":\"text\",\"Required\":false,\"OrderIndex\":1,\"MinSelections\":1,\"MaxSelections\":1,\"Values\":[{\"Caption\":\"ana\",\"Price\":0.0}]}]",
+      "dataKey": "FAAMA",
+      "price": 0.01,
+      "totalValue": 0.01
+    }
+  ],
+  "orderPayments": [
+    {
+      "orderPaymentId": "290ae92b-6de6-4fe8-5db4-08dddb824865",
+      "orderId": "fa61fbc2-b4d7-4bfc-407b-08dddb8245db",
+      "paidValue": 0.01,
+      "dueDate": "2025-11-23T12:42:43.667",
+      "creationDate": "2025-11-18T12:42:43.667",
+      "paymentDate": null,
+      "recurrenceInstallment": null,
+      "paymentStatus": 10,
+      "paymentMethodCode": 71,
+      "pluginReceivedData": "{\"ApplicationCode\":\"urt\",\"CreateDate\":\"2025-11-18T09:42:42.5347277\",\"Emv\":\"00020101021226850014br.gov.bcb.pix2563pix.santander.com.br/qr/v2/a607f19f-0c73-4792-b7c1-717b1b80a7bc52040000530398654040.015802BR5905FAAMA6008Marituba62070503***63042B50\",\"ErrorCode\":null,\"Id\":\"c03bc416-289b-49dc-b06c-b39900d17bf8\",\"InvoiceNumber\":\"4192828884\",\"Message\":\"SubscriptionsAndEnrollments  Order 10834\",\"PixReceiveds\":[],\"QrCode\":\"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quSfRSRR5ZWj0ftCHzp0qJ0+fTrUZ860NKXndkXdUMQVQ+5f6Eta5Eqz1OQmpKccrbX2yCOPiMefeeaZLYV47rnnhsyL/Jeyat5VFZdlFpOe85pM1OocOHDA3fatt95qJ0+eFM95ciWLaNcWiQhWfz6I1claKpaa7FD+/PPP7rnr16+39fX1rb9F5fjggw/a5ubmDcrx/vvv36Ac83PPP/988cxJWSZdOl8ZU9cYMU7W6kyJRJvefvvtduzYsaXj3333XTty5MjS8blyzC3PopXRPovsfZEY+d2w2kYsvPfz44apwWjK8dhjj7X33nsP6vvOO++0o0ePttZae/fdd9vJkyfbU089hU+UiFBBBvLxxx8vHXvllVfaiy++KLY/c+ZMe/rpp1WZixbm8OHDW1bjzTffTMyWSGzLzx8gIV/NZEYWjplixEifN954o7300kuttdauXLkizv+hhx5qP//8sypn165d7fLly0vHH3jggXbt2jX3fLwuCxKIyIZSvf2zqQaEla1BRqwDrD4SiIKgZSWfffZZ27t379ax69evt/3795t99+3b1z755JOl47PZTNxs1Vq//MSb88jkqSrXC1XlKVWlJjtmkS7Jq1qwI18ESSbypDx//nx78skn1TYHDx5sH330kXhuY2ND3R/y/ffft1tuucU1lznalzQSnPB+2aWxLZm98xIjFv5zuAYZhGUtTp061TY2NsRz999/f/vtt99U+d98803bvXt3ao7EhgoyACn69MILL7RXX31VbH/gwAE1VzLn8uXLbdeuGz+yRx99tO3Zs0fNyBOcsp8/QLLnVeP0zKV3YS/JQuc+VQ7JdfKuQ1prbc+ePe3zzz9fOv7VV1+1J554Yuv/V69eheY6xXI5kPuitUXWgAjZ7yAtyCCQspDWWrvnnnvaF198sXRcW6CTcZTtKJyCRB28SHKQxVdVNeminKnVePzxx9uVK1dM2Vab1lp3vTKnV9EbDdVOr8e7IM9GirysyurcICdb7l6tINmbUFUigkRwpmgW47bbbmvffvutax5ema3JoV7vvbauZ2Q5hzROVh5LTXYo9913X/vjjz+Wjl+6dEl83xXZ2UDVvGtr8Z1mUh+knTX29HzFfKbyLX766acl5ZhX4s6V48MPPzTloHjXKN7r8d6j3mfvvb89WYt/0/lYf95rtGC5eyEPP/zw1r+n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\",\"SchoolName\":null,\"StatusDate\":\"2025-11-18T09:42:43.4208519\",\"TxId\":\"419282888400028e17d31e2a44cb685933f\",\"Value\":{\"Amount\":0.01,\"InstallmentNumber\":1},\"Debtor\":{\"Cnpj\":null,\"Cpf\":\"02469878209\",\"Email\":\"anaclara.pereira@faama.edu.br\",\"WhatsAppNumber\":null,\"Name\":\"Ana Clara Ribeiro Pereira\"},\"Account\":{\"BankCode\":\"033\",\"EntityDocument\":\"83367326010575\",\"PixKey\":\"bf2a450b-c256-4416-901a-b8682889ffbc\"},\"Student\":{\"AcademicId\":null,\"Name\":null},\"Calendar\":{\"BankCreateDate\":\"2025-11-18T09:42:43\",\"Expiration\":\"7200\"}}",
+      "pluginTransactionId": "696df5c8-7ffb-466d-9cb5-08de261b0127",
+      "pluginRecurrenceId": null
+    }
+  ]
+}

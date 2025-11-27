@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus
 } from '@nestjs/common'
+import { ThrottlerException } from '@nestjs/throttler'
 
 import { Request, Response } from 'express'
 import { CustomErrorHandlerService } from './custom-error-handler.service'
@@ -33,7 +34,22 @@ export class GlobalErrorsFilter implements ExceptionFilter {
 
     let errorResponse: string | object
 
-    if (isHttpException && exception.message.startsWith('#')) {
+    // Tratamento especial para ThrottlerException
+    if (exception instanceof ThrottlerException) {
+      errorResponse = {
+        response: {
+          message:
+            '#Muitas tentativas. Aguarde 1 hora antes de tentar novamente.',
+          error: 'Too Many Requests',
+          statusCode: 429
+        },
+        status: 429,
+        options: {},
+        message:
+          '#Muitas tentativas. Aguarde 1 hora antes de tentar novamente.',
+        name: 'ThrottlerException'
+      }
+    } else if (isHttpException && exception.message.startsWith('#')) {
       errorResponse = exception.getResponse()
     } else {
       errorResponse = this.errorsService.handleErrors(exception, uniqueId)

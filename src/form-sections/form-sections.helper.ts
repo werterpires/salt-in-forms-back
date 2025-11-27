@@ -38,16 +38,15 @@ export class FormSectionsHelper {
   }
 
   static sortFormSectionsByOrder(formSections: FormSection[]): FormSection[] {
-    for (let section of formSections) {
+    for (const section of formSections) {
       if (
         section.answerDisplayValue &&
         typeof section.answerDisplayValue === 'string'
       ) {
-        section.answerDisplayValue = section.answerDisplayValue
-          .split('||')
-          .map((value) => Number(value))
+        section.answerDisplayValue = section.answerDisplayValue.split('||')
       }
     }
+
     return formSections.sort((a, b) => a.formSectionOrder - b.formSectionOrder)
   }
 
@@ -320,8 +319,10 @@ export class FormSectionsHelper {
     formSectionsRepo: FormSectionsRepo
   ): Promise<void> {
     // 1. Verificar se o ID da seção está sendo usado em alguma regra de display de questão
-    const questionsUsingSection = 
-      await formSectionsRepo.findQuestionsUsingFormSectionDisplayLink(formSectionId)
+    const questionsUsingSection =
+      await formSectionsRepo.findQuestionsUsingFormSectionDisplayLink(
+        formSectionId
+      )
 
     if (questionsUsingSection.length > 0) {
       const question = questionsUsingSection[0]
@@ -332,7 +333,9 @@ export class FormSectionsHelper {
 
     // 2. Verificar se o ID da seção está sendo usado em alguma regra de display de seção
     const sectionsUsingSection =
-      await formSectionsRepo.findSectionsUsingFormSectionDisplayLink(formSectionId)
+      await formSectionsRepo.findSectionsUsingFormSectionDisplayLink(
+        formSectionId
+      )
 
     if (sectionsUsingSection.length > 0) {
       const section = sectionsUsingSection[0]
