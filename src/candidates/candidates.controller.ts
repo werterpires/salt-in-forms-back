@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, Query } from '@nestjs/common'
+import { Controller, Get, Post, Put, Param, Body, Query } from '@nestjs/common'
 import { CandidatesService } from './candidates.service'
 import { IsPublic } from '../shared/auth/decorators/is-public.decorator'
 import { SignTermsDto } from './dto/sign-terms.dto'
@@ -6,6 +6,7 @@ import { SelfRegisterCandidateDto } from './dto/self-register-candidate.dto'
 import { CompleteRegistrationDto } from './dto/complete-registration.dto'
 import { ResendConfirmationDto } from './dto/resend-confirmation.dto'
 import { AssignInterviewerDto } from './dto/assign-interviewer.dto'
+import { UpdateCandidateDto } from './dto/update-candidate.dto'
 import { Roles } from '../users/decorators/roles.decorator'
 import { ERoles } from '../constants/roles.const'
 import { FindAllResponse, Paginator } from '../shared/types/types'
@@ -148,6 +149,19 @@ export class CandidatesController {
     return await this.candidatesService.getCandidatesByInterviewer(
       Number(processId),
       user.userId
+    )
+  }
+
+  /**
+   * 6.10 - Atualizar status de aprovação do candidato
+   * Endpoint administrativo (ADMIN only) para aprovar/desaprovar candidatos
+   */
+  @Roles(ERoles.ADMIN)
+  @Put('update-approval')
+  async updateCandidateApproval(@Body() dto: UpdateCandidateDto) {
+    return this.candidatesService.updateCandidateApproval(
+      dto.candidateId,
+      dto.approved
     )
   }
 }

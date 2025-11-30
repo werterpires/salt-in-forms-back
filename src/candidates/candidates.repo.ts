@@ -264,7 +264,8 @@ export class CandidatesRepo {
         db.Candidates.CANDIDATE_PHONE,
         db.Candidates.CANDIDATE_BIRTHDATE,
         db.Candidates.CANDIDATE_MARITAL_STATUS,
-        db.Candidates.INTERVIEW_USER_ID
+        db.Candidates.INTERVIEW_USER_ID,
+        db.Candidates.APPROVED
       )
       .where(db.Candidates.PROCESS_ID, processId)
 
@@ -821,7 +822,9 @@ export class CandidatesRepo {
 
   /**
    * Busca candidatos de um processo para distribuição entre entrevistadores
-   * Apenas retorna candidatos que possuem TODOS os formulários com status COMPLETED (8) ou UNUSEFULL (0)
+   * Apenas retorna candidatos que:
+   * - Possuem approved = true
+   * - Possuem TODOS os formulários com status COMPLETED (8) ou UNUSEFULL (0)
    * @param processId ID do processo
    * @returns Array de candidatos com dados necessários para distribuição
    */
@@ -862,6 +865,7 @@ export class CandidatesRepo {
         db.Candidates.CANDIDATE_MARITAL_STATUS
       )
       .where(db.Candidates.PROCESS_ID, processId)
+      .where(db.Candidates.APPROVED, true)
 
     if (excludedCandidateIds.length > 0) {
       query.whereNotIn(db.Candidates.CANDIDATE_ID, excludedCandidateIds)
@@ -930,5 +934,46 @@ export class CandidatesRepo {
       .where(db.Candidates.PROCESS_ID, processId)
       .where(db.Candidates.INTERVIEW_USER_ID, interviewUserId)
       .orderBy(db.Candidates.CANDIDATE_NAME, 'asc')
+  }
+
+  /**
+   * Atualiza o status de aprovação de um candidato
+   * @param candidateId ID do candidato
+   * @param approved Status de aprovação (true/false)
+   */
+  async updateCandidateApproval(
+    candidateId: number,
+    approved: boolean
+  ): Promise<void> {
+    await this.knex(db.Tables.CANDIDATES)
+      .where(db.Candidates.CANDIDATE_ID, candidateId)
+      .update({
+        [db.Candidates.APPROVED]: approved
+      })
+  }
+
+  /**
+   * Busca informações do candidato e seu processo para validação
+   * @param candidateId ID do candidato
+   * @returns Dados do candidato e processo
+   */
+  async findCandidateWithProcess(candidateId: number) {
+    return this.knex(db.Tables.CANDIDATES)
+      .select(
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_ID}`,
+        `${db.Tables.CANDIDATES}.${db.Candidates.PROCESS_ID}`,
+        `${db.Tables.CANDIDATES}.${db.Candidates.APPROVED}`,
+        `${db.Tables.PROCESSES}.${db.Processes.PROCESS_END_DATE}`
+      )
+      .innerJoin(
+        db.Tables.PROCESSES,
+        `${db.Tables.CANDIDATES}.${db.Candidates.PROCESS_ID}`,
+        `${db.Tables.PROCESSES}.${db.Processes.PROCESS_ID}`
+      )
+      .where(
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_ID}`,
+        candidateId
+      )
+      .first()
   }
 }

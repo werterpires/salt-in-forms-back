@@ -116,4 +116,11 @@ export class ProcessesRepo {
 
     return processes
   }
+
+  async findProcessById(processId: number) {
+    return this.knex(db.Tables.PROCESSES)
+      .select('*')
+      .where(db.Processes.PROCESS_ID, processId)
+      .first()
+  }
 }

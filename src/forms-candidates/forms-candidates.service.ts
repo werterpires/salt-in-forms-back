@@ -126,6 +126,9 @@ export class FormsCandidatesService {
     const formCandidateId =
       await this.validateAccessCodeAndGetFormCandidateId(accessCode)
 
+    // Validar se ainda estamos no período de resposta antes de submeter
+    await this.validateFormCandidateForAnswer(formCandidateId)
+
     // 1. Buscar todas as questões do form
     const questionIds: number[] =
       await this.formsCandidatesRepo.findAllQuestionsByFormCandidateId(

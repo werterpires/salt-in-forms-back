@@ -87,7 +87,8 @@ export class RatesService {
       candidateCountry: this.encryptionService.decrypt(
         candidateEncrypted.candidateCountry
       ),
-      interviewUserId: candidateEncrypted.interviewUserId
+      interviewUserId: candidateEncrypted.interviewUserId,
+      approved: candidateEncrypted.approved
     }
 
     // 4. Buscar todos os FormsCandidates do candidato

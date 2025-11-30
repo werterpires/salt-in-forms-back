@@ -18,6 +18,7 @@ export interface Candidate {
   candidateZipCode: string
   candidateCountry: string
   interviewUserId?: number
+  approved: boolean | null
 }
 
 export interface CreateCandidate {
@@ -360,6 +361,7 @@ export interface CandidateBasicInfo {
   candidateBirthdate: string
   candidateMaritalStatus: string
   interviewer: string | null
+  approved: boolean
   forms: CandidateFormInfo[]
 }
 

@@ -94,6 +94,29 @@ export class CandidatesService {
       )
     }
 
+    // c2) Validar período de inscrição
+    const now = new Date()
+    const processBeginDate = new Date(process.processBeginDate)
+    const processEndSubscription = new Date(process.processEndSubscription)
+
+    if (now < processBeginDate) {
+      this.loggger.warn(
+        `Tentativa de inscrição antes do período permitido. Processo ${dto.processId} inicia em ${processBeginDate.toISOString()}`
+      )
+      throw new BadRequestException(
+        '#O período de inscrições para este processo seletivo ainda não foi iniciado.'
+      )
+    }
+
+    if (now > processEndSubscription) {
+      this.loggger.warn(
+        `Tentativa de inscrição após o período permitido. Processo ${dto.processId} encerrou em ${processEndSubscription.toISOString()}`
+      )
+      throw new BadRequestException(
+        '#O período de inscrições para este processo seletivo já foi encerrado.'
+      )
+    }
+
     // d) Validar orderCode na API externa
     this.loggger.log(
       `Validando orderCode ${dto.orderCode} na API externa com dataKey: ${process.processDataKey}`
@@ -490,6 +513,7 @@ export class CandidatesService {
         candidateBirthdate: candidate.candidateBirthdate,
         candidateMaritalStatus: candidate.candidateMaritalStatus,
         interviewer,
+        approved: candidate.approved,
         forms
       })
     }
@@ -997,14 +1021,15 @@ export class CandidatesService {
    * Distribui candidatos entre entrevistadores ativos de forma balanceada
    * Prioriza distribuição equitativa de estado civil, seguida de faixa etária
    *
-   * IMPORTANTE: Apenas candidatos com TODOS os formulários nos status COMPLETED (8) ou UNUSEFULL (0)
-   * são incluídos na distribuição. Candidatos com formulários em outros status são ignorados.
+   * IMPORTANTE: Apenas candidatos com approved = true e TODOS os formulários nos status
+   * COMPLETED (8) ou UNUSEFULL (0) são incluídos na distribuição. Candidatos com
+   * formulários em outros status ou não aprovados são ignorados.
    *
    * @param processId ID do processo
    * @returns Resultado da distribuição com estatísticas
    */
   async distributeInterviewers(processId: number) {
-    // 1) Verificar se o processo já terminou o período de resposta
+    // 1) Verificar se o processo existe
     const process = await this.candidatesRepo.findProcessById(processId)
 
     if (!process) {
@@ -1012,6 +1037,15 @@ export class CandidatesService {
     }
 
     const today = new Date()
+    const processEndDate = new Date(process.processEndDate)
+
+    // Verificar se o processo já terminou completamente
+    if (today > processEndDate) {
+      throw new BadRequestException(
+        'Não é possível distribuir entrevistadores em processos que já terminaram.'
+      )
+    }
+
     const endAnswersDate = new Date(process.processEndAnswers)
 
     if (endAnswersDate >= today) {
@@ -1219,6 +1253,7 @@ export class CandidatesService {
   /**
    * Atribui um entrevistador a um candidato específico
    * Valida se o usuário existe, é entrevistador e está ativo
+   * Valida se o candidato está aprovado
    *
    * @param userId ID do entrevistador
    * @param candidateId ID do candidato
@@ -1228,10 +1263,26 @@ export class CandidatesService {
     userId: number,
     candidateId: number
   ): Promise<{ message: string }> {
-    // Verificar se o candidato existe
-    const candidate = await this.candidatesRepo.findCandidateById(candidateId)
-    if (!candidate) {
+    // Verificar se o candidato existe e buscar dados do processo
+    const candidateWithProcess =
+      await this.candidatesRepo.findCandidateWithProcess(candidateId)
+    if (!candidateWithProcess) {
       throw new BadRequestException('#Candidato não encontrado')
+    }
+
+    // Verificar se o processo já terminou
+    const today = new Date()
+    const processEndDate = new Date(candidateWithProcess.processEndDate)
+
+    if (today > processEndDate) {
+      throw new BadRequestException(
+        '#Não é possível atribuir entrevistadores em processos que já terminaram.'
+      )
+    }
+
+    // Verificar se o candidato está aprovado
+    if (!candidateWithProcess.approved) {
+      throw new BadRequestException('#Candidato não está aprovado')
     }
 
     // Verificar se o usuário é um entrevistador ativo
@@ -1284,5 +1335,55 @@ export class CandidatesService {
     )
 
     return candidatesDecrypted
+  }
+
+  /**
+   * Atualiza o status de aprovação de um candidato
+   * Valida se o candidato existe e se o processo ainda não terminou
+   *
+   * @param candidateId ID do candidato
+   * @param approved Status de aprovação
+   * @returns Mensagem de sucesso
+   */
+  async updateCandidateApproval(
+    candidateId: number,
+    approved: boolean
+  ): Promise<{ message: string }> {
+    this.loggger.log(
+      `Atualizando aprovação do candidato ${candidateId} para ${approved}`
+    )
+
+    // Buscar candidato com dados do processo
+    const candidateWithProcess =
+      await this.candidatesRepo.findCandidateWithProcess(candidateId)
+
+    if (!candidateWithProcess) {
+      this.loggger.warn(`Candidato ${candidateId} não encontrado`)
+      throw new BadRequestException('#Candidato não encontrado')
+    }
+
+    // Verificar se o processo já terminou
+    const today = new Date()
+    const processEndDate = new Date(candidateWithProcess.processEndDate)
+
+    if (today > processEndDate) {
+      this.loggger.warn(
+        `Tentativa de atualizar candidato ${candidateId} em processo finalizado`
+      )
+      throw new BadRequestException(
+        '#Não é possível atualizar candidatos de processos que já terminaram.'
+      )
+    }
+
+    // Atualizar status de aprovação
+    await this.candidatesRepo.updateCandidateApproval(candidateId, approved)
+
+    this.loggger.log(
+      `Candidato ${candidateId} teve aprovação atualizada para ${approved}`
+    )
+
+    return {
+      message: `Status de aprovação do candidato atualizado para ${approved ? 'aprovado' : 'não aprovado'}`
+    }
   }
 }

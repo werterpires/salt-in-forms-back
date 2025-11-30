@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, BadRequestException } from '@nestjs/common'
 import { CreateSFormDto } from './dto/create-s-form.dto'
 import { UpdateSFormDto } from './dto/update-s-form.dto'
 import { CopySFormDto } from './dto/copy-s-form.dto'
 import { SFormsRepo } from './s-forms.repo'
 import { QuestionsRepo } from '../questions/questions.repo'
+import { AnswersRepo } from '../answers/answers.repo'
 import * as db from 'src/constants/db-schema.enum'
 import { FindAllResponse, Paginator } from 'src/shared/types/types'
 import {
@@ -19,7 +20,8 @@ import { SForm, SFormFilter, SFormSimple } from './types'
 export class SFormsService {
   constructor(
     private readonly sFormsRepo: SFormsRepo,
-    private readonly questionsRepo: QuestionsRepo
+    private readonly questionsRepo: QuestionsRepo,
+    private readonly answersRepo: AnswersRepo
   ) {}
   async createSForm(createSFormDto: CreateSFormDto) {
     const sFormTypes = await this.sFormsRepo.findAllFormTypesByProcessId(
@@ -72,6 +74,16 @@ export class SFormsService {
   }
 
   async updateSForm(updateSFormDto: UpdateSFormDto) {
+    // Verificar se o formulário já possui respostas
+    const hasAnswers = await this.answersRepo.hasAnswersForForm(
+      updateSFormDto.sFormId
+    )
+    if (hasAnswers) {
+      throw new BadRequestException(
+        '#Este formulário já possui respostas de candidatos e não pode ser editado.'
+      )
+    }
+
     const sForms = await this.sFormsRepo.findAllFormTypesByProcessId(
       updateSFormDto.sFormId
     )
@@ -84,6 +96,14 @@ export class SFormsService {
   }
 
   async deleteSForm(sFormId: number) {
+    // Verificar se o formulário já possui respostas
+    const hasAnswers = await this.answersRepo.hasAnswersForForm(sFormId)
+    if (hasAnswers) {
+      throw new BadRequestException(
+        '#Este formulário já possui respostas de candidatos e não pode ser removido.'
+      )
+    }
+
     return await this.sFormsRepo.deleteSForm(sFormId)
   }
 

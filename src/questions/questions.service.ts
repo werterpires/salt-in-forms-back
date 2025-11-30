@@ -1,16 +1,37 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, BadRequestException } from '@nestjs/common'
 import { CreateQuestionDto } from './dto/create-question.dto'
 import { ReorderQuestionsDto } from './dto/reorder-questions.dto'
 import { UpdateQuestionDto } from './dto/update-question.dto'
 import { QuestionsHelper } from './questions.helper'
 import { QuestionsRepo } from './questions.repo'
+import { AnswersRepo } from '../answers/answers.repo'
+import { FormSectionsRepo } from '../form-sections/form-sections.repo'
 import { Question } from './types'
 
 @Injectable()
 export class QuestionsService {
-  constructor(private readonly questionsRepo: QuestionsRepo) {}
+  constructor(
+    private readonly questionsRepo: QuestionsRepo,
+    private readonly answersRepo: AnswersRepo,
+    private readonly formSectionsRepo: FormSectionsRepo
+  ) {}
 
   async create(createQuestionDto: CreateQuestionDto): Promise<void> {
+    // Verificar se o formulário (através da seção) já possui respostas
+    const section = await this.formSectionsRepo.findById(
+      createQuestionDto.formSectionId
+    )
+    if (section) {
+      const hasAnswers = await this.answersRepo.hasAnswersForForm(
+        section.sFormId
+      )
+      if (hasAnswers) {
+        throw new BadRequestException(
+          '#Não é possível adicionar perguntas pois este formulário já possui respostas de candidatos.'
+        )
+      }
+    }
+
     const createQuestionData = await QuestionsHelper.transformCreateDto(
       createQuestionDto,
       this.questionsRepo
@@ -90,6 +111,16 @@ export class QuestionsService {
   }
 
   async update(updateQuestionDto: UpdateQuestionDto): Promise<void> {
+    // Verificar se a questão já possui respostas
+    const hasAnswers = await this.answersRepo.hasAnswersForQuestion(
+      updateQuestionDto.questionId
+    )
+    if (hasAnswers) {
+      throw new BadRequestException(
+        '#Esta pergunta já possui respostas de candidatos e não pode ser editada.'
+      )
+    }
+
     const updateQuestionData = await QuestionsHelper.transformUpdateDto(
       updateQuestionDto,
       this.questionsRepo
@@ -100,6 +131,14 @@ export class QuestionsService {
   }
 
   async delete(questionId: number): Promise<void> {
+    // Verificar se a questão já possui respostas
+    const hasAnswers = await this.answersRepo.hasAnswersForQuestion(questionId)
+    if (hasAnswers) {
+      throw new BadRequestException(
+        '#Esta pergunta já possui respostas de candidatos e não pode ser removida.'
+      )
+    }
+
     // Validar se a questão pode ser excluída (verificar vínculos)
     await QuestionsHelper.validateQuestionDeletion(
       questionId,
@@ -110,6 +149,18 @@ export class QuestionsService {
   }
 
   async reorder(reorderQuestionsDto: ReorderQuestionsDto): Promise<void> {
+    // Verificar se alguma das questões já possui respostas
+    for (const questionOrder of reorderQuestionsDto.questions) {
+      const hasAnswers = await this.answersRepo.hasAnswersForQuestion(
+        questionOrder.questionId
+      )
+      if (hasAnswers) {
+        throw new BadRequestException(
+          '#Não é possível reordenar perguntas pois algumas já possuem respostas de candidatos.'
+        )
+      }
+    }
+
     await QuestionsHelper.validateReorderData(
       reorderQuestionsDto.questions,
       this.questionsRepo
