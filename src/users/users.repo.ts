@@ -159,7 +159,8 @@ export class UsersRepo {
       `${db.Tables.USERS}.${db.Users.USER_NAME}`,
       `${db.Tables.USERS}.${db.Users.USER_EMAIL}`,
       `${db.Tables.USERS}.${db.Users.USER_ID}`,
-      `${db.Tables.USERS}.${db.Users.USER_ACTIVE}`
+      `${db.Tables.USERS}.${db.Users.USER_ACTIVE}`,
+      `${db.Tables.USERS}.${db.Users.USER_INVITE_CODE}`
     )
 
     console.log('filters', filters)
