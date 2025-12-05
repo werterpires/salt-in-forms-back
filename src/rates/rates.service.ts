@@ -6,7 +6,7 @@ import {
 import { RatesRepo } from './rates.repo'
 import { CandidatesRepo } from '../candidates/candidates.repo'
 import { EncryptionService } from '../shared/utils-module/encryption/encryption.service'
-import { InterviewData, InterviewForm, InterviewAnswer } from './types'
+import { InterviewData, InterviewForm, InterviewAnswer, Rate } from './types'
 import { Candidate } from '../candidates/types'
 
 @Injectable()
@@ -172,5 +172,175 @@ export class RatesService {
 
     // Atualizar o comentário
     await this.ratesRepo.updateAnswerComment(answerId, answerComment)
+  }
+
+  /**
+   * Cria um novo rate para um candidato em uma área de questão
+   * Verifica se o entrevistador é responsável pelo candidato
+   * Verifica se a data final do processo não passou
+   *
+   * @param candidateId - ID do candidato
+   * @param questionAreaId - ID da área de questão
+   * @param rateValue - Nota (opcional)
+   * @param rateComment - Comentário (opcional)
+   * @param interviewUserId - ID do entrevistador (do token JWT)
+   * @returns ID do rate criado
+   */
+  async createRate(
+    candidateId: number,
+    questionAreaId: number,
+    rateValue: number | undefined,
+    rateComment: string | undefined,
+    interviewUserId: number
+  ): Promise<number> {
+    // 1. Verificar se o candidato pertence ao entrevistador
+    const isAssigned = await this.ratesRepo.isCandidateAssignedToInterviewer(
+      candidateId,
+      interviewUserId
+    )
+
+    if (!isAssigned) {
+      throw new ForbiddenException(
+        '#Você não tem permissão para avaliar este candidato'
+      )
+    }
+
+    // 2. Verificar se a data final do processo não passou
+    const processEndDate =
+      await this.ratesRepo.getProcessEndDateByCandidate(candidateId)
+
+    if (!processEndDate) {
+      throw new BadRequestException('#Processo não encontrado para o candidato')
+    }
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const endDate = new Date(processEndDate)
+    endDate.setHours(0, 0, 0, 0)
+
+    if (today > endDate) {
+      throw new BadRequestException(
+        '#O prazo final do processo já passou. Não é possível criar avaliações.'
+      )
+    }
+
+    // 3. Verificar se já existe um rate para este candidato/entrevistador/área
+    const existingRateId = await this.ratesRepo.findExistingRate(
+      candidateId,
+      interviewUserId,
+      questionAreaId
+    )
+
+    if (existingRateId) {
+      throw new BadRequestException(
+        '#Já existe uma avaliação para este candidato nesta área. Use o endpoint de edição.'
+      )
+    }
+
+    // 4. Criar o rate
+    const rateId = await this.ratesRepo.createRate({
+      candidateId,
+      interviewerId: interviewUserId,
+      questionAreaId,
+      rateValue,
+      rateComment
+    })
+
+    return rateId
+  }
+
+  /**
+   * Atualiza um rate existente (apenas nota e comentário)
+   * Verifica se o rate pertence ao entrevistador atual
+   * Verifica se a data final do processo não passou
+   *
+   * @param rateId - ID do rate
+   * @param rateValue - Nova nota (opcional)
+   * @param rateComment - Novo comentário (opcional)
+   * @param interviewUserId - ID do entrevistador (do token JWT)
+   */
+  async updateRate(
+    rateId: number,
+    rateValue: number | undefined,
+    rateComment: string | undefined,
+    interviewUserId: number
+  ): Promise<void> {
+    // 1. Verificar se o rate pertence ao entrevistador
+    const isOwned = await this.ratesRepo.isRateOwnedByInterviewer(
+      rateId,
+      interviewUserId
+    )
+
+    if (!isOwned) {
+      throw new ForbiddenException(
+        '#Você não tem permissão para editar esta avaliação'
+      )
+    }
+
+    // 2. Buscar candidateId do rate para verificar a data do processo
+    const rate = await this.ratesRepo.getRateDetails(rateId)
+
+    if (!rate) {
+      throw new BadRequestException('#Avaliação não encontrada')
+    }
+
+    // 3. Verificar se a data final do processo não passou
+    const processEndDate = await this.ratesRepo.getProcessEndDateByCandidate(
+      rate.candidateId
+    )
+
+    if (!processEndDate) {
+      throw new BadRequestException('#Processo não encontrado para o candidato')
+    }
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const endDate = new Date(processEndDate)
+    endDate.setHours(0, 0, 0, 0)
+
+    if (today > endDate) {
+      throw new BadRequestException(
+        '#O prazo final do processo já passou. Não é possível editar avaliações.'
+      )
+    }
+
+    // 4. Atualizar o rate
+    await this.ratesRepo.updateRate(rateId, {
+      rateValue,
+      rateComment
+    })
+  }
+
+  /**
+   * Busca todos os rates de um entrevistador para um candidato específico
+   * Verifica se o candidato pertence ao entrevistador atual
+   *
+   * @param candidateId - ID do candidato
+   * @param interviewUserId - ID do entrevistador (do token JWT)
+   * @returns Array de rates
+   */
+  async getRatesForCandidate(
+    candidateId: number,
+    interviewUserId: number
+  ): Promise<Rate[]> {
+    // Verificar se o candidato pertence ao entrevistador
+    const isAssigned = await this.ratesRepo.isCandidateAssignedToInterviewer(
+      candidateId,
+      interviewUserId
+    )
+
+    if (!isAssigned) {
+      throw new ForbiddenException(
+        '#Você não tem permissão para visualizar avaliações deste candidato'
+      )
+    }
+
+    // Buscar os rates
+    return await this.ratesRepo.findRatesByInterviewerAndCandidate(
+      candidateId,
+      interviewUserId
+    )
   }
 }
