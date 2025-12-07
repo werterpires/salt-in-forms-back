@@ -4,10 +4,23 @@ import { join, dirname } from 'path'
 
 @Injectable({ scope: Scope.TRANSIENT })
 export class CustomLoggerService extends ConsoleLogger {
-  private logFilePath = join(process.cwd(), 'logs', 'app.log')
+  /**
+   * Gera o caminho do arquivo de log para o mês atual.
+   * Formato: YYYYMM-app.log (ex: 202512-app.log para dezembro de 2025)
+   *
+   * Esta abordagem permite rotação automática de logs por mês,
+   * facilitando a limpeza de logs antigos sem processar conteúdo.
+   */
+  private getLogFilePath(): string {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const filename = `${year}${month}-app.log`
+    return join(process.cwd(), 'logs', filename)
+  }
 
   private ensureLogDirectoryExists() {
-    const dir = dirname(this.logFilePath)
+    const dir = dirname(this.getLogFilePath())
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true })
     }
@@ -23,7 +36,7 @@ export class CustomLoggerService extends ConsoleLogger {
     }
 
     this.ensureLogDirectoryExists()
-    appendFileSync(this.logFilePath, logMessage)
+    appendFileSync(this.getLogFilePath(), logMessage)
   }
 
   override log(message: any, context?: string) {

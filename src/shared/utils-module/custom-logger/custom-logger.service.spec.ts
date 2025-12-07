@@ -10,7 +10,17 @@ jest.mock('fs')
 describe('CustomLoggerService', () => {
   let service: CustomLoggerService
   const mockedAppendFileSync = appendFileSync as jest.Mock
-  const logFilePath = join(__dirname, '..', '..', '..', '..', 'logs', 'app.log')
+
+  // Gera o caminho do arquivo de log para o mês atual (formato: YYYYMM-app.log)
+  const getLogFilePath = (): string => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const filename = `${year}${month}-app.log`
+    return join(__dirname, '..', '..', '..', '..', 'logs', filename)
+  }
+
+  const logFilePath = getLogFilePath()
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

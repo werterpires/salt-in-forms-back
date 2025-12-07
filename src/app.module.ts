@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common'
 import { UtilsModuleModule } from './shared/utils-module/utils-module.module'
-import { APP_FILTER, APP_GUARD } from '@nestjs/core'
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { GlobalErrorsFilter } from './shared/custom-error-handler/global-errors.filter'
+import { LoggingInterceptor } from './shared/interceptors/logging.interceptor'
 import { CustomErrorHandlerService } from './shared/custom-error-handler/custom-error-handler.service'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { KnexModule } from 'nest-knexjs'
@@ -25,7 +26,7 @@ import { CandidatesModule } from './candidates/candidates.module'
 import { AnswersModule } from './answers/answers.module'
 import { FormsCandidatesModule } from './forms-candidates/forms-candidates.module'
 import { FieldsModule } from './fields/fields.module'
-import { RatesModule } from './rates/rates.module';
+import { RatesModule } from './rates/rates.module'
 
 config()
 
@@ -109,6 +110,7 @@ const knex = KnexModule.forRoot(
   providers: [
     CustomErrorHandlerService,
     { provide: APP_FILTER, useClass: GlobalErrorsFilter },
+    { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     {

@@ -21,16 +21,18 @@ export class GlobalErrorsFilter implements ExceptionFilter {
     this.logger.setContext(GlobalErrorsFilter.name)
   }
   catch(exception: Error, host: ArgumentsHost) {
-    const uniqueId = uuidv4()
+    const ctx = host.switchToHttp()
+    const request = ctx.getRequest<Request & { requestId?: string }>()
+    const response = ctx.getResponse<Response>()
+
+    // Usar requestId do interceptor se disponível, senão gerar novo
+    const uniqueId = request.requestId || uuidv4()
     this.logger.error(`[${uniqueId}] ${exception.message}`, exception.stack)
 
     const isHttpException = exception instanceof HttpException
     const status = isHttpException
       ? exception.getStatus()
       : HttpStatus.INTERNAL_SERVER_ERROR
-    const ctx = host.switchToHttp()
-    const response = ctx.getResponse<Response>()
-    const request = ctx.getRequest<Request>()
 
     let errorResponse: string | object
 
