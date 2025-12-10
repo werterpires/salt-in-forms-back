@@ -25,6 +25,7 @@ export interface LoginResponse {
   requires2FA?: boolean
   userEmail?: string
   accessToken?: string
+  pendingTerms?: Term[]
 }
 
 export interface UserPayload {

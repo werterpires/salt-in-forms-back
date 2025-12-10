@@ -127,7 +127,10 @@ export class QuestionsService {
     )
 
     // Use the new transaction-based update method
-    await this.questionsRepo.updateQuestionWithOptions(updateQuestionData)
+    await this.questionsRepo.updateQuestionWithOptions(
+      updateQuestionData,
+      updateQuestionData.questionOptions
+    )
   }
 
   async delete(questionId: number): Promise<void> {

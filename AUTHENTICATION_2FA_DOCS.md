@@ -23,11 +23,30 @@ A autenticação agora funciona em **três etapas**:
 }
 ```
 
-**Resposta de Sucesso:**
+**Resposta de Sucesso (sem termos pendentes):**
 ```json
 {
   "requires2FA": true,
-  "userEmail": "usuario@example.com"
+  "userEmail": "usuario@example.com",
+  "pendingTerms": []
+}
+```
+
+**Resposta de Sucesso (com termos pendentes):**
+```json
+{
+  "requires2FA": true,
+  "userEmail": "usuario@example.com",
+  "pendingTerms": [
+    {
+      "termId": 1,
+      "termText": "Texto completo do termo de uso...",
+      "termTypeId": 1,
+      "roleId": 1,
+      "beginDate": "2025-01-01T00:00:00.000Z",
+      "endDate": null
+    }
+  ]
 }
 ```
 
@@ -35,46 +54,14 @@ A autenticação agora funciona em **três etapas**:
 - `401`: Credenciais inválidas (`#Email e/ou senha não encontrado(s) ou não se correspondem`)
 - `403`: Usuário inativo (`#Usuário inativado pelo administrador do sistema.`)
 
-**⚠️ Importante:** Após este passo, o usuário **já recebeu o código 2FA por email** (válido por 30 minutos).
+**⚠️ Importante:** 
+- Após este passo, o usuário **já recebeu o código 2FA por email** (válido por 30 minutos)
+- Se houver termos pendentes, o front deve exibi-los ao usuário **antes** de chamar `/auth/verify-2fa`
+- Os `termId`s dos termos aceitos devem ser enviados no campo `termsIds` ao verificar o código 2FA
 
 ---
 
-### 2️⃣ Verificar Termos Pendentes
-
-**Endpoint:** `POST /auth/policies`
-
-**Body:**
-```json
-{
-  "userEmail": "usuario@example.com",
-  "password": "SenhaSegura123!"
-}
-```
-
-**Respostas:**
-
-✅ **Sem termos pendentes:**
-```json
-[]
-```
-
-⚠️ **Com termos pendentes:**
-```json
-[
-  {
-    "termId": 1,
-    "termText": "Texto completo do termo de uso...",
-    "termTypeId": 1,
-    "roleId": 1,
-    "beginDate": "2025-01-01T00:00:00.000Z",
-    "endDate": null
-  }
-]
-```
-
----
-
-### 3️⃣ Verificar Código 2FA
+### 2️⃣ Verificar Código 2FA
 
 **Endpoint:** `POST /auth/verify-2fa`
 
@@ -105,7 +92,7 @@ A autenticação agora funciona em **três etapas**:
 
 ---
 
-### 4️⃣ Reenviar Código 2FA
+### 3️⃣ Reenviar Código 2FA
 
 **Endpoint:** `POST /auth/resend-2fa`
 
@@ -137,20 +124,19 @@ graph TD
     C -->|Não| D[Erro 401]
     C -->|Sim| E[Gera código 2FA]
     E --> F[Envia email com código]
-    F --> G[Retorna requires2FA: true]
-    G --> H{Usuário digitou código?}
-    H -->|Não recebeu| I[POST /auth/resend-2fa]
-    I --> F
-    H -->|Sim| J[POST /auth/verify-2fa]
-    J --> K{Código válido?}
-    K -->|Não| L[Erro 401 - Máx 5 tentativas]
-    K -->|Sim| M{Há termos pendentes?}
-    M -->|Sim| N[POST /auth/policies]
-    N --> O[Exibir termos]
-    O --> P[Usuário aceita termos]
-    P --> Q[POST /auth/verify-2fa com termsIds]
-    M -->|Não| R[Gera JWT]
-    Q --> R
+    F --> G[Retorna requires2FA + pendingTerms]
+    G --> H{Há termos pendentes?}
+    H -->|Sim| I[Exibir termos ao usuário]
+    H -->|Não| J[Pedir código 2FA]
+    I --> K[Usuário aceita termos]
+    K --> J
+    J --> L{Usuário digitou código?}
+    L -->|Não recebeu| M[POST /auth/resend-2fa]
+    M --> F
+    L -->|Sim| N[POST /auth/verify-2fa com termsIds]
+    N --> O{Código válido?}
+    O -->|Não| P[Erro 401 - Máx 5 tentativas]
+    O -->|Sim| Q[Gera JWT]
     R --> S[Retorna accessToken]
 ```
 
@@ -187,25 +173,11 @@ const loginAndSend2FA = async (email, password) => {
   }
   
   const data = await response.json()
-  // Retorna: { requires2FA: true, userEmail: "..." }
+  // Retorna: { requires2FA: true, userEmail: "...", pendingTerms: [...] }
   return data
 }
 
-// 2. Verificar termos pendentes (opcional - fazer antes de pedir código)
-const checkPendingTerms = async (email, password) => {
-  const response = await fetch('/auth/policies', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
-      userEmail: email, 
-      password: password 
-    })
-  })
-  
-  return await response.json() // Retorna [] ou array de termos
-}
-
-// 3. Verificar código 2FA
+// 2. Verificar código 2FA
 const verify2FA = async (email, code, termsIds = []) => {
   const response = await fetch('/auth/verify-2fa', {
     method: 'POST',
@@ -227,7 +199,7 @@ const verify2FA = async (email, code, termsIds = []) => {
   return accessToken
 }
 
-// 4. Reenviar código 2FA
+// 3. Reenviar código 2FA
 const resend2FA = async (email) => {
   const response = await fetch('/auth/resend-2fa', {
     method: 'POST',
@@ -242,27 +214,26 @@ const resend2FA = async (email) => {
   return await response.json() // { message: "Código reenviado com sucesso." }
 }
 
-// 5. Fluxo completo de autenticação
+// 4. Fluxo completo de autenticação
 const authenticate = async (email, password) => {
   try {
-    // Passo 1: Login (valida senha e envia código)
+    // Passo 1: Login (valida senha e envia código, retorna termos pendentes)
     const loginResult = await loginAndSend2FA(email, password)
     
     if (loginResult.requires2FA) {
-      // Passo 2: Verificar termos pendentes
-      const pendingTerms = await checkPendingTerms(email, password)
+      const { userEmail, pendingTerms } = loginResult
       
-      // Passo 3: Exibir modal para usuário digitar código 2FA
-      const code = await showCodeInputModal() // Implementação do UI
-      
-      // Passo 4: Se há termos, exibir e coletar aceites
+      // Passo 2: Se há termos, exibir e coletar aceites
       let termsIds = []
       if (pendingTerms.length > 0) {
         termsIds = await showTermsModal(pendingTerms) // Implementação do UI
       }
       
-      // Passo 5: Verificar código e gerar JWT
-      const token = await verify2FA(email, code, termsIds)
+      // Passo 3: Exibir modal para usuário digitar código 2FA
+      const code = await showCodeInputModal() // Implementação do UI
+      
+      // Passo 4: Verificar código e gerar JWT
+      const token = await verify2FA(userEmail, code, termsIds)
       return token
     }
   } catch (error) {
@@ -346,9 +317,8 @@ try {
 
 | Ordem | Endpoint | Payload | Resposta |
 |-------|----------|---------|----------|
-| 1️⃣ | `POST /auth/login` | `{ userEmail, password }` | `{ requires2FA: true, userEmail }` |
-| 2️⃣ | `POST /auth/policies` | `{ userEmail, password }` | `Term[]` ou `[]` |
-| 3️⃣ | `POST /auth/verify-2fa` | `{ userEmail, code, termsIds? }` | `{ accessToken }` |
+| 1️⃣ | `POST /auth/login` | `{ userEmail, password }` | `{ requires2FA: true, userEmail, pendingTerms: Term[] }` |
+| 2️⃣ | `POST /auth/verify-2fa` | `{ userEmail, code, termsIds? }` | `{ accessToken }` |
 | 🔄 | `POST /auth/resend-2fa` | `{ userEmail }` | `{ message }` |
 
 ---

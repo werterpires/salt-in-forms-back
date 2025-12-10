@@ -513,6 +513,48 @@ export class QuestionsRepo {
           const idsToDelete = optionsToDelete.map(
             (opt) => opt[db.QuestionOptions.QUESTION_OPTION_ID]
           )
+
+          // Before deleting options, clean up any optionScoresJson that references them
+          const deletedOptionValues = optionsToDelete.map(
+            (opt) => opt[db.QuestionOptions.QUESTION_OPTION_VALUE]
+          )
+
+          // Get current questionScore if it exists
+          const currentScore = await this.findQuestionScoreByQuestionId(
+            updateQuestionData.questionId,
+            trx
+          )
+
+          if (
+            currentScore &&
+            currentScore[db.QuestionScores.OPTION_SCORES_JSON]
+          ) {
+            const optionScores =
+              currentScore[db.QuestionScores.OPTION_SCORES_JSON]
+
+            // Remove scores for deleted options
+            const cleanedScores = { ...optionScores }
+            for (const deletedValue of deletedOptionValues) {
+              delete cleanedScores[deletedValue]
+            }
+
+            // If no scores remain, delete the entire questionScore
+            if (Object.keys(cleanedScores).length === 0) {
+              await this.deleteQuestionScore(updateQuestionData.questionId, trx)
+            } else {
+              // Otherwise, update with cleaned scores
+              await trx(db.Tables.QUESTION_SCORES)
+                .where(
+                  db.QuestionScores.QUESTION_ID,
+                  updateQuestionData.questionId
+                )
+                .update({
+                  [db.QuestionScores.OPTION_SCORES_JSON]:
+                    JSON.stringify(cleanedScores)
+                })
+            }
+          }
+
           await trx(db.Tables.QUESTION_OPTIONS)
             .whereIn(db.QuestionOptions.QUESTION_OPTION_ID, idsToDelete)
             .del()
