@@ -156,30 +156,43 @@ export class UsersRepo {
     filters?: UserFilter
   ) {
     const query = this.knex(db.Tables.USERS).select(
-      db.Users.USER_NAME,
-      db.Users.USER_EMAIL,
-      db.Users.USER_ID,
-      db.Users.USER_ACTIVE
+      `${db.Tables.USERS}.${db.Users.USER_NAME}`,
+      `${db.Tables.USERS}.${db.Users.USER_EMAIL}`,
+      `${db.Tables.USERS}.${db.Users.USER_ID}`,
+      `${db.Tables.USERS}.${db.Users.USER_ACTIVE}`,
+      `${db.Tables.USERS}.${db.Users.USER_INVITE_CODE}`
     )
+
+    console.log('filters', filters)
 
     if (filters) {
       if (filters.roleId) {
         query
           .rightJoin(
             db.Tables.USERS_ROLES,
-            db.Users.USER_ID,
-            db.UsersRoles.USER_ID
+            `${db.Tables.USERS}.${db.Users.USER_ID}`,
+            `${db.Tables.USERS_ROLES}.${db.UsersRoles.USER_ID}`
           )
-          .where(db.UsersRoles.ROLE_ID, filters.roleId)
+          .where(
+            `${db.Tables.USERS_ROLES}.${db.UsersRoles.ROLE_ID}`,
+            filters.roleId
+          )
       }
       if (filters.userEmail) {
-        query.where(db.Users.USER_EMAIL, 'like', `%${filters.userEmail}%`)
+        query.where(
+          `${db.Tables.USERS}.${db.Users.USER_EMAIL}`,
+          'like',
+          `%${filters.userEmail}%`
+        )
       }
-      if (filters.userActive) {
-        query.where(db.Users.USER_ACTIVE, filters.userActive)
+      if (filters.userActive !== undefined) {
+        query.where(
+          `${db.Tables.USERS}.${db.Users.USER_ACTIVE}`,
+          filters.userActive
+        )
       }
     }
-    query.orderBy(orderBy.column, orderBy.direction)
+    query.orderBy(`${db.Tables.USERS}.${orderBy.column}`, orderBy.direction)
 
     query
       .limit(this.elementsPerPage)
@@ -197,20 +210,30 @@ export class UsersRepo {
         query
           .rightJoin(
             db.Tables.USERS_ROLES,
-            db.Users.USER_ID,
-            db.UsersRoles.USER_ID
+            `${db.Tables.USERS}.${db.Users.USER_ID}`,
+            `${db.Tables.USERS_ROLES}.${db.UsersRoles.USER_ID}`
           )
-          .where(db.UsersRoles.ROLE_ID, filters.roleId)
+          .where(
+            `${db.Tables.USERS_ROLES}.${db.UsersRoles.ROLE_ID}`,
+            filters.roleId
+          )
       }
       if (filters.userEmail) {
-        query.where(db.Users.USER_EMAIL, 'like', `%${filters.userEmail}%`)
+        query.where(
+          `${db.Tables.USERS}.${db.Users.USER_EMAIL}`,
+          'like',
+          `%${filters.userEmail}%`
+        )
       }
       if (filters.userActive) {
-        query.where(db.Users.USER_ACTIVE, filters.userActive)
+        query.where(
+          `${db.Tables.USERS}.${db.Users.USER_ACTIVE}`,
+          filters.userActive
+        )
       }
     }
 
-    query.countDistinct(db.Users.USER_ID)
+    query.countDistinct(`${db.Tables.USERS}.${db.Users.USER_ID}`)
     const [results] = await query
 
     const countKey = Object.keys(results)[0]

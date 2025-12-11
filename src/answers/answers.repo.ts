@@ -156,4 +156,39 @@ export class AnswersRepo {
 
     return query
   }
+
+  /**
+   * Verifica se uma questão específica possui respostas
+   */
+  async hasAnswersForQuestion(questionId: number): Promise<boolean> {
+    const result = await this.knex(db.Tables.ANSWERS)
+      .select(this.knex.raw('1'))
+      .where(db.Answers.QUESTION_ID, questionId)
+      .limit(1)
+      .first()
+
+    return !!result
+  }
+
+  /**
+   * Verifica se um formulário possui respostas (através de formsCandidates)
+   */
+  async hasAnswersForForm(sFormId: number): Promise<boolean> {
+    const result = await this.knex(db.Tables.ANSWERS)
+      .select(this.knex.raw('1'))
+      .innerJoin(
+        db.Tables.FORMS_CANDIDATES,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ID}`,
+        '=',
+        `${db.Tables.ANSWERS}.${db.Answers.FORM_CANDIDATE_ID}`
+      )
+      .where(
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID}`,
+        sFormId
+      )
+      .limit(1)
+      .first()
+
+    return !!result
+  }
 }

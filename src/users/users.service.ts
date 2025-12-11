@@ -78,6 +78,10 @@ export class UsersService {
     const users: User[] = await this.usersRepo.findAllUsers(orderBy, filters)
     for (const user of users) {
       user.userName = this.encryptionService.decrypt(user.userName)
+      user.userActive =
+        user.userInviteCode && user.userInviteCode.startsWith('done')
+          ? user.userActive
+          : null
 
       const roles = await this.usersRepo.findRolesByUserId(user.userId)
 

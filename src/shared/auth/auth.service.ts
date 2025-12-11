@@ -102,11 +102,17 @@ export class AuthService {
     throw new Error(CustomErrors.UNAUTHORIZED_EXCEPTION)
   }
 
-  login(user: ValidateUser): LoginResponse {
+  async login(user: ValidateUser): Promise<LoginResponse> {
     // Retornar que 2FA é necessário (código já foi enviado no validateUser)
+    const pendingTerms = await this.authRepo.findActiveTermsNotSigned(
+      user.userRoles,
+      user.userId
+    )
+
     return {
       requires2FA: true,
-      userEmail: user.userEmail
+      userEmail: user.userEmail,
+      pendingTerms
     }
   }
 

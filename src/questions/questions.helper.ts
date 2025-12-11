@@ -117,7 +117,7 @@ export class QuestionsHelper {
     await this.validateSubquestions(createQuestionDto)
 
     // Validar questionScore
-    await this.validateQuestionScore(
+    this.validateQuestionScore(
       createQuestionDto.questionType,
       createQuestionDto.questionScore,
       createQuestionDto.questionOptions
@@ -212,7 +212,7 @@ export class QuestionsHelper {
     )
 
     // Validar questionScore
-    await this.validateQuestionScore(
+    this.validateQuestionScore(
       updateQuestionDto.questionType,
       updateQuestionDto.questionScore,
       updateQuestionDto.questionOptions
@@ -845,11 +845,11 @@ export class QuestionsHelper {
     }
   }
 
-  static async validateQuestionScore(
+  static validateQuestionScore(
     questionType: number,
     questionScore: QuestionScoreDto | undefined,
     questionOptions?: QuestionOptionDto[]
-  ): Promise<void> {
+  ): void {
     // Se não há questionScore, não há o que validar
     if (!questionScore) {
       return

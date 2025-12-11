@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, Query } from '@nestjs/common'
+import { Controller, Get, Post, Put, Param, Body, Query } from '@nestjs/common'
 import { CandidatesService } from './candidates.service'
 import { IsPublic } from '../shared/auth/decorators/is-public.decorator'
 import { SignTermsDto } from './dto/sign-terms.dto'
@@ -6,11 +6,13 @@ import { SelfRegisterCandidateDto } from './dto/self-register-candidate.dto'
 import { CompleteRegistrationDto } from './dto/complete-registration.dto'
 import { ResendConfirmationDto } from './dto/resend-confirmation.dto'
 import { AssignInterviewerDto } from './dto/assign-interviewer.dto'
+import { UpdateCandidateDto } from './dto/update-candidate.dto'
+import { UpdateFormEmailDto } from './dto/update-form-email.dto'
 import { Roles } from '../users/decorators/roles.decorator'
 import { ERoles } from '../constants/roles.const'
 import { FindAllResponse, Paginator } from '../shared/types/types'
 import * as db from '../constants/db-schema.enum'
-import { CandidateBasicInfo } from './types'
+import { CandidateBasicInfo, EditableMailForm } from './types'
 import { CurrentUser } from '../users/decorators/current-user.decorator'
 import { ValidateUser } from '../shared/auth/types'
 
@@ -148,6 +150,45 @@ export class CandidatesController {
     return await this.candidatesService.getCandidatesByInterviewer(
       Number(processId),
       user.userId
+    )
+  }
+
+  /**
+   * 6.10 - Atualizar status de aprovação do candidato
+   * Endpoint administrativo (ADMIN only) para aprovar/desaprovar candidatos
+   */
+  @Roles(ERoles.ADMIN)
+  @Put('update-approval')
+  async updateCandidateApproval(@Body() dto: UpdateCandidateDto) {
+    return this.candidatesService.updateCandidateApproval(
+      dto.candidateId,
+      dto.approved
+    )
+  }
+
+  /**
+   * 6.11 - Buscar formulários de um candidato com emails editáveis
+   * Endpoint administrativo (ADMIN e SEC) para verificar emails de destino dos formulários
+   */
+  @Roles(ERoles.ADMIN, ERoles.SEC)
+  @Get('editable-forms/:candidateId')
+  async getEditableMailForms(
+    @Param('candidateId') candidateId: string
+  ): Promise<EditableMailForm[]> {
+    return this.candidatesService.getEditableMailForms(Number(candidateId))
+  }
+
+  /**
+   * 6.12 - Atualizar email de um formulário do tipo normal
+   * Endpoint administrativo (ADMIN e SEC) para editar email de destino de formulários
+   */
+  @Roles(ERoles.ADMIN, ERoles.SEC)
+  @Put('update-form-email')
+  async updateFormEmail(@Body() dto: UpdateFormEmailDto) {
+    return await this.candidatesService.updateFormEmail(
+      dto.formId,
+      dto.candidateId,
+      dto.newEmail
     )
   }
 }

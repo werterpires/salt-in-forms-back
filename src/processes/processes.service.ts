@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, BadRequestException } from '@nestjs/common'
 import { CreateProcessDto } from './dto/create-process.dto'
 import { UpdateProcessDto } from './dto/update-process.dto'
 import { ProcessesRepo } from './processes.repo'
@@ -41,6 +41,21 @@ export class ProcessesService {
   }
 
   async updateProcess(updateProcessDto: UpdateProcessDto) {
+    // Verificar se o processo já terminou
+    const existingProcess = await this.processesRepo.findProcessById(
+      updateProcessDto.processId
+    )
+    if (existingProcess) {
+      const today = new Date()
+      const processEndDate = new Date(existingProcess.processEndDate)
+
+      if (today > processEndDate) {
+        throw new BadRequestException(
+          '#Não é possível editar processos que já terminaram.'
+        )
+      }
+    }
+
     validateDto(updateProcessDto)
     const updateProcessData = makeUpdateProcessData(updateProcessDto)
     return this.processesRepo.updateProcess(updateProcessData)
@@ -51,6 +66,19 @@ export class ProcessesService {
   }
 
   async deleteProcess(processId: number) {
+    // Verificar se o processo já terminou
+    const existingProcess = await this.processesRepo.findProcessById(processId)
+    if (existingProcess) {
+      const today = new Date()
+      const processEndDate = new Date(existingProcess.processEndDate)
+
+      if (today > processEndDate) {
+        throw new BadRequestException(
+          '#Não é possível remover processos que já terminaram.'
+        )
+      }
+    }
+
     return this.processesRepo.deleteProcess(processId)
   }
 

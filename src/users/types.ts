@@ -10,9 +10,10 @@ export interface CreateUser {
 export interface User {
   userId: number
   userEmail: string
-  userActive: boolean
+  userActive: boolean | null
   userName: string
   userRoles: ERoles[]
+  userInviteCode?: string
 }
 
 export interface UpdateUser extends UpdateOwnUser {

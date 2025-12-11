@@ -91,6 +91,12 @@ CLEAN_EXPIRED_PENDING_CRON=0 */6 * * *
 ANSWER_PERIOD_CRON=0 10 * * *
 ```
 
+### Logging
+```env
+# Período de retenção de logs em anos (padrão: 3)
+LOG_RETENTION_YEARS=3
+```
+
 ### Candidate Registration
 ```env
 # Tempo de expiração do token de confirmação em minutos (padrão: 60)

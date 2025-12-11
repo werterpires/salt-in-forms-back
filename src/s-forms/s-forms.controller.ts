@@ -17,7 +17,6 @@ import { Roles } from 'src/users/decorators/roles.decorator'
 import { ERoles } from 'src/constants/roles.const'
 import { Paginator } from 'src/shared/types/types'
 import * as db from 'src/constants/db-schema.enum'
-import { SFormFilter, SFormType } from './types'
 
 @Controller('s-forms')
 export class SFormsController {
@@ -35,9 +34,7 @@ export class SFormsController {
     @Param('processId', ParseIntPipe) processId: number,
     @Query('direction') direction: string,
     @Query('page') page: number,
-    @Query('column') column: string,
-    @Query('sFormName') sFormName: string,
-    @Query('sFormType') sFormType: string
+    @Query('column') column: string
   ) {
     const paginator = new Paginator<typeof db.SForms>(
       +page,
@@ -47,15 +44,9 @@ export class SFormsController {
       db.SForms
     )
 
-    const filters: SFormFilter = {
-      sFormName: sFormName || undefined,
-      sFormType: (sFormType as SFormType) || undefined
-    }
-
     return await this.sFormsService.findAllformsByProcessId(
       processId,
-      paginator,
-      filters
+      paginator
     )
   }
 

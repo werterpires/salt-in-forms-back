@@ -94,6 +94,29 @@ export class CandidatesService {
       )
     }
 
+    // c2) Validar período de inscrição
+    const now = new Date()
+    const processBeginDate = new Date(process.processBeginDate)
+    const processEndSubscription = new Date(process.processEndSubscription)
+
+    if (now < processBeginDate) {
+      this.loggger.warn(
+        `Tentativa de inscrição antes do período permitido. Processo ${dto.processId} inicia em ${processBeginDate.toISOString()}`
+      )
+      throw new BadRequestException(
+        '#O período de inscrições para este processo seletivo ainda não foi iniciado.'
+      )
+    }
+
+    if (now > processEndSubscription) {
+      this.loggger.warn(
+        `Tentativa de inscrição após o período permitido. Processo ${dto.processId} encerrou em ${processEndSubscription.toISOString()}`
+      )
+      throw new BadRequestException(
+        '#O período de inscrições para este processo seletivo já foi encerrado.'
+      )
+    }
+
     // d) Validar orderCode na API externa
     this.loggger.log(
       `Validando orderCode ${dto.orderCode} na API externa com dataKey: ${process.processDataKey}`
@@ -490,6 +513,7 @@ export class CandidatesService {
         candidateBirthdate: candidate.candidateBirthdate,
         candidateMaritalStatus: candidate.candidateMaritalStatus,
         interviewer,
+        approved: candidate.approved,
         forms
       })
     }
@@ -997,14 +1021,15 @@ export class CandidatesService {
    * Distribui candidatos entre entrevistadores ativos de forma balanceada
    * Prioriza distribuição equitativa de estado civil, seguida de faixa etária
    *
-   * IMPORTANTE: Apenas candidatos com TODOS os formulários nos status COMPLETED (8) ou UNUSEFULL (0)
-   * são incluídos na distribuição. Candidatos com formulários em outros status são ignorados.
+   * IMPORTANTE: Apenas candidatos com approved = true e TODOS os formulários nos status
+   * COMPLETED (8) ou UNUSEFULL (0) são incluídos na distribuição. Candidatos com
+   * formulários em outros status ou não aprovados são ignorados.
    *
    * @param processId ID do processo
    * @returns Resultado da distribuição com estatísticas
    */
   async distributeInterviewers(processId: number) {
-    // 1) Verificar se o processo já terminou o período de resposta
+    // 1) Verificar se o processo existe
     const process = await this.candidatesRepo.findProcessById(processId)
 
     if (!process) {
@@ -1012,6 +1037,15 @@ export class CandidatesService {
     }
 
     const today = new Date()
+    const processEndDate = new Date(process.processEndDate)
+
+    // Verificar se o processo já terminou completamente
+    if (today > processEndDate) {
+      throw new BadRequestException(
+        'Não é possível distribuir entrevistadores em processos que já terminaram.'
+      )
+    }
+
     const endAnswersDate = new Date(process.processEndAnswers)
 
     if (endAnswersDate >= today) {
@@ -1219,6 +1253,7 @@ export class CandidatesService {
   /**
    * Atribui um entrevistador a um candidato específico
    * Valida se o usuário existe, é entrevistador e está ativo
+   * Valida se o candidato está aprovado
    *
    * @param userId ID do entrevistador
    * @param candidateId ID do candidato
@@ -1228,10 +1263,26 @@ export class CandidatesService {
     userId: number,
     candidateId: number
   ): Promise<{ message: string }> {
-    // Verificar se o candidato existe
-    const candidate = await this.candidatesRepo.findCandidateById(candidateId)
-    if (!candidate) {
+    // Verificar se o candidato existe e buscar dados do processo
+    const candidateWithProcess =
+      await this.candidatesRepo.findCandidateWithProcess(candidateId)
+    if (!candidateWithProcess) {
       throw new BadRequestException('#Candidato não encontrado')
+    }
+
+    // Verificar se o processo já terminou
+    const today = new Date()
+    const processEndDate = new Date(candidateWithProcess.processEndDate)
+
+    if (today > processEndDate) {
+      throw new BadRequestException(
+        '#Não é possível atribuir entrevistadores em processos que já terminaram.'
+      )
+    }
+
+    // Verificar se o candidato está aprovado
+    if (!candidateWithProcess.approved) {
+      throw new BadRequestException('#Candidato não está aprovado')
     }
 
     // Verificar se o usuário é um entrevistador ativo
@@ -1284,5 +1335,299 @@ export class CandidatesService {
     )
 
     return candidatesDecrypted
+  }
+
+  /**
+   * Atualiza o status de aprovação de um candidato
+   * Valida se o candidato existe e se o processo ainda não terminou
+   *
+   * @param candidateId ID do candidato
+   * @param approved Status de aprovação
+   * @returns Mensagem de sucesso
+   */
+  async updateCandidateApproval(
+    candidateId: number,
+    approved: boolean
+  ): Promise<{ message: string }> {
+    this.loggger.log(
+      `Atualizando aprovação do candidato ${candidateId} para ${approved}`
+    )
+
+    // Buscar candidato com dados do processo
+    const candidateWithProcess =
+      await this.candidatesRepo.findCandidateWithProcess(candidateId)
+
+    if (!candidateWithProcess) {
+      this.loggger.warn(`Candidato ${candidateId} não encontrado`)
+      throw new BadRequestException('#Candidato não encontrado')
+    }
+
+    // Verificar se o processo já terminou
+    const today = new Date()
+    const processEndDate = new Date(candidateWithProcess.processEndDate)
+
+    if (today > processEndDate) {
+      this.loggger.warn(
+        `Tentativa de atualizar candidato ${candidateId} em processo finalizado`
+      )
+      throw new BadRequestException(
+        '#Não é possível atualizar candidatos de processos que já terminaram.'
+      )
+    }
+
+    // Atualizar status de aprovação
+    await this.candidatesRepo.updateCandidateApproval(candidateId, approved)
+
+    this.loggger.log(
+      `Candidato ${candidateId} teve aprovação atualizada para ${approved}`
+    )
+
+    return {
+      message: `Status de aprovação do candidato atualizado para ${approved ? 'aprovado' : 'não aprovado'}`
+    }
+  }
+
+  /**
+   * 6.11 - Busca formulários de um candidato com informações de email editável
+   * Endpoint administrativo para SEC e ADMIN verificarem emails de destino dos formulários
+   *
+   * @param candidateId ID do candidato
+   * @returns Array de formulários com emails e status de editabilidade
+   */
+  async getEditableMailForms(candidateId: number) {
+    this.loggger.log(
+      `Buscando formulários editáveis para candidato ${candidateId}`
+    )
+
+    // 1. Buscar candidato com processo e validar período de resposta
+    const candidateData =
+      await this.candidatesRepo.findCandidateWithProcessAndAnswerPeriod(
+        candidateId
+      )
+
+    if (!candidateData) {
+      this.loggger.warn(`Candidato ${candidateId} não encontrado`)
+      throw new BadRequestException('#Candidato não encontrado')
+    }
+
+    // Verificar se ainda está no período de resposta
+    const today = new Date()
+    const processEndAnswers = new Date(candidateData.processEndAnswers)
+
+    if (today > processEndAnswers) {
+      this.loggger.warn(
+        `Processo do candidato ${candidateId} já passou do período de respostas`
+      )
+      throw new BadRequestException(
+        '#O período de respostas deste processo já foi encerrado.'
+      )
+    }
+
+    // 2. Buscar todos os formulários vinculados ao candidato
+    const formsCandidates =
+      await this.candidatesRepo.findFormsCandidatesByCandidateId(candidateId)
+
+    if (!formsCandidates || formsCandidates.length === 0) {
+      this.loggger.log(
+        `Nenhum formulário encontrado para candidato ${candidateId}`
+      )
+      return []
+    }
+
+    // Descriptografar email do candidato
+    const candidateEmail = this.encryptionService.decrypt(
+      candidateData.candidateEmail
+    )
+
+    // 3. Para cada formulário, determinar o email e editabilidade
+    const editableMailForms = await Promise.all(
+      formsCandidates.map(async (form) => {
+        const formType = form.sFormType
+        let email = ''
+        let editable = false
+
+        if (formType === 'candidate') {
+          // Tipo candidate: email do candidato, não editável
+          email = candidateEmail
+          editable = false
+        } else if (formType === 'ministerial') {
+          // Tipo ministerial: buscar resposta e encontrar ministerial
+          if (!form.emailQuestionId) {
+            email = 'Formulário criado sem referência a um email'
+          } else {
+            const answer =
+              await this.candidatesRepo.findAnswerByFormCandidateAndQuestion(
+                form.formCandidateId,
+                form.emailQuestionId
+              )
+
+            if (answer && answer.answerValue) {
+              // Descriptografar resposta
+              const fieldName = this.encryptionService.decrypt(
+                answer.answerValue
+              )
+
+              // Buscar ministerial ativo por nome do campo
+              const ministerial =
+                await this.candidatesRepo.findActiveMinisterialByFieldName(
+                  fieldName
+                )
+
+              if (ministerial && ministerial.ministerialPrimaryEmail) {
+                email = ministerial.ministerialPrimaryEmail
+              }
+              // Se não encontrar ministerial ou email, permanece string vazia
+            }
+            // Se não tem resposta, permanece string vazia
+          }
+          editable = false
+        } else if (formType === 'normal') {
+          // Tipo normal: resposta é o email, editável se existir
+          if (!form.emailQuestionId) {
+            email = 'Formulário criado sem referência a um email'
+            editable = false
+          } else {
+            const answer =
+              await this.candidatesRepo.findAnswerByFormCandidateAndQuestion(
+                form.formCandidateId,
+                form.emailQuestionId
+              )
+
+            if (answer && answer.answerValue) {
+              // Descriptografar resposta que é o próprio email
+              email = this.encryptionService.decrypt(answer.answerValue)
+              editable = true
+            } else {
+              // Se não tem resposta, string vazia e não editável
+              email = ''
+              editable = false
+            }
+          }
+        }
+
+        return {
+          formId: form.sFormId,
+          formName: form.sFormName,
+          email,
+          editable
+        }
+      })
+    )
+
+    this.loggger.log(
+      `Retornando ${editableMailForms.length} formulários para candidato ${candidateId}`
+    )
+
+    return editableMailForms
+  }
+
+  /**
+   * 6.12 - Atualiza email de um formulário do tipo normal
+   * Endpoint administrativo para SEC e ADMIN editarem email de destino de formulários
+   *
+   * @param formId ID do formulário
+   * @param candidateId ID do candidato
+   * @param newEmail Novo email a ser salvo
+   * @returns Mensagem de sucesso
+   */
+  async updateFormEmail(
+    formId: number,
+    candidateId: number,
+    newEmail: string
+  ): Promise<{ message: string }> {
+    this.loggger.log(
+      `Atualizando email do formulário ${formId} para candidato ${candidateId}`
+    )
+
+    // 1. Buscar formulário com processo e formCandidate
+    const formData =
+      await this.candidatesRepo.findFormWithProcessByFormAndCandidate(
+        formId,
+        candidateId
+      )
+
+    if (!formData) {
+      this.loggger.warn(
+        `Formulário ${formId} ou candidato ${candidateId} não encontrado`
+      )
+      throw new BadRequestException('#Formulário ou candidato não encontrado')
+    }
+
+    // 2. Verificar se é do tipo normal
+    if (formData.sFormType !== 'normal') {
+      this.loggger.warn(
+        `Tentativa de editar email de formulário tipo ${formData.sFormType}`
+      )
+      throw new BadRequestException(
+        '#Apenas formulários do tipo "normal" podem ter o email editado'
+      )
+    }
+
+    // 3. Verificar se ainda está no período de resposta
+    const today = new Date()
+    const processEndAnswers = new Date(formData.processEndAnswers)
+
+    if (today > processEndAnswers) {
+      this.loggger.warn(
+        `Processo do formulário ${formId} já passou do período de respostas`
+      )
+      throw new BadRequestException(
+        '#O período de respostas deste processo já foi encerrado.'
+      )
+    }
+
+    // 4. Verificar se o formulário tem emailQuestionId
+    if (!formData.emailQuestionId) {
+      this.loggger.warn(
+        `Formulário ${formId} não possui EMAIL_QUESTION_ID configurado`
+      )
+      throw new BadRequestException(
+        '#Este formulário não possui uma questão de email configurada'
+      )
+    }
+
+    // 5. Buscar a resposta para o emailQuestionId
+    const answer =
+      await this.candidatesRepo.findAnswerByFormCandidateAndQuestion(
+        formData.formCandidateId,
+        formData.emailQuestionId
+      )
+
+    if (!answer) {
+      this.loggger.warn(
+        `Resposta para EMAIL_QUESTION_ID não existe no formulário ${formId}`
+      )
+      throw new BadRequestException(
+        '#Não é possível editar o email porque a resposta ainda não foi criada. O candidato precisa responder esta questão primeiro.'
+      )
+    }
+
+    // 6. Verificar se o formulário já possui alguma questão respondida (exceto a de email)
+    const otherAnswersCount =
+      await this.candidatesRepo.countAnswersExcludingQuestion(
+        formData.formCandidateId,
+        formData.emailQuestionId
+      )
+
+    if (otherAnswersCount > 0) {
+      this.loggger.warn(
+        `Formulário ${formId} já possui ${otherAnswersCount} outras respostas além do email`
+      )
+      throw new BadRequestException(
+        '#Não é possível editar o email porque o formulário já possui outras questões respondidas.'
+      )
+    }
+
+    // 7. Criptografar novo email e atualizar resposta
+    const encryptedEmail = this.encryptionService.encrypt(newEmail)
+    await this.candidatesRepo.updateAnswerValue(answer.answerId, encryptedEmail)
+
+    this.loggger.log(
+      `Email do formulário ${formId} atualizado com sucesso para candidato ${candidateId}`
+    )
+
+    return {
+      message: 'Email do formulário atualizado com sucesso'
+    }
   }
 }
