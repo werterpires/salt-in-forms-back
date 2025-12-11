@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Patch, Body, Post } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Body,
+  Post,
+  ParseIntPipe
+} from '@nestjs/common'
 import { RatesService } from './rates.service'
 import { Roles } from '../users/decorators/roles.decorator'
 import { ERoles } from '../constants/roles.const'
@@ -26,7 +34,24 @@ export class RatesController {
   ): Promise<InterviewData> {
     return await this.ratesService.getInterviewDataForCandidate(
       Number(candidateId),
-      user.userId
+      user
+    )
+  }
+
+  /**
+   * Busca dados completos de entrevista para um candidato
+   * Endpoint protegido para administradores e secretários
+   * Não valida vínculo do candidato com entrevistador
+   */
+  @Roles(ERoles.ADMIN, ERoles.SEC)
+  @Get('interview-admin/:candidateId')
+  async getInterviewDataAsAdminOrSec(
+    @Param('candidateId', ParseIntPipe) candidateId: number,
+    @CurrentUser() user: ValidateUser
+  ): Promise<InterviewData> {
+    return await this.ratesService.getInterviewDataForCandidateAsAdmin(
+      candidateId,
+      user
     )
   }
 

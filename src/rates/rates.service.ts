@@ -8,6 +8,8 @@ import { CandidatesRepo } from '../candidates/candidates.repo'
 import { EncryptionService } from '../shared/utils-module/encryption/encryption.service'
 import { InterviewData, InterviewForm, InterviewAnswer, Rate } from './types'
 import { Candidate } from '../candidates/types'
+import { ValidateUser } from 'src/shared/auth/types'
+import { ERoles } from 'src/constants/roles.const'
 
 @Injectable()
 export class RatesService {
@@ -27,12 +29,12 @@ export class RatesService {
    */
   async getInterviewDataForCandidate(
     candidateId: number,
-    interviewUserId: number
+    user: ValidateUser
   ): Promise<InterviewData> {
     // 1. Verificar se o candidato pertence ao entrevistador
     const isAssigned = await this.ratesRepo.isCandidateAssignedToInterviewer(
       candidateId,
-      interviewUserId
+      user.userId
     )
 
     if (!isAssigned) {
@@ -41,7 +43,29 @@ export class RatesService {
       )
     }
 
-    // 2. Buscar dados do candidato (criptografados)
+    // Retorna dados completos da entrevista
+    return await this.getFullInterviewData(candidateId, user)
+  }
+
+  /**
+   * Busca dados completos de entrevista para um candidato (ADMIN/SEC)
+   * Não realiza validação de vínculo com entrevistador
+   */
+  async getInterviewDataForCandidateAsAdmin(
+    candidateId: number,
+    user: ValidateUser
+  ): Promise<InterviewData> {
+    return await this.getFullInterviewData(candidateId, user)
+  }
+
+  /**
+   * Método interno que monta os dados completos da entrevista
+   */
+  private async getFullInterviewData(
+    candidateId: number,
+    user: ValidateUser
+  ): Promise<InterviewData> {
+    // Buscar dados do candidato (criptografados)
     const candidateEncrypted =
       await this.candidatesRepo.findCandidateById(candidateId)
 
@@ -49,7 +73,7 @@ export class RatesService {
       throw new BadRequestException('#Candidato não encontrado')
     }
 
-    // 3. Descriptografar dados do candidato
+    // Descriptografar dados do candidato
     const candidate: Candidate = {
       candidateId: candidateEncrypted.candidateId,
       processId: candidateEncrypted.processId,
@@ -91,17 +115,25 @@ export class RatesService {
       approved: candidateEncrypted.approved
     }
 
-    // 4. Buscar todos os FormsCandidates do candidato
+    const userRoles = user.userRoles
+
+    if (
+      !userRoles.includes(ERoles.ADMIN) &&
+      !userRoles.includes(ERoles.INTERV)
+    ) {
+      return { candidate, interviewForms: [] }
+    }
+
+    // Buscar todos os FormsCandidates do candidato
     const formsCandidates =
       await this.ratesRepo.findFormsCandidatesByCandidateId(candidateId)
 
-    // 5. Buscar todas as respostas válidas com detalhes (uma única query otimizada)
+    // Buscar todas as respostas válidas com detalhes (uma única query otimizada)
     const answersWithDetails =
       await this.ratesRepo.findAnswersWithDetailsForCandidate(candidateId)
 
-    // 6. Agrupar respostas por formulário
+    // Agrupar respostas por formulário
     const formAnswersMap = new Map<number, any[]>()
-
     for (const answer of answersWithDetails) {
       if (!formAnswersMap.has(answer.sFormId)) {
         formAnswersMap.set(answer.sFormId, [])
@@ -109,7 +141,7 @@ export class RatesService {
       formAnswersMap.get(answer.sFormId)!.push(answer)
     }
 
-    // 7. Montar array de InterviewForm
+    // Montar array de InterviewForm
     const interviewForms: InterviewForm[] = formsCandidates.map(
       (formCandidate) => {
         const answersForForm = formAnswersMap.get(formCandidate.sFormId) || []
@@ -138,11 +170,8 @@ export class RatesService {
       }
     )
 
-    // 8. Retornar InterviewData completo
-    return {
-      candidate,
-      interviewForms
-    }
+    // Retornar InterviewData completo
+    return { candidate, interviewForms }
   }
 
   /**

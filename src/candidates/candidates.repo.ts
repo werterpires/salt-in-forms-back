@@ -976,4 +976,183 @@ export class CandidatesRepo {
       )
       .first()
   }
+
+  /**
+   * Busca candidato com processo e valida período de resposta
+   * @param candidateId ID do candidato
+   * @returns Dados do candidato, processo e email
+   */
+  async findCandidateWithProcessAndAnswerPeriod(candidateId: number) {
+    return this.knex(db.Tables.CANDIDATES)
+      .select(
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_ID}`,
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_EMAIL}`,
+        `${db.Tables.CANDIDATES}.${db.Candidates.PROCESS_ID}`,
+        `${db.Tables.PROCESSES}.${db.Processes.PROCESS_END_ANSWERS}`
+      )
+      .innerJoin(
+        db.Tables.PROCESSES,
+        `${db.Tables.CANDIDATES}.${db.Candidates.PROCESS_ID}`,
+        `${db.Tables.PROCESSES}.${db.Processes.PROCESS_ID}`
+      )
+      .where(
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_ID}`,
+        candidateId
+      )
+      .first()
+  }
+
+  /**
+   * Busca todos os formulários vinculados a um candidato
+   * @param candidateId ID do candidato
+   * @returns Lista de formulários com dados do form e formCandidate
+   */
+  async findFormsCandidatesByCandidateId(candidateId: number) {
+    return this.knex(db.Tables.FORMS_CANDIDATES)
+      .select(
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ID}`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID}`,
+        `${db.Tables.S_FORMS}.${db.SForms.S_FORM_NAME}`,
+        `${db.Tables.S_FORMS}.${db.SForms.S_FORM_TYPE}`,
+        `${db.Tables.S_FORMS}.${db.SForms.EMAIL_QUESTION_ID}`
+      )
+      .innerJoin(
+        db.Tables.S_FORMS,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID}`,
+        `${db.Tables.S_FORMS}.${db.SForms.S_FORM_ID}`
+      )
+      .where(
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID}`,
+        candidateId
+      )
+  }
+
+  /**
+   * Busca resposta de um candidato para uma questão específica
+   * @param formCandidateId ID do formCandidate
+   * @param questionId ID da questão
+   * @returns Resposta encontrada ou undefined
+   */
+  async findAnswerByFormCandidateAndQuestion(
+    formCandidateId: number,
+    questionId: number
+  ) {
+    return this.knex(db.Tables.ANSWERS)
+      .select(
+        db.Answers.ANSWER_ID,
+        db.Answers.ANSWER_VALUE,
+        db.Answers.VALID_ANSWER
+      )
+      .where(db.Answers.FORM_CANDIDATE_ID, formCandidateId)
+      .where(db.Answers.QUESTION_ID, questionId)
+      .first()
+  }
+
+  /**
+   * Busca ministerial ativo pelo nome do campo
+   * @param fieldName Nome do campo
+   * @returns Dados do ministerial ou undefined
+   */
+  async findActiveMinisterialByFieldName(fieldName: string) {
+    return this.knex(db.Tables.MINISTERIALS)
+      .select(
+        `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ID}`,
+        `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_PRIMARY_EMAIL}`
+      )
+      .innerJoin(
+        db.Tables.FIELDS,
+        `${db.Tables.MINISTERIALS}.${db.Ministerials.FIELD_ID}`,
+        `${db.Tables.FIELDS}.${db.Fields.FIELD_ID}`
+      )
+      .where(`${db.Tables.FIELDS}.${db.Fields.FIELD_NAME}`, fieldName)
+      .where(
+        `${db.Tables.MINISTERIALS}.${db.Ministerials.MINISTERIAL_ACTIVE}`,
+        true
+      )
+      .first()
+  }
+
+  /**
+   * Busca formulário com processo e valida período de resposta
+   * @param formId ID do formulário
+   * @param candidateId ID do candidato
+   * @returns Dados do form, formCandidate e processo
+   */
+  async findFormWithProcessByFormAndCandidate(
+    formId: number,
+    candidateId: number
+  ) {
+    return this.knex(db.Tables.S_FORMS)
+      .select(
+        `${db.Tables.S_FORMS}.${db.SForms.S_FORM_ID}`,
+        `${db.Tables.S_FORMS}.${db.SForms.S_FORM_TYPE}`,
+        `${db.Tables.S_FORMS}.${db.SForms.EMAIL_QUESTION_ID}`,
+        `${db.Tables.S_FORMS}.${db.SForms.PROCESS_ID}`,
+        `${db.Tables.PROCESSES}.${db.Processes.PROCESS_END_ANSWERS}`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ID}`
+      )
+      .innerJoin(
+        db.Tables.PROCESSES,
+        `${db.Tables.S_FORMS}.${db.SForms.PROCESS_ID}`,
+        `${db.Tables.PROCESSES}.${db.Processes.PROCESS_ID}`
+      )
+      .innerJoin(db.Tables.FORMS_CANDIDATES, function () {
+        this.on(
+          `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID}`,
+          '=',
+          `${db.Tables.S_FORMS}.${db.SForms.S_FORM_ID}`
+        ).andOnVal(
+          `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID}`,
+          '=',
+          candidateId
+        )
+      })
+      .where(`${db.Tables.S_FORMS}.${db.SForms.S_FORM_ID}`, formId)
+      .first()
+  }
+
+  /**
+   * Verifica se formCandidate tem alguma resposta registrada
+   * @param formCandidateId ID do formCandidate
+   * @returns true se existir pelo menos uma resposta
+   */
+  async formCandidateHasAnyAnswers(formCandidateId: number): Promise<boolean> {
+    const result = await this.knex(db.Tables.ANSWERS)
+      .where(db.Answers.FORM_CANDIDATE_ID, formCandidateId)
+      .first()
+
+    return !!result
+  }
+
+  /**
+   * Atualiza o valor de uma resposta
+   * @param answerId ID da resposta
+   * @param newValue Novo valor criptografado
+   */
+  async updateAnswerValue(answerId: number, newValue: string): Promise<void> {
+    await this.knex(db.Tables.ANSWERS)
+      .where(db.Answers.ANSWER_ID, answerId)
+      .update({
+        [db.Answers.ANSWER_VALUE]: newValue
+      })
+  }
+
+  /**
+   * Conta quantas respostas existem para um formCandidate excluindo uma questão específica
+   * @param formCandidateId ID do formCandidate
+   * @param excludeQuestionId ID da questão a ser excluída da contagem
+   * @returns Número de respostas
+   */
+  async countAnswersExcludingQuestion(
+    formCandidateId: number,
+    excludeQuestionId: number
+  ): Promise<number> {
+    const result = await this.knex(db.Tables.ANSWERS)
+      .where(db.Answers.FORM_CANDIDATE_ID, formCandidateId)
+      .whereNot(db.Answers.QUESTION_ID, excludeQuestionId)
+      .count('* as count')
+      .first()
+
+    return result ? Number(result.count) : 0
+  }
 }

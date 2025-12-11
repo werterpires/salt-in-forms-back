@@ -28,7 +28,7 @@ export class ProcessesController {
     return await this.processesService.createProcess(createProcessDto)
   }
 
-  @Roles(ERoles.ADMIN)
+  @Roles(ERoles.ADMIN, ERoles.SEC)
   @Get()
   async findAll(
     @Query('direction') direction: string,
@@ -65,7 +65,7 @@ export class ProcessesController {
     return await this.processesService.findActiveProcesses()
   }
 
-  @Roles(ERoles.ADMIN)
+  @Roles(ERoles.ADMIN, ERoles.SEC)
   @Get('all')
   async findAllProcessesSimple() {
     return await this.processesService.findAllProcessesSimple()

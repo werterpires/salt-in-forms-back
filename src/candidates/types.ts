@@ -371,3 +371,13 @@ export interface CandidateIdentification {
   candidateEmail: string
   candidateUniqueDocument: string
 }
+
+/**
+ * Informações de formulários com emails editáveis
+ */
+export interface EditableMailForm {
+  formId: number
+  formName: string
+  email: string
+  editable: boolean
+}
