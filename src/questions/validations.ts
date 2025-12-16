@@ -1008,11 +1008,62 @@ export const isUnicEmail: ValidationSpcification = {
   }
 }
 
+export const ehCPF: ValidationSpcification = {
+  validationType: 28,
+  validationName: 'CPF válido',
+  validationDescription: 'Verifica se o valor é um CPF válido',
+  valueOneType: 'undefined',
+  valueTwoType: 'undefined',
+  valueThreeType: 'undefined',
+  valueFourType: 'undefined',
+  validationFunction: (
+    value: string,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (val1 || val2 || val3 || val4) {
+      throw new Error('Parâmetros inválidos para a validação "CPF válido"')
+    }
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+    if (typeof value !== 'string')
+      return { isValid: false, errorMessage: 'O valor deve ser uma string' }
+    value = value.replace(/\D/g, '')
+
+    if (value.length !== 11 || /^(\d)\1+$/.test(value)) {
+      return { isValid: false, errorMessage: 'CPF inválido' }
+    }
+
+    const calcCheckDigit = (digits: string, factor: number): number => {
+      let total = 0
+      for (let i = 0; i < digits.length; i++) {
+        total += parseInt(digits.charAt(i), 10) * factor--
+      }
+      const remainder = total % 11
+      return remainder < 2 ? 0 : 11 - remainder
+    }
+
+    const firstCheckDigit = calcCheckDigit(value.substring(0, 9), 10)
+    const secondCheckDigit = calcCheckDigit(value.substring(0, 10), 11)
+
+    if (
+      firstCheckDigit === parseInt(value.charAt(9), 10) &&
+      secondCheckDigit === parseInt(value.charAt(10), 10)
+    ) {
+      return { isValid: true, errorMessage: '' }
+    } else {
+      return { isValid: false, errorMessage: 'CPF inválido' }
+    }
+  }
+}
+
 export const VALIDATION_SPECIFICATIONS_BY_TYPE: Record<
   number,
   ValidationSpcification
 > = {}
-;[
+
+const validationSpecs = [
   greaterThanOrEqual,
   greaterThan,
   lessThanOrEqual,
@@ -1039,7 +1090,10 @@ export const VALIDATION_SPECIFICATIONS_BY_TYPE: Record<
   isAlphaNumeric,
   isFutureDate,
   isPastDate,
-  isUnicEmail
-].forEach((spec) => {
+  isUnicEmail,
+  ehCPF
+]
+
+validationSpecs.forEach((spec) => {
   VALIDATION_SPECIFICATIONS_BY_TYPE[spec.validationType] = spec
 })
