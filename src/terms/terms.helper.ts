@@ -10,6 +10,7 @@ import * as db from 'src/constants/db-schema.enum'
 import * as utils from 'src/shared/utils'
 
 export enum UpdateCases {
+  ONLY_BEGIN_DATE = 4,
   TEXT_BEGIN_DATE_TYPE = 3,
   TEXT_BEGIN_DATE = 2,
   TEXT = 1,
@@ -30,12 +31,16 @@ export function getUpdateCase(
     new Date(updateTermDto.beginDate).getTime() !==
     new Date(term.beginDate).getTime()
 
+  console.log({ diferentText, diferentType, diferentRole, diferentBeginDate })
+
   if (diferentType || diferentRole) {
     return UpdateCases.TEXT_BEGIN_DATE_TYPE
   } else if (diferentText && diferentBeginDate) {
     return UpdateCases.TEXT_BEGIN_DATE
   } else if (diferentText) {
     return UpdateCases.TEXT
+  } else if (diferentBeginDate) {
+    return UpdateCases.ONLY_BEGIN_DATE
   } else {
     return UpdateCases.NOTHING
   }

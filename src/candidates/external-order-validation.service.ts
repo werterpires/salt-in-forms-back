@@ -163,7 +163,6 @@ export class ExternalOrderValidationService {
       }
 
       const order = response.data.entities[0]
-      console.log('order', order)
 
       if (order.orderItems[0].enrollmentModelId != dataKey) {
         throw new BadRequestException(

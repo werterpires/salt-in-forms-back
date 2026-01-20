@@ -65,7 +65,7 @@ export class ProcessesController {
     return await this.processesService.findActiveProcesses()
   }
 
-  @Roles(ERoles.ADMIN, ERoles.SEC)
+  @Roles(ERoles.ADMIN, ERoles.SEC, ERoles.INTERV)
   @Get('all')
   async findAllProcessesSimple() {
     return await this.processesService.findAllProcessesSimple()

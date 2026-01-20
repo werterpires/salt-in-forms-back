@@ -92,7 +92,6 @@ export class TermsService {
           updateTermDto.termTypeId,
           this.termsRepo
         )
-
         break
       case UpdateCases.NOTHING:
         throw new BadRequestException('#Nenhuma informação foi alterada.')

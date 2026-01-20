@@ -127,8 +127,6 @@ export class PendingCandidatesService {
 
     // Verificar se já foi confirmado
     if (pending.confirmedAt) {
-      console.log('confirmedAt: ', pending.confirmedAt)
-      console.log('tipo:', typeof pending.confirmedAt)
       this.logger.warn(
         `Token já foi confirmado em: ${pending.confirmedAt.toISOString()}`
       )

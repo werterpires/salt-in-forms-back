@@ -163,8 +163,6 @@ export class UsersRepo {
       `${db.Tables.USERS}.${db.Users.USER_INVITE_CODE}`
     )
 
-    console.log('filters', filters)
-
     if (filters) {
       if (filters.roleId) {
         query
