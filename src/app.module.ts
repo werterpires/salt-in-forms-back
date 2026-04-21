@@ -28,6 +28,7 @@ import { FormsCandidatesModule } from './forms-candidates/forms-candidates.modul
 import { FieldsModule } from './fields/fields.module'
 import { RatesModule } from './rates/rates.module'
 import { CustomLoggerModule } from './shared/utils-module/custom-logger/custom-logger.module'
+import * as fs from 'fs'
 
 config()
 
@@ -40,6 +41,15 @@ const throttler = ThrottlerModule.forRoot({
   ]
 })
 
+const certPath = process.env.SSL_CA_PATH!
+
+const ssl = fs.existsSync(certPath)
+  ? {
+      ca: fs.readFileSync(certPath, 'utf8'),
+      rejectUnauthorized: true
+    }
+  : false
+
 const knex = KnexModule.forRoot(
   {
     config: {
@@ -50,17 +60,7 @@ const knex = KnexModule.forRoot(
         password: process.env.SQL_PASS,
         database: process.env.SQL_DB,
         port: process.env.SQL_PORT ? parseInt(process.env.SQL_PORT) : 3306,
-        ssl:
-          process.env.SQL_SSL_CA &&
-          process.env.SQL_SSL_CERT &&
-          process.env.SQL_SSL_KEY
-            ? {
-                ca: process.env.SQL_SSL_CA.replace(/\\n/g, '\n'),
-                cert: process.env.SQL_SSL_CERT.replace(/\\n/g, '\n'),
-                key: process.env.SQL_SSL_KEY.replace(/\\n/g, '\n'),
-                rejectUnauthorized: false
-              }
-            : false,
+        ssl,
         typeCast: function (field, next) {
           if (field.type === 'TINY' && field.length === 1) {
             // retorna tipo booleano ou null
