@@ -27,6 +27,7 @@ import { AnswersModule } from './answers/answers.module'
 import { FormsCandidatesModule } from './forms-candidates/forms-candidates.module'
 import { FieldsModule } from './fields/fields.module'
 import { RatesModule } from './rates/rates.module'
+import { CustomLoggerModule } from './shared/utils-module/custom-logger/custom-logger.module'
 
 config()
 
@@ -98,6 +99,7 @@ const knex = KnexModule.forRoot(
 
 @Module({
   imports: [
+    CustomLoggerModule,
     UtilsModuleModule,
     throttler,
     knex,
