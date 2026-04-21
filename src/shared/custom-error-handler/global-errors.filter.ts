@@ -3,7 +3,8 @@ import {
   Catch,
   ExceptionFilter,
   HttpException,
-  HttpStatus
+  HttpStatus,
+  Optional
 } from '@nestjs/common'
 import { ThrottlerException } from '@nestjs/throttler'
 
@@ -16,9 +17,11 @@ import { v4 as uuidv4 } from 'uuid'
 export class GlobalErrorsFilter implements ExceptionFilter {
   constructor(
     private readonly errorsService: CustomErrorHandlerService,
-    private readonly logger: CustomLoggerService
+    @Optional() private readonly logger: CustomLoggerService
   ) {
-    this.logger.setContext(GlobalErrorsFilter.name)
+    if (this.logger) {
+      this.logger.setContext(GlobalErrorsFilter.name)
+    }
   }
   catch(exception: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp()
