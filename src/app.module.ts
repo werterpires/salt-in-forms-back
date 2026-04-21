@@ -48,7 +48,18 @@ const knex = KnexModule.forRoot(
         user: process.env.SQL_USER,
         password: process.env.SQL_PASS,
         database: process.env.SQL_DB,
-        port: 3306,
+        port: process.env.SQL_PORT ? parseInt(process.env.SQL_PORT) : 3306,
+        ssl:
+          process.env.SQL_SSL_CA &&
+          process.env.SQL_SSL_CERT &&
+          process.env.SQL_SSL_KEY
+            ? {
+                ca: process.env.SQL_SSL_CA.replace(/\\n/g, '\n'),
+                cert: process.env.SQL_SSL_CERT.replace(/\\n/g, '\n'),
+                key: process.env.SQL_SSL_KEY.replace(/\\n/g, '\n'),
+                rejectUnauthorized: false
+              }
+            : false,
         typeCast: function (field, next) {
           if (field.type === 'TINY' && field.length === 1) {
             // retorna tipo booleano ou null

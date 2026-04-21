@@ -83,8 +83,6 @@ export class CandidatesService {
       throw new BadRequestException('#Processo seletivo não encontrado.')
     }
 
-    console.log(process)
-
     if (!process.processDataKey) {
       this.loggger.error(
         `Processo ${dto.processId} não possui processDataKey configurado`
@@ -790,8 +788,6 @@ export class CandidatesService {
 
     // Buscar termos ativos para candidatos
     const activeTerms = await this.candidatesRepo.findActiveTermsForCandidate()
-
-    console.log('activeTerms', activeTerms)
 
     if (activeTerms.length > 0) {
       const activeTermIds = activeTerms.map((term) => term.termId)
