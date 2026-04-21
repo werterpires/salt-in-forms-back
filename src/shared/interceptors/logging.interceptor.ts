@@ -2,7 +2,8 @@ import {
   Injectable,
   NestInterceptor,
   ExecutionContext,
-  CallHandler
+  CallHandler,
+  Optional
 } from '@nestjs/common'
 import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
@@ -18,8 +19,10 @@ interface AuthRequest extends Request {
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
-  constructor(private readonly logger: CustomLoggerService) {
-    this.logger.setContext('LoggingInterceptor')
+  constructor(@Optional() private readonly logger: CustomLoggerService) {
+    if (this.logger) {
+      this.logger.setContext('LoggingInterceptor')
+    }
   }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
