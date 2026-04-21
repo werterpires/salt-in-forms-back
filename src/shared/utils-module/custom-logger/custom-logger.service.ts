@@ -4,6 +4,8 @@ import { join, dirname } from 'path'
 
 @Injectable()
 export class CustomLoggerService extends ConsoleLogger {
+  private logsEnabled = true
+
   /**
    * Gera o caminho do arquivo de log para o mês atual.
    * Formato: YYYYMM-app.log (ex: 202512-app.log para dezembro de 2025)
@@ -20,9 +22,18 @@ export class CustomLoggerService extends ConsoleLogger {
   }
 
   private ensureLogDirectoryExists() {
-    const dir = dirname(this.getLogFilePath())
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true })
+    try {
+      const dir = dirname(this.getLogFilePath())
+      if (!existsSync(dir)) {
+        mkdirSync(dir, { recursive: true })
+      }
+    } catch (error) {
+      // Se falhar ao criar diretório, desabilita logs em arquivo
+      console.warn(
+        'Failed to create logs directory, file logging disabled:',
+        error
+      )
+      this.logsEnabled = false
     }
   }
 
@@ -30,13 +41,29 @@ export class CustomLoggerService extends ConsoleLogger {
     const timestamp = new Date().toISOString()
     const logMessage = `[${timestamp}] [${level}] ${context ? `{${context}}` : ''} ${message} ${trace ? `\nStacktrace: ${trace}` : ''}\n`
 
-    if (level === 'LOG') {
+    // Sempre loga no console
+    if (level === 'ERROR' || level === 'WARN') {
+      console.error(logMessage)
+    } else {
       console.log(logMessage)
-      return
     }
 
-    this.ensureLogDirectoryExists()
-    appendFileSync(this.getLogFilePath(), logMessage)
+    // Tenta gravar em arquivo se habilitado
+    if (this.logsEnabled && level !== 'LOG') {
+      try {
+        this.ensureLogDirectoryExists()
+        appendFileSync(this.getLogFilePath(), logMessage)
+      } catch (e) {
+        // Falha silenciosa em produção
+        const errorMessage = e instanceof Error ? e.message : String(e)
+        this.writeLog(
+          'LOG',
+          'Failed to write log to file, disabling file logging. Error: ' +
+            errorMessage
+        )
+        this.logsEnabled = false
+      }
+    }
   }
 
   override log(message: any, context?: string) {

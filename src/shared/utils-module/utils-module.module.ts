@@ -10,11 +10,11 @@ import { TwoFactorCacheService } from './two-factor-cache/two-factor-cache.servi
 const services = [
   CustomLoggerService,
   LogCleanupService,
-  EncryptionService,
   ExternalApiService,
+  TwoFactorCacheService,
+  EncryptionService,
   SendPulseService,
-  SendPulseEmailService,
-  TwoFactorCacheService
+  SendPulseEmailService
 ]
 @Global()
 @Module({
