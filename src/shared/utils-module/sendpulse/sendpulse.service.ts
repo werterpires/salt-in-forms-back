@@ -20,7 +20,18 @@ export class SendPulseService {
     private readonly logger: CustomLoggerService,
     private readonly externalApiService: ExternalApiService
   ) {
-    this.logger.setContext('SendPulseService')
+    console.log(
+      '[DIAGNOSTIC] SendPulseService: Starting constructor, logger is:',
+      logger ? 'defined' : 'UNDEFINED'
+    )
+    if (logger) {
+      this.logger.setContext('SendPulseService')
+      console.log(
+        '[DIAGNOSTIC] SendPulseService: Constructor completed successfully'
+      )
+    } else {
+      console.error('[DIAGNOSTIC] SendPulseService: Logger is UNDEFINED!')
+    }
 
     if (!process.env.SENDPULSE_BASE_URL) {
       throw new InternalServerErrorException(

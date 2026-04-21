@@ -27,7 +27,6 @@ import { AnswersModule } from './answers/answers.module'
 import { FormsCandidatesModule } from './forms-candidates/forms-candidates.module'
 import { FieldsModule } from './fields/fields.module'
 import { RatesModule } from './rates/rates.module'
-import { CustomLoggerService } from './shared/utils-module/custom-logger/custom-logger.service'
 
 config()
 
@@ -120,7 +119,6 @@ const knex = KnexModule.forRoot(
   ],
   controllers: [],
   providers: [
-    CustomLoggerService,
     CustomErrorHandlerService,
     { provide: APP_FILTER, useClass: GlobalErrorsFilter },
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
