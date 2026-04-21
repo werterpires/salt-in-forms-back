@@ -1,8 +1,8 @@
-import { ConsoleLogger, Injectable, Scope } from '@nestjs/common'
+import { ConsoleLogger, Injectable } from '@nestjs/common'
 import { appendFileSync, existsSync, mkdirSync } from 'fs'
 import { join, dirname } from 'path'
 
-@Injectable({ scope: Scope.TRANSIENT })
+@Injectable()
 export class CustomLoggerService extends ConsoleLogger {
   /**
    * Gera o caminho do arquivo de log para o mês atual.
