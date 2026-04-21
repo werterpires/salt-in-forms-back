@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common'
-import { CustomLoggerService } from './custom-logger/custom-logger.service'
+import { CustomLoggerModule } from './custom-logger/custom-logger.module'
 import { LogCleanupService } from './custom-logger/log-cleanup.service'
 import { EncryptionService } from './encryption/encryption.service'
 import { ExternalApiService } from './external-api/external-api.service'
@@ -8,7 +8,6 @@ import { SendPulseEmailService } from './email-sender/sendpulse-email.service'
 import { TwoFactorCacheService } from './two-factor-cache/two-factor-cache.service'
 
 const services = [
-  CustomLoggerService,
   LogCleanupService,
   ExternalApiService,
   TwoFactorCacheService,
@@ -18,6 +17,7 @@ const services = [
 ]
 @Global()
 @Module({
+  imports: [CustomLoggerModule],
   controllers: [],
   providers: services,
   exports: services

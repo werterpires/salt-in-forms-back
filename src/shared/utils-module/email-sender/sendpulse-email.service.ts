@@ -13,7 +13,18 @@ export class SendPulseEmailService implements EmailSender {
     private readonly sendPulseService: SendPulseService,
     private readonly logger: CustomLoggerService
   ) {
-    this.logger.setContext('SendPulseEmailService')
+    console.log(
+      '[DIAGNOSTIC] SendPulseEmailService: Starting constructor, logger is:',
+      logger ? 'defined' : 'UNDEFINED'
+    )
+    if (logger) {
+      this.logger.setContext('SendPulseEmailService')
+      console.log(
+        '[DIAGNOSTIC] SendPulseEmailService: Constructor completed successfully'
+      )
+    } else {
+      console.error('[DIAGNOSTIC] SendPulseEmailService: Logger is UNDEFINED!')
+    }
 
     if (!process.env.EMAIL_SENDER_NAME) {
       throw new InternalServerErrorException(
