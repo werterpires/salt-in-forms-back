@@ -22,4 +22,8 @@ const services = [
   providers: services,
   exports: services
 })
-export class UtilsModuleModule {}
+export class UtilsModuleModule {
+  constructor() {
+    console.log('[DIAGNOSTIC] UtilsModuleModule: Module initialized')
+  }
+}

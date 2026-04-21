@@ -16,7 +16,18 @@ export class TwoFactorCacheService {
   private readonly MAX_ATTEMPTS = 5
 
   constructor(private readonly logger: CustomLoggerService) {
-    this.logger.setContext('TwoFactorCacheService')
+    console.log(
+      '[DIAGNOSTIC] TwoFactorCacheService: Starting constructor, logger is:',
+      logger ? 'defined' : 'UNDEFINED'
+    )
+    if (logger) {
+      this.logger.setContext('TwoFactorCacheService')
+      console.log(
+        '[DIAGNOSTIC] TwoFactorCacheService: Constructor completed successfully'
+      )
+    } else {
+      console.error('[DIAGNOSTIC] TwoFactorCacheService: Logger is UNDEFINED!')
+    }
   }
 
   /**
