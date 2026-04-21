@@ -11,18 +11,39 @@ const corsOptions: CorsOptions = {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    bufferLogs: true,
-    cors: corsOptions
-  })
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true
+  console.log('[DIAGNOSTIC] main.ts: Starting bootstrap function')
+  try {
+    console.log('[DIAGNOSTIC] main.ts: Creating NestFactory...')
+    const app = await NestFactory.create(AppModule, {
+      bufferLogs: true,
+      cors: corsOptions
     })
-  )
-  app.useLogger(new CustomLoggerService())
-  await app.listen(process.env.PORT ?? 3000)
+    console.log('[DIAGNOSTIC] main.ts: NestFactory created successfully')
+
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true
+      })
+    )
+    console.log('[DIAGNOSTIC] main.ts: Global pipes configured')
+
+    console.log(
+      '[DIAGNOSTIC] main.ts: Creating CustomLoggerService instance...'
+    )
+    app.useLogger(new CustomLoggerService())
+    console.log('[DIAGNOSTIC] main.ts: Logger configured')
+
+    const port = process.env.PORT ?? 3000
+    await app.listen(port)
+    console.log(`[DIAGNOSTIC] main.ts: Application listening on port ${port}`)
+  } catch (error) {
+    console.error('[DIAGNOSTIC] main.ts: Bootstrap failed with error:', error)
+    throw error
+  }
 }
-bootstrap()
+bootstrap().catch((err) => {
+  console.error('[DIAGNOSTIC] main.ts: Fatal error during bootstrap:', err)
+  process.exit(1)
+})

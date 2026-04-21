@@ -6,6 +6,22 @@ import { join, dirname } from 'path'
 export class CustomLoggerService extends ConsoleLogger {
   private logsEnabled = true
 
+  constructor() {
+    console.log('[DIAGNOSTIC] CustomLoggerService: Starting constructor')
+    try {
+      super()
+      console.log(
+        '[DIAGNOSTIC] CustomLoggerService: Constructor completed successfully'
+      )
+    } catch (error) {
+      console.error(
+        '[DIAGNOSTIC] CustomLoggerService: Constructor failed:',
+        error
+      )
+      throw error
+    }
+  }
+
   /**
    * Gera o caminho do arquivo de log para o mês atual.
    * Formato: YYYYMM-app.log (ex: 202512-app.log para dezembro de 2025)

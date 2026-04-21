@@ -17,7 +17,18 @@ export interface ApiError {
 @Injectable()
 export class ExternalApiService {
   constructor(private readonly logger: CustomLoggerService) {
-    this.logger.setContext('ExternalApiService')
+    console.log(
+      '[DIAGNOSTIC] ExternalApiService: Starting constructor, logger is:',
+      logger ? 'defined' : 'UNDEFINED'
+    )
+    if (logger) {
+      this.logger.setContext('ExternalApiService')
+      console.log(
+        '[DIAGNOSTIC] ExternalApiService: Constructor completed successfully'
+      )
+    } else {
+      console.error('[DIAGNOSTIC] ExternalApiService: Logger is UNDEFINED!')
+    }
   }
 
   async request<T = any>(
@@ -82,12 +93,16 @@ export class ExternalApiService {
         throw error
       }
 
-      this.logger.error('Unexpected error during API request', error.stack)
+      const errorStack = error instanceof Error ? error.stack : undefined
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
+
+      this.logger.error('Unexpected error during API request', errorStack)
       throw new HttpException(
         {
           message: 'Failed to connect to external API',
           status: 0,
-          response: error.message
+          response: errorMessage
         } as ApiError,
         HttpStatus.BAD_GATEWAY
       )

@@ -29,7 +29,18 @@ export class LogCleanupService {
   private retentionYears = parseInt(process.env.LOG_RETENTION_YEARS || '3', 10)
 
   constructor(private readonly logger: CustomLoggerService) {
-    this.logger.setContext('LogCleanupService')
+    console.log(
+      '[DIAGNOSTIC] LogCleanupService: Starting constructor, logger is:',
+      logger ? 'defined' : 'UNDEFINED'
+    )
+    if (logger) {
+      this.logger.setContext('LogCleanupService')
+      console.log(
+        '[DIAGNOSTIC] LogCleanupService: Constructor completed successfully'
+      )
+    } else {
+      console.error('[DIAGNOSTIC] LogCleanupService: Logger is UNDEFINED!')
+    }
   }
 
   /**
@@ -104,9 +115,15 @@ export class LogCleanupService {
               `Arquivo de log removido: ${file} (${this.formatBytes(stats.size)})`
             )
           } catch (deleteError) {
+            const errorMessage =
+              deleteError instanceof Error
+                ? deleteError.message
+                : String(deleteError)
+            const errorStack =
+              deleteError instanceof Error ? deleteError.stack : undefined
             this.logger.error(
-              `Erro ao deletar arquivo ${file}: ${deleteError.message}`,
-              deleteError.stack
+              `Erro ao deletar arquivo ${file}: ${errorMessage}`,
+              errorStack
             )
           }
         } else {
@@ -120,9 +137,12 @@ export class LogCleanupService {
           `(${this.formatBytes(totalSizeRemoved)}), ${keptCount} arquivo(s) mantido(s)`
       )
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
+      const errorStack = error instanceof Error ? error.stack : undefined
       this.logger.error(
-        `Erro ao limpar logs antigos: ${error.message}`,
-        error.stack
+        `Erro ao limpar logs antigos: ${errorMessage}`,
+        errorStack
       )
     }
   }

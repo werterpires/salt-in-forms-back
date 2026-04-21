@@ -19,8 +19,19 @@ export class GlobalErrorsFilter implements ExceptionFilter {
     private readonly errorsService: CustomErrorHandlerService,
     @Optional() private readonly logger: CustomLoggerService
   ) {
+    console.log(
+      '[DIAGNOSTIC] GlobalErrorsFilter: Starting constructor, logger is:',
+      logger ? 'defined' : 'UNDEFINED'
+    )
     if (this.logger) {
       this.logger.setContext(GlobalErrorsFilter.name)
+      console.log(
+        '[DIAGNOSTIC] GlobalErrorsFilter: Constructor completed successfully'
+      )
+    } else {
+      console.log(
+        '[DIAGNOSTIC] GlobalErrorsFilter: Logger is optional and undefined'
+      )
     }
   }
   catch(exception: Error, host: ArgumentsHost) {

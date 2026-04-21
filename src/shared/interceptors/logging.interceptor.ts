@@ -20,8 +20,19 @@ interface AuthRequest extends Request {
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
   constructor(@Optional() private readonly logger: CustomLoggerService) {
+    console.log(
+      '[DIAGNOSTIC] LoggingInterceptor: Starting constructor, logger is:',
+      logger ? 'defined' : 'UNDEFINED'
+    )
     if (this.logger) {
       this.logger.setContext('LoggingInterceptor')
+      console.log(
+        '[DIAGNOSTIC] LoggingInterceptor: Constructor completed successfully'
+      )
+    } else {
+      console.log(
+        '[DIAGNOSTIC] LoggingInterceptor: Logger is optional and undefined'
+      )
     }
   }
 
