@@ -9,13 +9,21 @@ export async function up(knex: Knex): Promise<void> {
 
   if (!hasOldColumn) return
 
-  return knex.schema.alterTable(db.Tables.PROCESSES, (table) => {
-    table.renameColumn('process_totvs_id', db.Processes.PROCESS_DATA_KEY)
+  await knex.schema.alterTable(db.Tables.PROCESSES, (table) => {
+    table.dropIndex(['process_totvs_id'], 'processes_processtotvsid_unique')
+
+    table.dropColumn('process_totvs_id')
+
+    table.string(db.Processes.PROCESS_DATA_KEY, 255).notNullable().unique()
   })
 }
 
 export async function down(knex: Knex): Promise<void> {
-  return knex.schema.alterTable(db.Tables.PROCESSES, (table) => {
-    table.renameColumn(db.Processes.PROCESS_DATA_KEY, 'process_totvs_id')
+  await knex.schema.alterTable(db.Tables.PROCESSES, (table) => {
+    table.dropUnique([db.Processes.PROCESS_DATA_KEY])
+
+    table.dropColumn(db.Processes.PROCESS_DATA_KEY)
+
+    table.string('process_totvs_id', 255).notNullable().unique()
   })
 }
