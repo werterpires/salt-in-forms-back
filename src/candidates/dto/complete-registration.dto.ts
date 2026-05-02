@@ -9,12 +9,12 @@ import {
 import { Type } from 'class-transformer'
 
 enum MaritalStatus {
-  SOLTEIRO = 'solteiro',
+  SOLTEIRO = 'solteiro/a',
   NAMORANDO = 'namorando',
-  NOIVO = 'noivo',
-  CASADO = 'casado',
-  DIVORCIADO = 'divorciado',
-  VIUVO = 'viúvo'
+  NOIVO = 'noivo/a',
+  CASADO = 'casado/a',
+  DIVORCIADO = 'divorciado/a',
+  VIUVO = 'viúvo/a'
 }
 
 export class CompleteRegistrationDto {
@@ -83,8 +83,9 @@ export class CompleteRegistrationDto {
   candidateCountry: string
 
   @IsEnum(MaritalStatus, {
-    message:
-      '#Estado civil deve ser: solteiro, namorando, noivo, casado, divorciado ou viúvo'
+    message: `#Estado civil deve ser: ${Object.values(MaritalStatus)
+      .join(', ')
+      .replace(/, ([^,]*)$/, ' ou $1')}`
   })
   @IsNotEmpty({ message: '#Estado civil é obrigatório' })
   candidateMaritalStatus: MaritalStatus

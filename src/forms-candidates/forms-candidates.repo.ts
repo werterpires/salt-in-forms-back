@@ -326,7 +326,7 @@ export class FormsCandidatesRepo {
       .select(`${db.FormsCandidates.CANDIDATE_ID} as candidateId`)
       .select(
         this.knex.raw(
-          `JSON_ARRAYAGG(${db.FormsCandidates.FORM_CANDIDATE_ID}) as candidateFormCandidateIds`
+          `JSON_ARRAYAGG(\`${db.FormsCandidates.FORM_CANDIDATE_ID}\`) as candidateFormCandidateIds`
         )
       )
       .groupBy(db.FormsCandidates.CANDIDATE_ID)
@@ -393,7 +393,7 @@ export class FormsCandidatesRepo {
       .select(db.FormsCandidates.CANDIDATE_ID)
       .select(
         this.knex.raw(
-          `JSON_ARRAYAGG(${db.FormsCandidates.FORM_CANDIDATE_ID}) as candidateFormCandidateIds`
+          `JSON_ARRAYAGG(\`${db.FormsCandidates.FORM_CANDIDATE_ID}\`) as candidateFormCandidateIds`
         )
       )
       .groupBy(db.FormsCandidates.CANDIDATE_ID)
