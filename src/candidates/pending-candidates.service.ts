@@ -117,8 +117,9 @@ export class PendingCandidatesService {
 
     // Verificar se foi invalidado
     if (pending.invalidatedAt) {
+      const invalidatedDate = new Date(pending.invalidatedAt)
       this.logger.warn(
-        `Token foi invalidado em: ${pending.invalidatedAt.toISOString()}`
+        `Token foi invalidado em: ${invalidatedDate.toISOString()}`
       )
       throw new BadRequestException(
         '#Este token foi invalidado. Um novo email de confirmação pode ter sido enviado.'
@@ -127,18 +128,19 @@ export class PendingCandidatesService {
 
     // Verificar se já foi confirmado
     if (pending.confirmedAt) {
+      const confirmedDate = new Date(pending.confirmedAt)
       this.logger.warn(
-        `Token já foi confirmado em: ${pending.confirmedAt.toISOString()}`
+        `Token já foi confirmado em: ${confirmedDate.toISOString()}`
       )
-      throw new BadRequestException('#Este cadastro já foi confirmado')
+      // throw new BadRequestException('#Este cadastro já foi confirmado')
+      return pending
     }
 
     // Verificar se expirou
     const now = new Date()
-    if (now > pending.tokenExpiresAt) {
-      this.logger.warn(
-        `Token expirou em: ${pending.tokenExpiresAt.toISOString()}`
-      )
+    const expirationDate = new Date(pending.tokenExpiresAt)
+    if (now > expirationDate) {
+      this.logger.warn(`Token expirou em: ${expirationDate.toISOString()}`)
       throw new BadRequestException(
         '#Token de confirmação expirado. Por favor, cadastre-se novamente.'
       )

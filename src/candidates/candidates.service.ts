@@ -29,6 +29,9 @@ import { getRegistrationConfirmedTemplate } from './email-templates/registration
 
 @Injectable()
 export class CandidatesService {
+  private readonly confirmationEmailCooldownMs = 10 * 60 * 1000
+  private readonly confirmationEmailLastSentByToken = new Map<string, number>()
+
   constructor(
     private readonly candidatesRepo: CandidatesRepo,
     private readonly externalApiService: ExternalApiService,
@@ -40,6 +43,34 @@ export class CandidatesService {
     private readonly externalOrderValidationService: ExternalOrderValidationService,
     private readonly usersRepo: UsersRepo
   ) {}
+
+  private cleanupExpiredConfirmationEmailEntries(nowMs: number): void {
+    for (const [token, lastSentAtMs] of this.confirmationEmailLastSentByToken) {
+      if (nowMs - lastSentAtMs >= this.confirmationEmailCooldownMs) {
+        this.confirmationEmailLastSentByToken.delete(token)
+      }
+    }
+  }
+
+  private enforceConfirmationEmailCooldown(token: string): void {
+    const nowMs = Date.now()
+    this.cleanupExpiredConfirmationEmailEntries(nowMs)
+
+    const lastSentAtMs = this.confirmationEmailLastSentByToken.get(token)
+    if (!lastSentAtMs) {
+      return
+    }
+
+    const elapsedMs = nowMs - lastSentAtMs
+    if (elapsedMs < this.confirmationEmailCooldownMs) {
+      const remainingMs = this.confirmationEmailCooldownMs - elapsedMs
+      const remainingMinutes = Math.ceil(remainingMs / (60 * 1000))
+
+      throw new BadRequestException(
+        `#Aguarde ${remainingMinutes} minuto(s) antes de tentar se inscrever novamente com o mesmo código de pedido.`
+      )
+    }
+  }
 
   async selfRegisterCandidate(
     dto: SelfRegisterCandidateDto
@@ -151,8 +182,16 @@ export class CandidatesService {
         `Encontrado pending existente para orderCode ${dto.orderCode}`
       )
 
+      const existingPendingEmail = this.encryptionService.decrypt(
+        existingPending.candidateEmail
+      )
+      const normalizedExistingPendingEmail = existingPendingEmail
+        .trim()
+        .toLowerCase()
+      const normalizedIncomingEmail = dto.candidateEmail.trim().toLowerCase()
+
       // Se o email é diferente, criar novo pending (o service já invalida o anterior)
-      if (existingPending.candidateEmail !== encryptedEmail) {
+      if (normalizedExistingPendingEmail !== normalizedIncomingEmail) {
         this.loggger.log('Email diferente detectado, criando novo pending')
 
         const result =
@@ -613,59 +652,48 @@ export class CandidatesService {
     candidateEmail: string,
     confirmationToken: string
   ): Promise<void> {
-    try {
-      const frontendUrl = getFrontendUrl()
-      const confirmationLink = `${frontendUrl}/#/confirm-registration/${confirmationToken}`
+    this.enforceConfirmationEmailCooldown(confirmationToken)
 
-      // Obter tempo de expiração do .env (padrão: 60 minutos)
-      const expirationMinutes = Number(
-        process.env.CONFIRMATION_TOKEN_EXPIRATION || 60
-      )
+    const frontendUrl = getFrontendUrl()
+    const confirmationLink = `${frontendUrl}/#/confirm-registration/${confirmationToken}`
 
-      const html = getConfirmationEmailTemplate(
-        candidateName,
-        confirmationLink,
-        expirationMinutes
-      )
+    // Obter tempo de expiração do .env (padrão: 60 minutos)
+    const expirationMinutes = Number(
+      process.env.CONFIRMATION_TOKEN_EXPIRATION || 60
+    )
 
-      await this.sendPulseEmailService.sendEmail(
-        candidateEmail,
-        candidateName,
-        html
-      )
+    const html = getConfirmationEmailTemplate(
+      candidateName,
+      confirmationLink,
+      expirationMinutes
+    )
 
-      this.loggger.log(`Email de confirmação enviado para ${candidateEmail}`)
-    } catch (error) {
-      this.loggger.error(
-        `Erro ao enviar email de confirmação para ${candidateEmail}:`,
-        error.stack
-      )
-    }
+    await this.sendPulseEmailService.sendEmail(
+      candidateEmail,
+      candidateName,
+      html
+    )
+
+    this.confirmationEmailLastSentByToken.set(confirmationToken, Date.now())
+
+    this.loggger.log(`Email de confirmação enviado para ${candidateEmail}`)
   }
 
   private async sendRegistrationConfirmedEmail(
     candidateName: string,
     candidateEmail: string
   ): Promise<void> {
-    try {
-      const html = getRegistrationConfirmedTemplate(candidateName)
+    const html = getRegistrationConfirmedTemplate(candidateName)
 
-      await this.sendPulseEmailService.sendEmail(
-        candidateEmail,
-        candidateName,
-        html
-      )
+    await this.sendPulseEmailService.sendEmail(
+      candidateEmail,
+      candidateName,
+      html
+    )
 
-      this.loggger.log(
-        `Email de cadastro confirmado enviado para ${candidateEmail}`
-      )
-    } catch (error) {
-      this.loggger.error(
-        `Erro ao enviar email de cadastro confirmado para ${candidateEmail}:`,
-        error.stack
-      )
-      // Não lança erro aqui para não falhar a confirmação se o email falhar
-    }
+    this.loggger.log(
+      `Email de cadastro confirmado enviado para ${candidateEmail}`
+    )
   }
 
   @Cron('0 */6 * * *')
@@ -678,9 +706,10 @@ export class CandidatesService {
       await this.pendingCandidatesService.cleanupExpiredPendings()
       this.loggger.info('\n=== Limpeza de pendings concluída com sucesso ===')
     } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error))
       this.loggger.error(
         'Erro ao executar limpeza de candidatos pendentes:',
-        error.stack
+        err.stack
       )
     }
   }

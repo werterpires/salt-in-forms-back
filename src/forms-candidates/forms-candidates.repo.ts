@@ -166,11 +166,13 @@ export class FormsCandidatesRepo {
   async findProcessesInAnswerPeriod(): Promise<ProcessInAnswerPeriod[]> {
     const today = new Date()
 
-    return this.knex(db.Tables.PROCESSES)
+    const processesInAnswerPeriod = await this.knex(db.Tables.PROCESSES)
       .select(db.Processes.PROCESS_ID, db.Processes.PROCESS_TITLE)
       .where(db.Processes.PROCESS_BEGIN_DATE, '<=', today)
       .where(db.Processes.PROCESS_END_ANSWERS, '>=', today)
       .orderBy(db.Processes.PROCESS_TITLE, 'asc')
+    console.log('processesInAnswerPeriod', processesInAnswerPeriod)
+    return processesInAnswerPeriod
   }
 
   /**
@@ -184,7 +186,7 @@ export class FormsCandidatesRepo {
         db.SForms.EMAIL_QUESTION_ID
       )
       .where(db.SForms.PROCESS_ID, processId)
-      .orderBy(db.SForms.S_FORM_NAME, 'asc')
+      .orderBy(db.SForms.S_FORM_TYPE, 'asc')
   }
 
   /**
@@ -311,7 +313,7 @@ export class FormsCandidatesRepo {
   /**
    * Busca formCandidates ministeriais com status GENERATED
    * Retorna contexto completo incluindo todos os formCandidateIds do candidato
-   * Query otimizada com subquery para agregar formCandidateIds
+   * Usa 2 queries separadas para evitar knex.raw() e complexidade de subqueries
    *
    * @param sFormId - ID do formulário ministerial
    * @param emailQuestionId - ID da questão que contém o email/field
@@ -321,64 +323,59 @@ export class FormsCandidatesRepo {
     sFormId: number,
     emailQuestionId: number
   ): Promise<MinisterialFormCandidateContext[]> {
-    // Subquery para buscar todos os formCandidateIds do mesmo candidato
-    const subquery = this.knex(db.Tables.FORMS_CANDIDATES)
-      .select(`${db.FormsCandidates.CANDIDATE_ID} as candidateId`)
-      .select(
-        this.knex.raw(
-          `JSON_ARRAYAGG(${db.FormsCandidates.FORM_CANDIDATE_ID}) as candidateFormCandidateIds`
-        )
-      )
-      .groupBy(db.FormsCandidates.CANDIDATE_ID)
-      .as('fc_grouped')
-
-    const results = await this.knex(db.Tables.FORMS_CANDIDATES)
+    // Query 1: Buscar formCandidates do formulário ministerial
+    const formCandidates = await this.knex(db.Tables.FORMS_CANDIDATES)
       .select(
         `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ID} as formCandidateId`,
         `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID} as candidateId`,
         `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID} as sFormId`,
         `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ACCESS_CODE} as formCandidateAccessCode`,
-        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_NAME} as candidateName`,
-        this.knex.raw(`? as emailQuestionId`, [emailQuestionId]),
-        this.knex.raw(
-          `fc_grouped.candidateFormCandidateIds as candidateFormCandidateIds`
-        )
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_NAME} as candidateName`
       )
       .innerJoin(
         db.Tables.CANDIDATES,
         `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_ID}`,
         `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID}`
       )
-      .innerJoin(subquery, function () {
-        this.on(
-          `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID}`,
-          '=',
-          'fc_grouped.candidateId'
-        )
-      })
-      .where(
-        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID}`,
-        sFormId
-      )
-      .where(
-        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_STATUS}`,
-        1 // FormCandidateStatus.GENERATED
-      )
+      .where(db.FormsCandidates.S_FORM_ID, sFormId)
+      .where(db.FormsCandidates.FORM_CANDIDATE_STATUS, 1)
 
-    // Parse JSON arrays to actual arrays
-    return results.map((row) => ({
-      ...row,
+    if (formCandidates.length === 0) return []
+
+    // Query 2: Buscar todos os formCandidateIds por candidato (em batch)
+    const candidateIds = [
+      ...new Set(formCandidates.map((fc) => fc.candidateId))
+    ]
+
+    const allFormCandidates = await this.knex(db.Tables.FORMS_CANDIDATES)
+      .select(
+        db.FormsCandidates.CANDIDATE_ID,
+        db.FormsCandidates.FORM_CANDIDATE_ID
+      )
+      .whereIn(db.FormsCandidates.CANDIDATE_ID, candidateIds)
+
+    // Agrupar em memória
+    const candidateFormCandidatesMap = new Map<number, number[]>()
+
+    for (const fc of allFormCandidates) {
+      const existing = candidateFormCandidatesMap.get(fc.candidateId) || []
+      existing.push(fc.formCandidateId)
+      candidateFormCandidatesMap.set(fc.candidateId, existing)
+    }
+
+    // Combinar resultados
+    return formCandidates.map((fc) => ({
+      ...fc,
+      emailQuestionId,
       candidateFormCandidateIds:
-        typeof row.candidateFormCandidateIds === 'string'
-          ? JSON.parse(row.candidateFormCandidateIds)
-          : row.candidateFormCandidateIds
+        candidateFormCandidatesMap.get(fc.candidateId) || []
     }))
   }
 
   /**
    * Busca formCandidates do tipo "normal" com status GENERATED
    * Retorna contexto completo incluindo todos os formCandidateIds do candidato
-   * Similar ao método ministerial, mas para formulários normais
+   * Usa 2 queries separadas para evitar knex.raw() e complexidade de subqueries
    *
    * @param sFormId - ID do formulário normal
    * @param emailQuestionId - ID da questão que contém o email
@@ -388,57 +385,52 @@ export class FormsCandidatesRepo {
     sFormId: number,
     emailQuestionId: number
   ): Promise<NormalFormCandidateContext[]> {
-    // Subquery para buscar todos os formCandidateIds do mesmo candidato
-    const subquery = this.knex(db.Tables.FORMS_CANDIDATES)
-      .select(db.FormsCandidates.CANDIDATE_ID)
-      .select(
-        this.knex.raw(
-          `JSON_ARRAYAGG(${db.FormsCandidates.FORM_CANDIDATE_ID}) as candidateFormCandidateIds`
-        )
-      )
-      .groupBy(db.FormsCandidates.CANDIDATE_ID)
-      .as('fc_grouped')
-
-    const results = await this.knex(db.Tables.FORMS_CANDIDATES)
+    // Query 1: Buscar formCandidates do formulário normal
+    const formCandidates = await this.knex(db.Tables.FORMS_CANDIDATES)
       .select(
         `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ID} as formCandidateId`,
         `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID} as candidateId`,
         `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID} as sFormId`,
         `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ACCESS_CODE} as formCandidateAccessCode`,
-        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_NAME} as candidateName`,
-        this.knex.raw(`? as emailQuestionId`, [emailQuestionId]),
-        this.knex.raw(
-          `fc_grouped.candidateFormCandidateIds as candidateFormCandidateIds`
-        )
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_NAME} as candidateName`
       )
       .innerJoin(
         db.Tables.CANDIDATES,
         `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_ID}`,
         `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID}`
       )
-      .innerJoin(subquery, function () {
-        this.on(
-          `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID}`,
-          '=',
-          'fc_grouped.candidateId'
-        )
-      })
-      .where(
-        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID}`,
-        sFormId
-      )
-      .where(
-        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_STATUS}`,
-        1 // FormCandidateStatus.GENERATED
-      )
+      .where(db.FormsCandidates.S_FORM_ID, sFormId)
+      .where(db.FormsCandidates.FORM_CANDIDATE_STATUS, 1)
 
-    // Parse JSON arrays to actual arrays
-    return results.map((row) => ({
-      ...row,
+    if (formCandidates.length === 0) return []
+
+    // Query 2: Buscar todos os formCandidateIds por candidato (em batch)
+    const candidateIds = [
+      ...new Set(formCandidates.map((fc) => fc.candidateId))
+    ]
+
+    const allFormCandidates = await this.knex(db.Tables.FORMS_CANDIDATES)
+      .select(
+        db.FormsCandidates.CANDIDATE_ID,
+        db.FormsCandidates.FORM_CANDIDATE_ID
+      )
+      .whereIn(db.FormsCandidates.CANDIDATE_ID, candidateIds)
+
+    // Agrupar em memória
+    const candidateFormCandidatesMap = new Map<number, number[]>()
+
+    for (const fc of allFormCandidates) {
+      const existing = candidateFormCandidatesMap.get(fc.candidateId) || []
+      existing.push(fc.formCandidateId)
+      candidateFormCandidatesMap.set(fc.candidateId, existing)
+    }
+
+    // Combinar resultados
+    return formCandidates.map((fc) => ({
+      ...fc,
+      emailQuestionId,
       candidateFormCandidateIds:
-        typeof row.candidateFormCandidateIds === 'string'
-          ? JSON.parse(row.candidateFormCandidateIds)
-          : row.candidateFormCandidateIds
+        candidateFormCandidatesMap.get(fc.candidateId) || []
     }))
   }
 }
