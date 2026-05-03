@@ -91,50 +91,7 @@ export class FormsCandidatesCronService implements OnModuleInit {
     )
 
     for (const process of processes) {
-      // Buscar formulários do processo
-      const sForms: SFormBasic[] =
-        await this.formsCandidatesRepo.findSFormsByProcessId(process.processId)
-
-      // Buscar candidatos que não estão na tabela FormsCandidates
-      const candidatesNotInFormsCandidates: number[] =
-        await this.formsCandidatesRepo.findCandidatesNotInFormsCandidatesByProcessId(
-          process.processId
-        )
-
-      if (candidatesNotInFormsCandidates.length > 0 && sForms.length > 0) {
-        const formsCandidatesData: CreateFormCandidate[] = []
-
-        // Gerar códigos de acesso para cada combinação candidato-formulário
-        for (const candidateId of candidatesNotInFormsCandidates) {
-          for (const sForm of sForms) {
-            formsCandidatesData.push({
-              candidateId: candidateId,
-              sFormId: sForm.sFormId,
-              formCandidateStatus: FormCandidateStatus.GENERATED,
-              formCandidateAccessCode: createAccessCode()
-            })
-          }
-        }
-
-        // Inserir FormsCandidates em batch e obter IDs gerados
-        const insertedIds: number[] =
-          await this.formsCandidatesRepo.insertFormsCandidatesInBatch(
-            formsCandidatesData
-          )
-
-        this.logger.info(
-          `\n=== ${formsCandidatesData.length} códigos de acesso gerados ===`
-        )
-
-        // Enviar emails apenas para formulários do tipo "candidate"
-        await this.sendEmailsForCandidateForms(insertedIds)
-      }
-
-      // Processar formulários ministeriais do processo
-      await this.handleMinisterialForms(sForms)
-
-      // Processar formulários normais do processo
-      await this.handleNormalForms(sForms)
+      await this.handleFormsOfOneProcess(process)
     }
 
     const endTime = new Date()
@@ -143,6 +100,59 @@ export class FormsCandidatesCronService implements OnModuleInit {
     this.logger.info(
       `\n=== Finalizando cron: Processamento concluído em ${duration}s ===`
     )
+  }
+
+  async handleFormsOfOneProcess(process: ProcessInAnswerPeriod) {
+    // Buscar formulários do processo
+    const sForms: SFormBasic[] =
+      await this.formsCandidatesRepo.findSFormsByProcessId(process.processId)
+
+    console.log('sForms', sForms)
+
+    // Buscar candidatos que não estão na tabela FormsCandidates
+    const candidatesNotInFormsCandidates: number[] =
+      await this.formsCandidatesRepo.findCandidatesNotInFormsCandidatesByProcessId(
+        process.processId
+      )
+    console.log(
+      'candidatesNotInFormsCandidates',
+      candidatesNotInFormsCandidates
+    )
+
+    if (candidatesNotInFormsCandidates.length > 0 && sForms.length > 0) {
+      const formsCandidatesData: CreateFormCandidate[] = []
+
+      // Gerar códigos de acesso para cada combinação candidato-formulário
+      for (const candidateId of candidatesNotInFormsCandidates) {
+        for (const sForm of sForms) {
+          formsCandidatesData.push({
+            candidateId: candidateId,
+            sFormId: sForm.sFormId,
+            formCandidateStatus: FormCandidateStatus.GENERATED,
+            formCandidateAccessCode: createAccessCode()
+          })
+        }
+      }
+
+      // Inserir FormsCandidates em batch e obter IDs gerados
+      const insertedIds: number[] =
+        await this.formsCandidatesRepo.insertFormsCandidatesInBatch(
+          formsCandidatesData
+        )
+
+      this.logger.info(
+        `\n=== ${formsCandidatesData.length} códigos de acesso gerados ===`
+      )
+
+      // Enviar emails apenas para formulários do tipo "candidate"
+      await this.sendEmailsForCandidateForms(insertedIds)
+    }
+
+    // Processar formulários ministeriais do processo
+    await this.handleMinisterialForms(sForms)
+
+    // Processar formulários normais do processo
+    await this.handleNormalForms(sForms)
   }
 
   /**

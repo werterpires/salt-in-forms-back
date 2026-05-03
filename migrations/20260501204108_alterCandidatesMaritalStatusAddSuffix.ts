@@ -5,7 +5,7 @@ export async function up(knex: Knex): Promise<void> {
   await knex.raw(`
     ALTER TABLE candidates 
     MODIFY COLUMN candidate_marital_status 
-    ENUM('solteiro/a', 'namorando', 'noivo/a', 'casado/a', 'divorciado/a', 'viúvo/a')kn
+    ENUM('solteiro/a', 'namorando', 'noivo/a', 'casado/a', 'divorciado/a', 'viúvo/a')
   `)
 }
 
