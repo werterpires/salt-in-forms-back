@@ -221,7 +221,12 @@ export class FormsCandidatesCronService implements OnModuleInit {
         `Email de primeiro acesso enviado para ${recipientName} (${recipientEmail})`
       )
     } catch (error) {
-      this.logger.error(`Erro ao enviar email de primeiro acesso:`, error.stack)
+      if (error instanceof Error) {
+        this.logger.error(
+          `Erro ao enviar email de primeiro acesso para ${candidateEmail}: ${error.message}`,
+          error.stack
+        )
+      }
     }
   }
 
@@ -269,10 +274,12 @@ export class FormsCandidatesCronService implements OnModuleInit {
           await this.processMinisterialFormCandidate(ministerialFC, frontendUrl)
         }
       } catch (error) {
-        this.logger.error(
-          `Erro ao processar formulário ministerial ${sForm.sFormId}:`,
-          error.stack
-        )
+        if (error instanceof Error) {
+          this.logger.error(
+            `Erro ao processar formulário ministerial ${sForm.sFormId}: ${error.message}`,
+            error.stack
+          )
+        }
       }
     }
   }
@@ -410,10 +417,12 @@ export class FormsCandidatesCronService implements OnModuleInit {
         `Email ministerial enviado com sucesso para ${ministerial.ministerialName} (${ministerialEmail})`
       )
     } catch (error) {
-      this.logger.error(
-        `Erro ao processar formCandidate ministerial ${ministerialFC.formCandidateId}:`,
-        error.stack
-      )
+      if (error instanceof Error) {
+        this.logger.error(
+          `Erro ao processar formCandidate ministerial ${ministerialFC.formCandidateId}: ${error.message}`,
+          error.stack
+        )
+      }
     }
   }
 
@@ -459,10 +468,12 @@ export class FormsCandidatesCronService implements OnModuleInit {
           await this.processNormalFormCandidate(normalFC, frontendUrl)
         }
       } catch (error) {
-        this.logger.error(
-          `Erro ao processar formulário normal ${sForm.sFormId}:`,
-          error.stack
-        )
+        if (error instanceof Error) {
+          this.logger.error(
+            `Erro ao processar formulário normal ${sForm.sFormId}: ${error.message}`,
+            error.stack
+          )
+        }
       }
     }
   }
@@ -584,10 +595,12 @@ export class FormsCandidatesCronService implements OnModuleInit {
         `Email de formulário normal enviado com sucesso para ${recipientEmail}`
       )
     } catch (error) {
-      this.logger.error(
-        `Erro ao processar formCandidate normal ${normalFC.formCandidateId}:`,
-        error.stack
-      )
+      if (error instanceof Error) {
+        this.logger.error(
+          `Erro ao processar formCandidate normal ${normalFC.formCandidateId}: ${error.message}`,
+          error.stack
+        )
+      }
     }
   }
 }

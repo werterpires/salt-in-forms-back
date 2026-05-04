@@ -61,6 +61,7 @@ const knex = KnexModule.forRoot(
         database: process.env.SQL_DB,
         port: process.env.SQL_PORT ? parseInt(process.env.SQL_PORT) : 3306,
         ssl,
+        timezone: 'Z',
         typeCast: function (field, next) {
           if (field.type === 'TINY' && field.length === 1) {
             // retorna tipo booleano ou null
@@ -78,9 +79,9 @@ const knex = KnexModule.forRoot(
             }
           } else if (field.type === 'DATE' && field.length > 1) {
             return field.string() // 1 = true, 0 = false
-          } else if (field.type === 'DATETIME' && field.length > 1) {
-            const value = field.string()
-            return value ? value.substring(0, 10) : null
+            // } else if (field.type === 'DATETIME' && field.length > 1) {
+            //   const value = field.string()
+            //   return value ? value.substring(0, 10) : null
           }
           return next()
         }

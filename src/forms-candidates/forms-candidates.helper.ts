@@ -55,7 +55,7 @@ export function generateFormAccessLink(
   frontendUrl: string,
   accessCode: string
 ): string {
-  return `${frontendUrl}/${accessCode}`
+  return `${frontendUrl}/#/${accessCode}`
 }
 
 /**

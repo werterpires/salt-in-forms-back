@@ -27,7 +27,8 @@ const config: { [key: string]: Knex.Config } = {
       password: process.env.SQL_PASS,
       database: process.env.SQL_DB,
       port: process.env.SQL_PORT ? parseInt(process.env.SQL_PORT) : 3306,
-      ssl
+      ssl,
+      timezone: 'Z'
     },
     wrapIdentifier: (value, origImpl) => origImpl(toSnakeCase(value)),
     postProcessResponse: (result) => {
