@@ -50,7 +50,10 @@ export class FormsCandidatesService {
     const createdAt = extractDateFromFixed(
       formCandidate.formCandidateAccessCode
     )
+
+    console.log('createdAt', createdAt)
     const now = new Date()
+    console.log('now', now)
     const hoursDifference = getHoursDifference(createdAt, now)
 
     if (Number.isNaN(hoursDifference) || hoursDifference > 24) {
