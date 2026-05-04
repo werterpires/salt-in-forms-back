@@ -150,7 +150,6 @@ export class ExternalOrderValidationService {
           Authorization: `Bearer ${token}`
         }
       )
-      console.log('Resposta da API externa:', JSON.stringify(response.data))
       // Verificar se encontrou o pedido
       if (!response.data.entities || response.data.entities.length === 0) {
         this.logger.warn(

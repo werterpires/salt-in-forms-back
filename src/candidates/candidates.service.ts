@@ -125,7 +125,6 @@ export class CandidatesService {
 
     // c2) Validar período de inscrição
     const now = new Date()
-    console.log('data atual', now)
     const processBeginDate = new Date(process.processBeginDate)
     const processEndSubscription = new Date(process.processEndSubscription)
 
@@ -614,8 +613,7 @@ export class CandidatesService {
 
     // Verificar se token expirou
     const now = new Date()
-    console.log('nowwww', now)
-    console.log('expired', pendingCandidate.tokenExpiresAt)
+
     if (now > pendingCandidate.tokenExpiresAt) {
       this.loggger.warn(
         `Token do pending ${pendingCandidate.pendingCandidateId} expirou em ${pendingCandidate.tokenExpiresAt.toISOString()}`

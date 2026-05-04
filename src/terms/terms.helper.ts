@@ -31,8 +31,6 @@ export function getUpdateCase(
     new Date(updateTermDto.beginDate).getTime() !==
     new Date(term.beginDate).getTime()
 
-  console.log({ diferentText, diferentType, diferentRole, diferentBeginDate })
-
   if (diferentType || diferentRole) {
     return UpdateCases.TEXT_BEGIN_DATE_TYPE
   } else if (diferentText && diferentBeginDate) {
