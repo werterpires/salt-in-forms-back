@@ -110,8 +110,6 @@ export class PendingCandidatesService {
 
     const pending = await this.pendingCandidatesRepo.findPendingByToken(token)
 
-    console.log('pending encontrado', pending)
-
     if (!pending) {
       this.logger.warn('Token não encontrado')
       throw new BadRequestException('#Token de confirmação inválido')
@@ -141,8 +139,7 @@ export class PendingCandidatesService {
     // Verificar se expirou
     const now = new Date()
     const expirationDate = new Date(pending.tokenExpiresAt)
-    console.log('now', now)
-    console.log('expired', expirationDate)
+
     if (now > expirationDate) {
       this.logger.warn(`Token expirou em: ${expirationDate.toISOString()}`)
       throw new BadRequestException(

@@ -215,7 +215,7 @@ export class AnswersService {
           const newAnswer: CreateAnswer = {
             questionId: depResult.questionId,
             formCandidateId: formCandidateId,
-            answerValue: '',
+            answerValue: null,
             validAnswer: depResult.validAnswer
           }
           await this.answersRepo.insertAnswerInTransaction(newAnswer, trx)
