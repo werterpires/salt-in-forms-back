@@ -760,7 +760,7 @@ export const isAlpha: ValidationSpcification = {
     if (typeof value !== 'string')
       return { isValid: false, errorMessage: 'O valor deve ser uma string' }
     value = value.trim()
-    const alphaRegex = /^[a-zA-Z]+$/
+    const alphaRegex = /^[\p{L}]+$/u
     return alphaRegex.test(value)
       ? { isValid: true, errorMessage: '' }
       : { isValid: false, errorMessage: 'Apenas letras são permitidas' }
@@ -855,7 +855,7 @@ export const isAlphaSpace: ValidationSpcification = {
     if (typeof value !== 'string')
       return { isValid: false, errorMessage: 'O valor deve ser uma string' }
     value = value.trim()
-    const alphaSpaceRegex = /^[a-zA-Z\s]+$/
+    const alphaSpaceRegex = /^[\p{L}\s]+$/u
     return alphaSpaceRegex.test(value)
       ? { isValid: true, errorMessage: '' }
       : {
@@ -890,7 +890,7 @@ export const isAlphaNumeric: ValidationSpcification = {
     if (typeof value !== 'string')
       return { isValid: false, errorMessage: 'O valor deve ser uma string' }
     value = value.trim()
-    const alphaNumericRegex = /^[a-zA-Z0-9]+$/
+    const alphaNumericRegex = /^[\p{L}\p{N}]+$/u
     return alphaNumericRegex.test(value)
       ? { isValid: true, errorMessage: '' }
       : {
