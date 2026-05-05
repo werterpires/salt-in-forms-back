@@ -189,10 +189,19 @@ export class CandidatesService {
         .trim()
         .toLowerCase()
       const normalizedIncomingEmail = dto.candidateEmail.trim().toLowerCase()
+      const existingTokenExpired =
+        new Date() > new Date(existingPending.tokenExpiresAt)
 
       // Se o email é diferente, criar novo pending (o service já invalida o anterior)
-      if (normalizedExistingPendingEmail !== normalizedIncomingEmail) {
-        this.loggger.log('Email diferente detectado, criando novo pending')
+      if (
+        normalizedExistingPendingEmail !== normalizedIncomingEmail ||
+        existingTokenExpired
+      ) {
+        if (normalizedExistingPendingEmail !== normalizedIncomingEmail) {
+          this.loggger.log('Email diferente detectado, criando novo pending')
+        } else {
+          this.loggger.log('Token expirado detectado, criando novo pending')
+        }
 
         const result =
           await this.pendingCandidatesService.createOrUpdatePendingCandidate(
