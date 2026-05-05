@@ -351,15 +351,20 @@ export class FormsCandidatesCronService implements OnModuleInit {
         return
       }
 
-      // PASSO 3: Buscar ministerial pelo fieldName
-      const fieldName = answer.answerValue.trim()
+      // PASSO 3: Descriptografar o fieldName antes de buscar ministerial
+      const decryptedFieldName = this.encryptionService.decrypt(
+        answer.answerValue.trim()
+      )
+
       const ministerial =
-        await this.ministerialsRepo.findActiveMinisterialByFieldName(fieldName)
+        await this.ministerialsRepo.findActiveMinisterialByFieldName(
+          decryptedFieldName
+        )
 
       // Validação 4: Se não encontrar ministerial ou não tiver nome/email, passa para o próximo
       if (!ministerial) {
         this.logger.warn(
-          `Nenhum ministerial ativo encontrado para o campo "${fieldName}"`
+          `Nenhum ministerial ativo encontrado para o campo "${decryptedFieldName}"`
         )
         return
       }
@@ -529,16 +534,21 @@ export class FormsCandidatesCronService implements OnModuleInit {
         return
       }
 
+      // PASSO 2: Descriptografar o email antes de validar
+      const decryptedEmail = this.encryptionService.decrypt(
+        answer.answerValue.trim()
+      )
+
       // Validação 4: Validar formato de email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(answer.answerValue.trim())) {
+      if (!emailRegex.test(decryptedEmail)) {
         this.logger.warn(
-          `Email inválido na resposta: "${answer.answerValue}", formCandidate ${normalFC.formCandidateId}`
+          `Email inválido na resposta: "${decryptedEmail}", formCandidate ${normalFC.formCandidateId}`
         )
         return
       }
 
-      // PASSO 2: Verificar se o formCandidate que contém a resposta está >= SUBMITTED
+      // PASSO 3: Verificar se o formCandidate que contém a resposta está >= SUBMITTED
       const referencedFormCandidateStatus =
         await this.formsCandidatesRepo.findFormCandidateWithProcessDetails(
           answer.formCandidateId
@@ -554,8 +564,8 @@ export class FormsCandidatesCronService implements OnModuleInit {
         return
       }
 
-      // PASSO 3: O email já está no answerValue
-      const recipientEmail = answer.answerValue.trim()
+      // PASSO 4: O email já está descriptografado
+      const recipientEmail = decryptedEmail
 
       // PASSO 4: Gerar novo código de acesso
       const newAccessCode = createAccessCode()
