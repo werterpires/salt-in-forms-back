@@ -21,7 +21,7 @@ export class AnswersHelper {
     5
   ]
   private static readonly SINGLE_CHOICE_VALID_VALIDATIONS_TYPES: number[] = [5]
-  private static readonly LIKERT_SCALE_VALID_VALIDATIONS_TYPES: number[] = []
+  private static readonly LIKERT_SCALE_VALID_VALIDATIONS_TYPES: number[] = [5]
   private static readonly SINGLE_CHOICE_MATRIX_VALID_VALIDATIONS_TYPES: number[] =
     [5]
   private static readonly MULTIPLE_CHOICE_MATRIX_VALID_VALIDATIONS_TYPES: number[] =

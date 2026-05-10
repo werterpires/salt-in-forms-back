@@ -11,8 +11,7 @@ import {
   extractDateFromFixed,
   getHoursDifference,
   createAccessCode,
-  prepareCandidateEmailData,
-  getFrontendUrl
+  prepareCandidateEmailData
 } from '../candidates/candidates.helper'
 import { getResendAccessCodeEmailTemplate } from '../candidates/email-templates/resend-access-code.template'
 import { FormCandidateStatus } from '../constants/form-candidate-status.const'
@@ -82,8 +81,6 @@ export class FormsCandidatesService {
     sFormId: number,
     accessCode: string
   ): Promise<void> {
-    const frontendUrl = getFrontendUrl()
-
     const formData =
       await this.formsCandidatesRepo.findCandidateAndFormDataForResend(
         candidateId,
@@ -104,7 +101,6 @@ export class FormsCandidatesService {
         candidateName,
         candidateEmail,
         accessCode,
-        frontendUrl,
         this.encryptionService,
         getResendAccessCodeEmailTemplate
       )

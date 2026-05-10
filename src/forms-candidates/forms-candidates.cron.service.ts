@@ -341,9 +341,6 @@ export class FormsCandidatesCronService implements OnModuleInit {
     )
 
     if (!answer) {
-      this.logger.info(
-        `Nenhuma resposta encontrada para emailQuestionId ${emailQuestionId}`
-      )
       return
     }
 
@@ -415,9 +412,6 @@ export class FormsCandidatesCronService implements OnModuleInit {
     )
 
     if (!answer) {
-      this.logger.info(
-        `Nenhuma resposta encontrada para emailQuestionId ${emailQuestionId}`
-      )
       return
     }
 

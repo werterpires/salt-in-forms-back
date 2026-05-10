@@ -665,7 +665,7 @@ export class CandidatesService {
     this.enforceConfirmationEmailCooldown(confirmationToken)
 
     const frontendUrl = getFrontendUrl()
-    const confirmationLink = `${frontendUrl}/#/confirm-registration/${confirmationToken}`
+    const confirmationLink = `${frontendUrl}confirm-registration/${confirmationToken}`
 
     // Obter tempo de expiração do .env (padrão: 60 minutos)
     const expirationMinutes = Number(

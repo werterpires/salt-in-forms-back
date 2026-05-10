@@ -163,7 +163,7 @@ export function generateFormAccessLink(
   frontendUrl: string,
   accessCode: string
 ): string {
-  return `${frontendUrl}/${accessCode}`
+  return `${frontendUrl}${accessCode}`
 }
 
 /**
@@ -241,7 +241,6 @@ export function prepareCandidateEmailData(
   candidateName: string,
   candidateEmail: string,
   accessCode: string,
-  frontendUrl: string,
   encryptionService: { decrypt: (value: string) => string },
   emailTemplate: (name: string, link: string, code: string) => string
 ): { recipientName: string; recipientEmail: string; html: string } {
@@ -250,6 +249,7 @@ export function prepareCandidateEmailData(
     candidateEmail,
     encryptionService
   )
+  const frontendUrl = getFrontendUrl()
   const accessLink = generateFormAccessLink(frontendUrl, accessCode)
   const html = emailTemplate(name, accessLink, accessCode)
 

@@ -154,7 +154,7 @@ export class UsersService {
   private buildInviteLink(inviteCode: string): string {
     const base = this.getFrontendAdmUrl()
     const baseNormalized = base.endsWith('/') ? base.slice(0, -1) : base
-    return `${baseNormalized}/#/logon/${inviteCode}`
+    return `${baseNormalized}/logon/${inviteCode}`
   }
 
   private formatRolesPtBr(roleIds: number[]): string {
