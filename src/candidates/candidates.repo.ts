@@ -13,6 +13,8 @@ import { ERoles } from '../constants/roles.const'
 import { Term } from 'src/terms/types'
 import { Answer } from 'src/answers/types'
 import { Paginator } from '../shared/types/types'
+import { FormCandidateStatus } from 'src/constants/form-candidate-status.const'
+import { randomBytes } from 'crypto'
 
 @Injectable()
 export class CandidatesRepo {
@@ -187,31 +189,28 @@ export class CandidatesRepo {
   }
 
   async insertFormsCandidatesInBatch(
-    formsCandidatesData: CreateFormCandidate[]
+    formsCandidatesData: CreateFormCandidate[],
+    trx: Knex.Transaction
   ): Promise<number[]> {
     if (formsCandidatesData.length === 0) {
       return []
     }
 
-    return this.knex.transaction(async (trx) => {
-      const formsCandidatesToInsert = formsCandidatesData.map((fc) => ({
-        [db.FormsCandidates.CANDIDATE_ID]: fc.candidateId,
-        [db.FormsCandidates.S_FORM_ID]: fc.sFormId,
-        [db.FormsCandidates.FORM_CANDIDATE_STATUS]: fc.formCandidateStatus,
-        [db.FormsCandidates.FORM_CANDIDATE_ACCESS_CODE]:
-          fc.formCandidateAccessCode
-      }))
+    const formsCandidatesToInsert = formsCandidatesData.map((fc) => ({
+      [db.FormsCandidates.CANDIDATE_ID]: fc.candidateId,
+      [db.FormsCandidates.S_FORM_ID]: fc.sFormId,
+      [db.FormsCandidates.FORM_CANDIDATE_STATUS]: fc.formCandidateStatus,
+      [db.FormsCandidates.FORM_CANDIDATE_ACCESS_CODE]:
+        fc.formCandidateAccessCode
+    }))
 
-      const insertedIds = await trx(db.Tables.FORMS_CANDIDATES)
-        .insert(formsCandidatesToInsert)
-        .returning(db.FormsCandidates.FORM_CANDIDATE_ID)
+    const insertedIds = await trx(db.Tables.FORMS_CANDIDATES)
+      .insert(formsCandidatesToInsert)
+      .returning(db.FormsCandidates.FORM_CANDIDATE_ID)
 
-      return insertedIds.map((row) =>
-        typeof row === 'object'
-          ? row[db.FormsCandidates.FORM_CANDIDATE_ID]
-          : row
-      )
-    })
+    return insertedIds.map((row) =>
+      typeof row === 'object' ? row[db.FormsCandidates.FORM_CANDIDATE_ID] : row
+    )
   }
 
   async findFormCandidateByAccessCode(
@@ -774,30 +773,68 @@ export class CandidatesRepo {
   async insertCompleteCandidate(
     data: InsertCompleteCandidate
   ): Promise<number> {
-    const [id] = await this.knex(db.Tables.CANDIDATES)
-      .insert({
-        [db.Candidates.PROCESS_ID]: data.processId,
-        [db.Candidates.CANDIDATE_NAME]: data.candidateName,
-        [db.Candidates.CANDIDATE_DOCUMENT_TYPE]: data.candidateDocumentType,
-        [db.Candidates.CANDIDATE_UNIQUE_DOCUMENT]: data.candidateUniqueDocument,
-        [db.Candidates.CANDIDATE_EMAIL]: data.candidateEmail,
-        [db.Candidates.CANDIDATE_PHONE]: data.candidatePhone,
-        [db.Candidates.CANDIDATE_ORDER_CODE]: data.candidateOrderCode,
-        [db.Candidates.CANDIDATE_ORDER_CODE_VALIDATED_AT]: this.knex.fn.now(),
-        [db.Candidates.CANDIDATE_BIRTHDATE]: data.candidateBirthdate,
-        [db.Candidates.CANDIDATE_FOREIGNER]: data.candidateForeigner,
-        [db.Candidates.CANDIDATE_ADDRESS]: data.candidateAddress,
-        [db.Candidates.CANDIDATE_ADDRESS_NUMBER]: data.candidateAddressNumber,
-        [db.Candidates.CANDIDATE_DISTRICT]: data.candidateDistrict,
-        [db.Candidates.CANDIDATE_CITY]: data.candidateCity,
-        [db.Candidates.CANDIDATE_STATE]: data.candidateState,
-        [db.Candidates.CANDIDATE_ZIP_CODE]: data.candidateZipCode,
-        [db.Candidates.CANDIDATE_COUNTRY]: data.candidateCountry,
-        [db.Candidates.CANDIDATE_MARITAL_STATUS]: data.candidateMaritalStatus
-      })
-      .returning(db.Candidates.CANDIDATE_ID)
+    const candidateId = await this.knex.transaction(async (trx) => {
+      const [id] = await trx(db.Tables.CANDIDATES)
+        .insert({
+          [db.Candidates.PROCESS_ID]: data.processId,
+          [db.Candidates.CANDIDATE_NAME]: data.candidateName,
+          [db.Candidates.CANDIDATE_DOCUMENT_TYPE]: data.candidateDocumentType,
+          [db.Candidates.CANDIDATE_UNIQUE_DOCUMENT]:
+            data.candidateUniqueDocument,
+          [db.Candidates.CANDIDATE_EMAIL]: data.candidateEmail,
+          [db.Candidates.CANDIDATE_PHONE]: data.candidatePhone,
+          [db.Candidates.CANDIDATE_ORDER_CODE]: data.candidateOrderCode,
+          [db.Candidates.CANDIDATE_ORDER_CODE_VALIDATED_AT]: this.knex.fn.now(),
+          [db.Candidates.CANDIDATE_BIRTHDATE]: data.candidateBirthdate,
+          [db.Candidates.CANDIDATE_FOREIGNER]: data.candidateForeigner,
+          [db.Candidates.CANDIDATE_ADDRESS]: data.candidateAddress,
+          [db.Candidates.CANDIDATE_ADDRESS_NUMBER]: data.candidateAddressNumber,
+          [db.Candidates.CANDIDATE_DISTRICT]: data.candidateDistrict,
+          [db.Candidates.CANDIDATE_CITY]: data.candidateCity,
+          [db.Candidates.CANDIDATE_STATE]: data.candidateState,
+          [db.Candidates.CANDIDATE_ZIP_CODE]: data.candidateZipCode,
+          [db.Candidates.CANDIDATE_COUNTRY]: data.candidateCountry,
+          [db.Candidates.CANDIDATE_MARITAL_STATUS]: data.candidateMaritalStatus
+        })
+        .returning(db.Candidates.CANDIDATE_ID)
 
-    return typeof id === 'object' ? id[db.Candidates.CANDIDATE_ID] : id
+      const candidateId =
+        typeof id === 'object' ? id[db.Candidates.CANDIDATE_ID] : id
+
+      const formIds = await this.findFormIdsByProcessId(data.processId)
+
+      const formsCandidatesData: CreateFormCandidate[] = formIds.map(
+        (formId) => {
+          const formCanidate: CreateFormCandidate = {
+            candidateId: candidateId,
+            sFormId: formId,
+            formCandidateStatus: FormCandidateStatus.GENERATED,
+            formCandidateAccessCode: this.createAccessCode()
+          }
+          return formCanidate
+        }
+      )
+
+      await this.insertFormsCandidatesInBatch(formsCandidatesData, trx)
+
+      return candidateId
+    })
+
+    return candidateId
+  }
+
+  createAccessCode(): string {
+    const timestamp = Date.now().toString(36).padStart(9, '0') // sempre 9 chars
+    const randomPart = randomBytes(32).toString('base64url')
+    return (timestamp + randomPart).slice(0, 45)
+  }
+
+  async findFormIdsByProcessId(processId: number): Promise<number[]> {
+    const forms = await this.knex(db.Tables.S_FORMS)
+      .select(db.SForms.S_FORM_ID)
+      .where(db.SForms.PROCESS_ID, processId)
+
+    return forms.map((form) => form[db.SForms.S_FORM_ID])
   }
 
   /**
