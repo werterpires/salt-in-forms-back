@@ -26,6 +26,7 @@ import { getMinisterialFormAccessEmailTemplate } from '../candidates/email-templ
 import { getNormalFormAccessEmailTemplate } from '../candidates/email-templates/normal-form-access.template'
 import { AnswersRepo } from '../answers/answers.repo'
 import { MinisterialsRepo } from '../ministerials/ministerials.repo'
+import { FormCandidateToSendEmail } from './types'
 
 @Injectable()
 export class FormsCandidatesCronService implements OnModuleInit {
@@ -78,18 +79,93 @@ export class FormsCandidatesCronService implements OnModuleInit {
    */
   async handleProcessesInAnswerPeriod() {
     this.logger.info(
-      '\n=== Iniciando cron: Processar candidatos no período de respostas ==='
+      `\n====================================================================
+       \n=== Iniciando cron: Processar candidatos no período de respostas ===
+       \n====================================================================`
     )
+
+    const frontendUrl = getFrontendUrl()
 
     const startTime = new Date()
 
     const processes: ProcessInAnswerPeriod[] =
       await this.formsCandidatesRepo.findProcessesInAnswerPeriod()
+    this.logger.info(
+      `Foram encontrados ${processes.length} processo(s) no período de respostas com os seguintes IDs: ${processes.map((p) => p.processId).join(', ')}`
+    )
 
     this.logger.info(
       `\n=== Total de processos encontrados: ${processes.length} ===`
     )
 
+    const sForms: SFormBasic[] =
+      await this.formsCandidatesRepo.findSFormsByProcessIds(
+        processes.map((process) => process.processId)
+      )
+
+    this.logger.info(
+      `Foram encontrados ${sForms.length} formulário(s) associado(s) aos processos no período de respostas`
+    )
+
+    const normalFormsIds = sForms
+      .filter((form) => form.sFormType === 'normal')
+      .map((form) => form.sFormId)
+
+    const ministerialFormsIds = sForms
+      .filter((form) => form.sFormType === 'ministerial')
+      .map((form) => form.sFormId)
+
+    const candidatesFormsIds = sForms
+      .filter((form) => form.sFormType === 'candidate')
+      .map((form) => form.sFormId)
+
+    this.logger.info(
+      `Formulários do tipo "candidates": ${candidatesFormsIds.join(', ')}`
+    )
+
+    const formCandidatesInStatusGenerated =
+      await this.formsCandidatesRepo.findFormsCandidatesInStatusGenerated()
+
+    this.logger.info(
+      `Foram encontrados ${formCandidatesInStatusGenerated.length} formulário(s) do tipo "candidate" no status GENERATED`
+    )
+
+    const formCandidatesGeneratedInvalid: FormCandidateToSendEmail[] = []
+
+    for (const formCandidate of formCandidatesInStatusGenerated) {
+      if (candidatesFormsIds.includes(formCandidate.sFormId)) {
+        await this.sendCandidateFormEmail(
+          formCandidate.candidateName,
+          formCandidate.candidateEmail,
+          formCandidate.formCandidateAccessCode,
+          frontendUrl
+        )
+
+        await this.formsCandidatesRepo.updateFormCandidateStatusByCandidateAndForm(
+          formCandidate.candidateId,
+          formCandidate.sFormId,
+          FormCandidateStatus.MAILED
+        )
+        this.logger.info(
+          `Status atualizado para MAILED para formCandidateId: ${formCandidate.formCandidateId}`
+        )
+      } else {
+        formCandidatesGeneratedInvalid.push(formCandidate)
+      }
+
+      for (const formCandidate of formCandidatesGeneratedInvalid) {
+        await this.formsCandidatesRepo.updateFormCandidateStatus(
+          formCandidate.formCandidateId,
+          FormCandidateStatus.UNUSEFULL
+        )
+      }
+
+      this.logger.info(
+        `${formCandidatesGeneratedInvalid.length} formCandidate(s) marcado(s) como UNUSEFULL`
+      )
+    }
+
+    return
     for (const process of processes) {
       await this.handleFormsOfOneProcess(process)
     }

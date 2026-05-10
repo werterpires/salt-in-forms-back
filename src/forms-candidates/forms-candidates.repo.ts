@@ -11,6 +11,7 @@ import {
   MinisterialFormCandidateContext,
   NormalFormCandidateContext
 } from '../candidates/types'
+import { FormCandidateToSendEmail } from './types'
 
 @Injectable()
 export class FormsCandidatesRepo {
@@ -186,6 +187,25 @@ export class FormsCandidatesRepo {
         db.SForms.EMAIL_QUESTION_ID
       )
       .where(db.SForms.PROCESS_ID, processId)
+      .orderBy(db.SForms.S_FORM_TYPE, 'asc')
+  }
+
+  /**
+   * Busca formulários de uma lista de processos
+   */
+  async findSFormsByProcessIds(processIds: number[]): Promise<SFormBasic[]> {
+    if (processIds.length === 0) {
+      return []
+    }
+
+    return this.knex(db.Tables.S_FORMS)
+      .select(
+        db.SForms.S_FORM_ID,
+        db.SForms.S_FORM_TYPE,
+        db.SForms.EMAIL_QUESTION_ID,
+        db.SForms.PROCESS_ID
+      )
+      .whereIn(db.SForms.PROCESS_ID, processIds)
       .orderBy(db.SForms.S_FORM_TYPE, 'asc')
   }
 
@@ -432,5 +452,32 @@ export class FormsCandidatesRepo {
       candidateFormCandidateIds:
         candidateFormCandidatesMap.get(fc.candidateId) || []
     }))
+  }
+
+  async findFormsCandidatesInStatusGenerated(): Promise<
+    FormCandidateToSendEmail[]
+  > {
+    return await this.knex(db.Tables.FORMS_CANDIDATES)
+      .select(
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ID} as formCandidateId`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID} as candidateId`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID} as sFormId`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ACCESS_CODE} as formCandidateAccessCode`,
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_NAME} as candidateName`,
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_EMAIL} as candidateEmail`,
+        `${db.Tables.S_FORMS}.${db.SForms.S_FORM_TYPE} as sFormType`
+      )
+      .innerJoin(
+        db.Tables.CANDIDATES,
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_ID}`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID}`
+      )
+      .innerJoin(
+        db.Tables.S_FORMS,
+        `${db.Tables.S_FORMS}.${db.SForms.S_FORM_ID}`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID}`
+      )
+      .where(db.FormsCandidates.FORM_CANDIDATE_STATUS, 1)
+      .andWhere(`${db.Tables.S_FORMS}.${db.SForms.S_FORM_TYPE}`, 'candidate')
   }
 }
