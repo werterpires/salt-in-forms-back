@@ -3,6 +3,7 @@ import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
 import * as db from '../constants/db-schema.enum'
 import { Answer, CreateAnswer } from './types'
+import { FormCandidateStatus } from 'src/constants/form-candidate-status.const'
 
 @Injectable()
 export class AnswersRepo {
@@ -20,8 +21,19 @@ export class AnswersRepo {
         db.Answers.ANSWER_VALUE,
         db.Answers.VALID_ANSWER
       )
+      .join(
+        db.Tables.FORMS_CANDIDATES,
+        db.Answers.FORM_CANDIDATE_ID,
+        '=',
+        db.FormsCandidates.FORM_CANDIDATE_ID
+      )
       .where(db.Answers.QUESTION_ID, questionId)
       .where(db.Answers.FORM_CANDIDATE_ID, formCandidateId)
+      .where(
+        db.FormsCandidates.FORM_CANDIDATE_STATUS,
+        '>=',
+        FormCandidateStatus.SUBMITTED
+      )
       .first()
   }
 

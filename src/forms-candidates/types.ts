@@ -6,4 +6,5 @@ export interface FormCandidateToSendEmail {
   candidateName: string
   candidateEmail: string
   sFormType: string
+  emailQuestionId: number | null
 }
