@@ -219,7 +219,8 @@ export class SFormsRepo {
             [db.Questions.QUESTION_DISPLAY_LINK]: null, // Será atualizado depois
             [db.Questions.ANSWER_DISPLEY_RULE]:
               question[db.Questions.ANSWER_DISPLEY_RULE],
-            [db.Questions.ANSWER_DISPLAY_VALUE]: null // Será atualizado depois
+            [db.Questions.ANSWER_DISPLAY_VALUE]:
+              question[db.Questions.ANSWER_DISPLAY_VALUE]
           }
 
           const [newQuestionId] = await trx(db.Tables.QUESTIONS).insert(
@@ -353,18 +354,18 @@ export class SFormsRepo {
       }
 
       // Helper function to remap ANSWER_DISPLAY_VALUE
-      const remapAnswerDisplayValue = (
-        answerDisplayValue: string | null
-      ): string | null => {
-        if (!answerDisplayValue) return null
+      // const remapAnswerDisplayValue = (
+      //   answerDisplayValue: string | null
+      // ): string | null => {
+      //   if (!answerDisplayValue) return null
 
-        const optionIds = answerDisplayValue.split('||')
-        const newOptionIds = optionIds
-          .map((id) => questionOptionsMapping.get(parseInt(id)))
-          .filter((id) => id !== undefined)
+      //   const optionIds = answerDisplayValue.split('||')
+      //   const newOptionIds = optionIds
+      //     .map((id) => questionOptionsMapping.get(parseInt(id)))
+      //     .filter((id) => id !== undefined)
 
-        return newOptionIds.length > 0 ? newOptionIds.join('||') : null
-      }
+      //   return newOptionIds.length > 0 ? newOptionIds.join('||') : null
+      // }
 
       // 4. Atualizar referências nas seções
       for (const section of sections) {
@@ -396,16 +397,16 @@ export class SFormsRepo {
           }
         }
 
-        // Mapear answerDisplayValue
-        if (section[db.FormSections.ANSWER_DISPLAY_VALUE]) {
-          const newAnswerDisplayValue = remapAnswerDisplayValue(
-            section[db.FormSections.ANSWER_DISPLAY_VALUE] as string
-          )
-          if (newAnswerDisplayValue) {
-            updates[db.FormSections.ANSWER_DISPLAY_VALUE] =
-              newAnswerDisplayValue
-          }
-        }
+        // // Mapear answerDisplayValue
+        // if (section[db.FormSections.ANSWER_DISPLAY_VALUE]) {
+        //   const newAnswerDisplayValue = remapAnswerDisplayValue(
+        //     section[db.FormSections.ANSWER_DISPLAY_VALUE] as string
+        //   )
+        //   if (newAnswerDisplayValue) {
+        //     updates[db.FormSections.ANSWER_DISPLAY_VALUE] =
+        //       newAnswerDisplayValue
+        //   }
+        // }
 
         if (Object.keys(updates).length > 0) {
           await trx(db.Tables.FORM_SECTIONS)
@@ -446,14 +447,14 @@ export class SFormsRepo {
         }
 
         // Mapear answerDisplayValue
-        if (originalQuestion[db.Questions.ANSWER_DISPLAY_VALUE]) {
-          const newAnswerDisplayValue = remapAnswerDisplayValue(
-            originalQuestion[db.Questions.ANSWER_DISPLAY_VALUE] as string
-          )
-          if (newAnswerDisplayValue) {
-            updates[db.Questions.ANSWER_DISPLAY_VALUE] = newAnswerDisplayValue
-          }
-        }
+        // if (originalQuestion[db.Questions.ANSWER_DISPLAY_VALUE]) {
+        //   const newAnswerDisplayValue = remapAnswerDisplayValue(
+        //     originalQuestion[db.Questions.ANSWER_DISPLAY_VALUE] as string
+        //   )
+        //   if (newAnswerDisplayValue) {
+        //     updates[db.Questions.ANSWER_DISPLAY_VALUE] = newAnswerDisplayValue
+        //   }
+        // }
 
         if (Object.keys(updates).length > 0) {
           await trx(db.Tables.QUESTIONS)
