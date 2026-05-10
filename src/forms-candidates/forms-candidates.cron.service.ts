@@ -87,8 +87,6 @@ export class FormsCandidatesCronService implements OnModuleInit {
 
     const frontendUrl = getFrontendUrl()
 
-    // const startTime = new Date()
-
     const processes: ProcessInAnswerPeriod[] =
       await this.formsCandidatesRepo.findProcessesInAnswerPeriod()
     this.logger.info(
@@ -108,6 +106,41 @@ export class FormsCandidatesCronService implements OnModuleInit {
       `Foram encontrados ${sForms.length} formulário(s) associado(s) aos processos no período de respostas`
     )
 
+    const { normalFormsIds, ministerialFormsIds, candidatesFormsIds } =
+      this.categorizeFormsByType(sForms)
+
+    const invalidCandidatesFromGenerated =
+      await this.processCandidateFormsCandidates(
+        candidatesFormsIds,
+        frontendUrl
+      )
+
+    const invalidCandidatesFromNonGenerated =
+      await this.processNonCandidateFormsCandidates(
+        ministerialFormsIds,
+        normalFormsIds,
+        frontendUrl
+      )
+
+    await this.markAsUnuseful([
+      ...invalidCandidatesFromGenerated,
+      ...invalidCandidatesFromNonGenerated
+    ])
+
+    // Limpar cache ao finalizar
+    this.ministerialsCache = null
+
+    return
+  }
+
+  /**
+   * Categoriza formulários por tipo (normal, ministerial, candidate)
+   */
+  private categorizeFormsByType(sForms: SFormBasic[]): {
+    normalFormsIds: number[]
+    ministerialFormsIds: number[]
+    candidatesFormsIds: number[]
+  } {
     const normalFormsIds = sForms
       .filter((form) => form.sFormType === 'normal')
       .map((form) => form.sFormId)
@@ -124,6 +157,17 @@ export class FormsCandidatesCronService implements OnModuleInit {
       `Formulários do tipo "candidates": ${candidatesFormsIds.join(', ')}`
     )
 
+    return { normalFormsIds, ministerialFormsIds, candidatesFormsIds }
+  }
+
+  /**
+   * Processa formulários do tipo "candidate" no status GENERATED
+   * Retorna a lista de formCandidates inválidos para marcação posterior
+   */
+  private async processCandidateFormsCandidates(
+    candidatesFormsIds: number[],
+    frontendUrl: string
+  ): Promise<FormCandidateToSendEmail[]> {
     const formCandidatesInStatusGenerated =
       await this.formsCandidatesRepo.findFormsCandidatesInStatusGenerated()
 
@@ -131,7 +175,7 @@ export class FormsCandidatesCronService implements OnModuleInit {
       `Foram encontrados ${formCandidatesInStatusGenerated.length} formulário(s) do tipo "candidate" no status GENERATED`
     )
 
-    const formCandidatesGeneratedInvalid: FormCandidateToSendEmail[] = []
+    const invalidFormCandidates: FormCandidateToSendEmail[] = []
 
     for (const formCandidate of formCandidatesInStatusGenerated) {
       if (candidatesFormsIds.includes(formCandidate.sFormId)) {
@@ -151,14 +195,26 @@ export class FormsCandidatesCronService implements OnModuleInit {
           `Status atualizado para MAILED para formCandidateId: ${formCandidate.formCandidateId}`
         )
       } else {
-        formCandidatesGeneratedInvalid.push(formCandidate)
+        invalidFormCandidates.push(formCandidate)
       }
     }
 
     this.logger.info(
-      `${formCandidatesGeneratedInvalid.length} formCandidate(s) marcado(s) como UNUSEFULL`
+      `${invalidFormCandidates.length} formCandidate(s) marcado(s) como UNUSEFULL`
     )
 
+    return invalidFormCandidates
+  }
+
+  /**
+   * Processa formulários do tipo "ministerial" e "normal" que não estão no status GENERATED
+   * Retorna a lista de formCandidates inválidos para marcação posterior
+   */
+  private async processNonCandidateFormsCandidates(
+    ministerialFormsIds: number[],
+    normalFormsIds: number[],
+    frontendUrl: string
+  ): Promise<FormCandidateToSendEmail[]> {
     const formCandidatesNotInStatusGenerated =
       await this.formsCandidatesRepo.findFormsNotCandidatesInStatusGenerated()
 
@@ -169,6 +225,8 @@ export class FormsCandidatesCronService implements OnModuleInit {
     ) {
       await this.loadMinisterialsCache()
     }
+
+    const invalidFormCandidates: FormCandidateToSendEmail[] = []
 
     for (const formCandidate of formCandidatesNotInStatusGenerated) {
       if (ministerialFormsIds.includes(formCandidate.sFormId)) {
@@ -186,24 +244,28 @@ export class FormsCandidatesCronService implements OnModuleInit {
           formCandidate.candidateName
         )
       } else {
-        formCandidatesGeneratedInvalid.push(formCandidate)
+        invalidFormCandidates.push(formCandidate)
         this.logger.warn(
           ` FormCandidateId ${formCandidate.formCandidateId} possui sFormId ${formCandidate.sFormId} que não corresponde a nenhum formulário do tipo "candidate", "ministerial" ou "normal" em tempo de inscrição`
         )
       }
     }
 
-    for (const formCandidate of formCandidatesGeneratedInvalid) {
+    return invalidFormCandidates
+  }
+
+  /**
+   * Marca uma lista de formCandidates como UNUSEFULL
+   */
+  private async markAsUnuseful(
+    formCandidates: FormCandidateToSendEmail[]
+  ): Promise<void> {
+    for (const formCandidate of formCandidates) {
       await this.formsCandidatesRepo.updateFormCandidateStatus(
         formCandidate.formCandidateId,
         FormCandidateStatus.UNUSEFULL
       )
     }
-
-    // Limpar cache ao finalizar
-    this.ministerialsCache = null
-
-    return
   }
 
   /**
