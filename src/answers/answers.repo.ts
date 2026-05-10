@@ -21,16 +21,39 @@ export class AnswersRepo {
         db.Answers.ANSWER_VALUE,
         db.Answers.VALID_ANSWER
       )
+      .where(`${db.Tables.ANSWERS}.${db.Answers.QUESTION_ID}`, questionId)
+      .where(
+        `${db.Tables.ANSWERS}.${db.Answers.FORM_CANDIDATE_ID}`,
+        formCandidateId
+      )
+      .first()
+  }
+
+  async findAnswerByQuestionAndFormCandidateSubmited(
+    questionId: number,
+    formCandidateId: number
+  ): Promise<Answer | undefined> {
+    return this.knex(db.Tables.ANSWERS)
+      .select(
+        db.Answers.ANSWER_ID,
+        db.Answers.QUESTION_ID,
+        db.Answers.FORM_CANDIDATE_ID,
+        db.Answers.ANSWER_VALUE,
+        db.Answers.VALID_ANSWER
+      )
       .join(
         db.Tables.FORMS_CANDIDATES,
-        db.Answers.FORM_CANDIDATE_ID,
-        '=',
-        db.FormsCandidates.FORM_CANDIDATE_ID
+        `${db.Tables.ANSWERS}.${db.Answers.FORM_CANDIDATE_ID}`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ID}`,
+        '='
       )
-      .where(db.Answers.QUESTION_ID, questionId)
-      .where(db.Answers.FORM_CANDIDATE_ID, formCandidateId)
+      .where(`${db.Tables.ANSWERS}.${db.Answers.QUESTION_ID}`, questionId)
       .where(
-        db.FormsCandidates.FORM_CANDIDATE_STATUS,
+        `${db.Tables.ANSWERS}.${db.Answers.FORM_CANDIDATE_ID}`,
+        formCandidateId
+      )
+      .where(
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_STATUS}`,
         '>=',
         FormCandidateStatus.SUBMITTED
       )

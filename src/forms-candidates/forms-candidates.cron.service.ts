@@ -497,10 +497,11 @@ export class FormsCandidatesCronService implements OnModuleInit {
       return null
     }
     // PASSO 1: Buscar a resposta da questão emailQuestionId em qualquer formCandidate do candidato
-    const answer = await this.answersRepo.findAnswerByQuestionAndFormCandidate(
-      emailQuestionId,
-      formCandidateId
-    )
+    const answer =
+      await this.answersRepo.findAnswerByQuestionAndFormCandidateSubmited(
+        emailQuestionId,
+        formCandidateId
+      )
 
     // Validação 1: Se não houver resposta, não faz nada
     if (!answer) {

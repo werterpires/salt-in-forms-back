@@ -506,7 +506,7 @@ export class FormsCandidatesRepo {
         `${db.Tables.S_FORMS}.${db.SForms.S_FORM_ID}`,
         `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID}`
       )
-      .where(db.FormsCandidates.FORM_CANDIDATE_STATUS, '!=', 1)
-      .andWhere(`${db.Tables.S_FORMS}.${db.SForms.S_FORM_TYPE}`, 'candidate')
+      .where(db.FormsCandidates.FORM_CANDIDATE_STATUS, 1)
+      .andWhereNot(`${db.Tables.S_FORMS}.${db.SForms.S_FORM_TYPE}`, 'candidate')
   }
 }
