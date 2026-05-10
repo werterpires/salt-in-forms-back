@@ -465,7 +465,8 @@ export class FormsCandidatesRepo {
         `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ACCESS_CODE} as formCandidateAccessCode`,
         `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_NAME} as candidateName`,
         `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_EMAIL} as candidateEmail`,
-        `${db.Tables.S_FORMS}.${db.SForms.S_FORM_TYPE} as sFormType`
+        `${db.Tables.S_FORMS}.${db.SForms.S_FORM_TYPE} as sFormType`,
+        `${db.Tables.S_FORMS}.${db.SForms.EMAIL_QUESTION_ID} as emailQuestionId`
       )
       .innerJoin(
         db.Tables.CANDIDATES,
@@ -478,6 +479,34 @@ export class FormsCandidatesRepo {
         `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID}`
       )
       .where(db.FormsCandidates.FORM_CANDIDATE_STATUS, 1)
+      .andWhere(`${db.Tables.S_FORMS}.${db.SForms.S_FORM_TYPE}`, 'candidate')
+  }
+
+  async findFormsNotCandidatesInStatusGenerated(): Promise<
+    FormCandidateToSendEmail[]
+  > {
+    return await this.knex(db.Tables.FORMS_CANDIDATES)
+      .select(
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ID} as formCandidateId`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID} as candidateId`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID} as sFormId`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ACCESS_CODE} as formCandidateAccessCode`,
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_NAME} as candidateName`,
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_EMAIL} as candidateEmail`,
+        `${db.Tables.S_FORMS}.${db.SForms.S_FORM_TYPE} as sFormType`,
+        `${db.Tables.S_FORMS}.${db.SForms.EMAIL_QUESTION_ID} as emailQuestionId`
+      )
+      .innerJoin(
+        db.Tables.CANDIDATES,
+        `${db.Tables.CANDIDATES}.${db.Candidates.CANDIDATE_ID}`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID}`
+      )
+      .innerJoin(
+        db.Tables.S_FORMS,
+        `${db.Tables.S_FORMS}.${db.SForms.S_FORM_ID}`,
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.S_FORM_ID}`
+      )
+      .where(db.FormsCandidates.FORM_CANDIDATE_STATUS, '!=', 1)
       .andWhere(`${db.Tables.S_FORMS}.${db.SForms.S_FORM_TYPE}`, 'candidate')
   }
 }
