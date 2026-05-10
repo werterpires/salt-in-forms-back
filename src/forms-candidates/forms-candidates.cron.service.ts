@@ -85,50 +85,61 @@ export class FormsCandidatesCronService implements OnModuleInit {
        \n====================================================================`
     )
 
-    const frontendUrl = getFrontendUrl()
+    try {
+      const frontendUrl = getFrontendUrl()
 
-    const processes: ProcessInAnswerPeriod[] =
-      await this.formsCandidatesRepo.findProcessesInAnswerPeriod()
-    this.logger.info(
-      `Foram encontrados ${processes.length} processo(s) no período de respostas com os seguintes IDs: ${processes.map((p) => p.processId).join(', ')}`
-    )
-
-    this.logger.info(
-      `\n=== Total de processos encontrados: ${processes.length} ===`
-    )
-
-    const sForms: SFormBasic[] =
-      await this.formsCandidatesRepo.findSFormsByProcessIds(
-        processes.map((process) => process.processId)
+      const processes: ProcessInAnswerPeriod[] =
+        await this.formsCandidatesRepo.findProcessesInAnswerPeriod()
+      this.logger.info(
+        `Foram encontrados ${processes.length} processo(s) no período de respostas com os seguintes IDs: ${processes.map((p) => p.processId).join(', ')}`
       )
 
-    this.logger.info(
-      `Foram encontrados ${sForms.length} formulário(s) associado(s) aos processos no período de respostas`
-    )
-
-    const { normalFormsIds, ministerialFormsIds, candidatesFormsIds } =
-      this.categorizeFormsByType(sForms)
-
-    const invalidCandidatesFromGenerated =
-      await this.processCandidateFormsCandidates(
-        candidatesFormsIds,
-        frontendUrl
+      this.logger.info(
+        `\n=== Total de processos encontrados: ${processes.length} ===`
       )
 
-    const invalidCandidatesFromNonGenerated =
-      await this.processNonCandidateFormsCandidates(
-        ministerialFormsIds,
-        normalFormsIds,
-        frontendUrl
+      const sForms: SFormBasic[] =
+        await this.formsCandidatesRepo.findSFormsByProcessIds(
+          processes.map((process) => process.processId)
+        )
+
+      this.logger.info(
+        `Foram encontrados ${sForms.length} formulário(s) associado(s) aos processos no período de respostas`
       )
 
-    await this.markAsUnuseful([
-      ...invalidCandidatesFromGenerated,
-      ...invalidCandidatesFromNonGenerated
-    ])
+      const { normalFormsIds, ministerialFormsIds, candidatesFormsIds } =
+        this.categorizeFormsByType(sForms)
 
-    // Limpar cache ao finalizar
-    this.ministerialsCache = null
+      const invalidCandidatesFromGenerated =
+        await this.processCandidateFormsCandidates(
+          candidatesFormsIds,
+          frontendUrl
+        )
+
+      const invalidCandidatesFromNonGenerated =
+        await this.processNonCandidateFormsCandidates(
+          ministerialFormsIds,
+          normalFormsIds,
+          frontendUrl
+        )
+
+      await this.markAsUnuseful([
+        ...invalidCandidatesFromGenerated,
+        ...invalidCandidatesFromNonGenerated
+      ])
+
+      // Limpar cache ao finalizar
+      this.ministerialsCache = null
+
+      return
+    } catch (error) {
+      if (error instanceof Error) {
+        this.logger.error(
+          `Erro inesperado ao processar candidatos no período de respostas: ${error.message}`,
+          error.stack
+        )
+      }
+    }
 
     return
   }

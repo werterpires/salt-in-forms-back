@@ -44,8 +44,8 @@ export class AnswersRepo {
       .join(
         db.Tables.FORMS_CANDIDATES,
         `${db.Tables.ANSWERS}.${db.Answers.FORM_CANDIDATE_ID}`,
-        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ID}`,
-        '='
+        '=',
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_ID}`
       )
       .where(`${db.Tables.ANSWERS}.${db.Answers.QUESTION_ID}`, questionId)
       .where(
