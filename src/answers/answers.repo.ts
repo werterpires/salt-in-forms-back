@@ -37,7 +37,7 @@ export class AnswersRepo {
       .select(
         db.Answers.ANSWER_ID,
         db.Answers.QUESTION_ID,
-        db.Answers.FORM_CANDIDATE_ID,
+        `${db.Tables.ANSWERS}.${db.Answers.FORM_CANDIDATE_ID}`,
         db.Answers.ANSWER_VALUE,
         db.Answers.VALID_ANSWER
       )
