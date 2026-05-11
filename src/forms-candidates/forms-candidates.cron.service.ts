@@ -245,14 +245,16 @@ export class FormsCandidatesCronService implements OnModuleInit {
           formCandidate.emailQuestionId,
           formCandidate.formCandidateId,
           frontendUrl,
-          formCandidate.candidateName
+          formCandidate.candidateName,
+          formCandidate.candidateId
         )
       } else if (normalFormsIds.includes(formCandidate.sFormId)) {
         await this.handleNormalForms(
           formCandidate.emailQuestionId,
           formCandidate.formCandidateId,
           frontendUrl,
-          formCandidate.candidateName
+          formCandidate.candidateName,
+          formCandidate.candidateId
         )
       } else {
         invalidFormCandidates.push(formCandidate)
@@ -333,10 +335,12 @@ export class FormsCandidatesCronService implements OnModuleInit {
     emailQuestionId: number | null,
     formCandidateId: number,
     frontendUrl: string,
-    candidateName: string
+    candidateName: string,
+    candidateId: number
   ) {
     const answer = await this.getAnswerLinkValue(
       emailQuestionId,
+      candidateId,
       formCandidateId
     )
 
@@ -407,10 +411,12 @@ export class FormsCandidatesCronService implements OnModuleInit {
     emailQuestionId: number | null,
     formCandidateId: number,
     frontendUrl: string,
-    candidateName: string
+    candidateName: string,
+    candidateId: number
   ) {
     const answer = await this.getAnswerLinkValue(
       emailQuestionId,
+      candidateId,
       formCandidateId
     )
 
@@ -496,6 +502,7 @@ export class FormsCandidatesCronService implements OnModuleInit {
 
   async getAnswerLinkValue(
     emailQuestionId: number | null,
+    candidateId: number,
     formCandidateId: number
   ): Promise<string | null> {
     if (!emailQuestionId) {
@@ -505,10 +512,16 @@ export class FormsCandidatesCronService implements OnModuleInit {
       return null
     }
     // PASSO 1: Buscar a resposta da questão emailQuestionId em qualquer formCandidate do candidato
+    console.log(
+      'Buscando resposta para emailQuestionId:',
+      emailQuestionId,
+      'e candidato:',
+      candidateId
+    )
     const answer =
       await this.answersRepo.findAnswerByQuestionAndFormCandidateSubmited(
         emailQuestionId,
-        formCandidateId
+        candidateId
       )
 
     // Validação 1: Se não houver resposta, não faz nada
@@ -534,7 +547,7 @@ export class FormsCandidatesCronService implements OnModuleInit {
     // Validação 3: Se answerValue vazio ou nulo, não faz nada
     if (!answer.answerValue || answer.answerValue.trim() === '') {
       this.logger.info(
-        `Resposta vazia ou nula, aguardando preenchimento para formCandidate ${formCandidateId}`
+        `Resposta vazia ou nula, aguardando preenchimento para candidato ${candidateId}`
       )
       return null
     }
