@@ -84,7 +84,7 @@ FRONTEND_URL=https://your-frontend-url.com
 
 ### Cron Jobs
 ```env
-# Limpeza de candidatos pendentes expirados (padrão: a cada 6 horas)
+# Limpeza de candidatos pendentes expirados (padrão: a cada 6 horas).
 CLEAN_EXPIRED_PENDING_CRON=0 */6 * * *
 
 # Processamento de formulários em período de resposta (padrão: às 10h diariamente)
