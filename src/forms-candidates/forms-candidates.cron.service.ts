@@ -373,13 +373,16 @@ export class FormsCandidatesCronService implements OnModuleInit {
     // PASSO 3: Descriptografar o fieldName antes de buscar ministerial
     const decryptedFieldName = this.encryptionService.decrypt(criptEmail)
 
+    // Extrair apenas o texto antes do primeiro parêntese e dar trim
+    const fieldNameKey = decryptedFieldName.split('(')[0].trim()
+
     // Buscar ministerial no cache
-    const ministerial = this.ministerialsCache?.get(decryptedFieldName.trim()) //mudar
+    const ministerial = this.ministerialsCache?.get(fieldNameKey)
 
     // Validação 4: Se não encontrar ministerial ou não tiver nome/email, passa para o próximo
     if (!ministerial) {
       this.logger.warn(
-        `Nenhum ministerial ativo encontrado para o campo "${decryptedFieldName}"`
+        `Nenhum ministerial ativo encontrado para o campo "${fieldNameKey}"`
       )
       return null
     }
