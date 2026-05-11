@@ -31,9 +31,9 @@ export class AnswersRepo {
 
   async findAnswerByQuestionAndFormCandidateSubmited(
     questionId: number,
-    formCandidateId: number
+    candidateId: number
   ): Promise<Answer | undefined> {
-    return this.knex(db.Tables.ANSWERS)
+    return await this.knex(db.Tables.ANSWERS)
       .select(
         db.Answers.ANSWER_ID,
         db.Answers.QUESTION_ID,
@@ -49,8 +49,8 @@ export class AnswersRepo {
       )
       .where(`${db.Tables.ANSWERS}.${db.Answers.QUESTION_ID}`, questionId)
       .where(
-        `${db.Tables.ANSWERS}.${db.Answers.FORM_CANDIDATE_ID}`,
-        formCandidateId
+        `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.CANDIDATE_ID}`,
+        candidateId
       )
       .where(
         `${db.Tables.FORMS_CANDIDATES}.${db.FormsCandidates.FORM_CANDIDATE_STATUS}`,
