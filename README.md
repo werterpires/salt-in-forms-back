@@ -23,7 +23,7 @@
 
 ## Description
 
-Sistema de gerenciamento de formulários e candidatos para processos seletivos da SALT/FAAMA. Desenvolvido com [Nest](https://github.com/nestjs/nest) framework.
+Sistema de gerenciamento de formulários e candidatos para processos seletivos da SALT/FAAMA. Desenvolvido com [Nest](https://github.com/nestjs/nest) framework!
 
 ## Features
 
