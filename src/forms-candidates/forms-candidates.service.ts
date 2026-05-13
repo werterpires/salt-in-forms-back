@@ -13,6 +13,7 @@ import {
   createAccessCode,
   prepareCandidateEmailData
 } from '../candidates/candidates.helper'
+import { parseEndDateFromDb } from '../shared/utils'
 import { getResendAccessCodeEmailTemplate } from '../candidates/email-templates/resend-access-code.template'
 import { FormCandidateStatus } from '../constants/form-candidate-status.const'
 import { QuestionsRepo } from '../questions/questions.repo'
@@ -249,7 +250,7 @@ export class FormsCandidatesService {
     // Validação 1: Verificar período de resposta
     if (formData.processEndAnswers) {
       const now = new Date()
-      const endAnswers = new Date(formData.processEndAnswers)
+      const endAnswers = parseEndDateFromDb(formData.processEndAnswers)
 
       if (now > endAnswers) {
         throw new BadRequestException(

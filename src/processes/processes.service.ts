@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common'
+import { parseEndDateFromDb } from 'src/shared/utils'
 import { CreateProcessDto } from './dto/create-process.dto'
 import { UpdateProcessDto } from './dto/update-process.dto'
 import { ProcessesRepo } from './processes.repo'
@@ -47,7 +48,7 @@ export class ProcessesService {
     )
     if (existingProcess) {
       const today = new Date()
-      const processEndDate = new Date(existingProcess.processEndDate)
+      const processEndDate = parseEndDateFromDb(existingProcess.processEndDate)
 
       if (today > processEndDate) {
         throw new BadRequestException(
@@ -70,7 +71,7 @@ export class ProcessesService {
     const existingProcess = await this.processesRepo.findProcessById(processId)
     if (existingProcess) {
       const today = new Date()
-      const processEndDate = new Date(existingProcess.processEndDate)
+      const processEndDate = parseEndDateFromDb(existingProcess.processEndDate)
 
       if (today > processEndDate) {
         throw new BadRequestException(

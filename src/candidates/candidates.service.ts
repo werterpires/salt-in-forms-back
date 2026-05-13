@@ -16,6 +16,7 @@ import * as db from '../constants/db-schema.enum'
 import { CustomLoggerService } from 'src/shared/utils-module/custom-logger/custom-logger.service'
 import { SendPulseEmailService } from '../shared/utils-module/email-sender/sendpulse-email.service'
 import { getFrontendUrl, decryptAnswer } from './candidates.helper'
+import { parseBeginDateFromDb, parseEndDateFromDb } from 'src/shared/utils'
 import { Term } from 'src/terms/types'
 import { FormsCandidatesService } from 'src/forms-candidates/forms-candidates.service'
 import { AnswerWithoutId } from 'src/answers/types'
@@ -125,8 +126,10 @@ export class CandidatesService {
 
     // c2) Validar período de inscrição
     const now = new Date()
-    const processBeginDate = new Date(process.processBeginDate)
-    const processEndSubscription = new Date(process.processEndSubscription)
+    const processBeginDate = parseBeginDateFromDb(process.processBeginDate)
+    const processEndSubscription = parseEndDateFromDb(
+      process.processEndSubscription
+    )
 
     if (now < processBeginDate) {
       this.loggger.warn(
@@ -991,7 +994,7 @@ export class CandidatesService {
     }
 
     const today = new Date()
-    const processEndDate = new Date(process.processEndDate)
+    const processEndDate = parseEndDateFromDb(process.processEndDate)
 
     // Verificar se o processo já terminou completamente
     if (today > processEndDate) {
@@ -1000,7 +1003,7 @@ export class CandidatesService {
       )
     }
 
-    const endAnswersDate = new Date(process.processEndAnswers)
+    const endAnswersDate = parseEndDateFromDb(process.processEndAnswers)
 
     if (endAnswersDate >= today) {
       throw new BadRequestException(
@@ -1226,7 +1229,9 @@ export class CandidatesService {
 
     // Verificar se o processo já terminou
     const today = new Date()
-    const processEndDate = new Date(candidateWithProcess.processEndDate)
+    const processEndDate = parseEndDateFromDb(
+      candidateWithProcess.processEndDate
+    )
 
     if (today > processEndDate) {
       throw new BadRequestException(
@@ -1318,7 +1323,9 @@ export class CandidatesService {
 
     // Verificar se o processo já terminou
     const today = new Date()
-    const processEndDate = new Date(candidateWithProcess.processEndDate)
+    const processEndDate = parseEndDateFromDb(
+      candidateWithProcess.processEndDate
+    )
 
     if (today > processEndDate) {
       this.loggger.warn(
@@ -1366,7 +1373,9 @@ export class CandidatesService {
 
     // Verificar se ainda está no período de resposta
     const today = new Date()
-    const processEndAnswers = new Date(candidateData.processEndAnswers)
+    const processEndAnswers = parseEndDateFromDb(
+      candidateData.processEndAnswers
+    )
 
     if (today > processEndAnswers) {
       this.loggger.warn(
@@ -1519,7 +1528,7 @@ export class CandidatesService {
 
     // 3. Verificar se ainda está no período de resposta
     const today = new Date()
-    const processEndAnswers = new Date(formData.processEndAnswers)
+    const processEndAnswers = parseEndDateFromDb(formData.processEndAnswers)
 
     if (today > processEndAnswers) {
       this.loggger.warn(
