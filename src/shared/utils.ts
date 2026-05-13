@@ -7,13 +7,13 @@ export function toSnakeCase(str: string): string {
 }
 
 export function getDateFromString(dateStr: string): Date {
-  const date = new Date(dateStr)
+  const [yearStr, monthStr, dayStr] = dateStr.split('-')
+  // Parse as local midnight to avoid UTC offset shifting the day
+  const date = new Date(Number(yearStr), Number(monthStr) - 1, Number(dayStr))
 
   if (isNaN(date.getTime())) {
     throw new BadRequestException('#Data inválida.')
   }
-
-  date.setDate(date.getDate() + 1)
 
   return date
 }
@@ -24,6 +24,21 @@ export function areArraysEqual(arr1: number[], arr2: number[]): boolean {
   const set2 = new Set(arr2)
 
   return arr1.every((item) => set2.has(item))
+}
+
+// MySQL2 with timezone:'Z' returns `date` columns as UTC midnight (e.g. 2026-04-20T00:00:00Z).
+// Using new Date() directly on these values causes 3-hour drift in UTC-3: a begin date of
+// "Apr 20" becomes active at 21:00 Apr 19 local, and an end date of "Apr 20" expires at
+// 21:00 Apr 19 local instead of 23:59 Apr 20. These helpers fix both cases by extracting
+// the UTC date components and reconstructing as local time.
+export function parseBeginDateFromDb(d: Date | string): Date {
+  const dt = new Date(d)
+  return new Date(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate(), 0, 0, 0, 0)
+}
+
+export function parseEndDateFromDb(d: Date | string): Date {
+  const dt = new Date(d)
+  return new Date(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate(), 23, 59, 59, 999)
 }
 
 export function parseLocalDate(dateStr: string): Date {

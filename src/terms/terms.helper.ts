@@ -75,7 +75,8 @@ export async function getAndValidateOpenTerm(
 }
 
 export function validateDto(createTermDto: CreateTermDto) {
-  const beginDate = new Date(createTermDto.beginDate)
+  const [yearStr, monthStr, dayStr] = createTermDto.beginDate.split('-')
+  const beginDate = new Date(Number(yearStr), Number(monthStr) - 1, Number(dayStr))
 
   if (Object.values(ERoles).includes(createTermDto.roleId) === false) {
     throw new BadRequestException('#Papel de usuário inválido.')
