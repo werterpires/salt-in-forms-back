@@ -4,7 +4,7 @@ import { InjectConnection } from 'nest-knexjs'
 import { Union, Field, Ministerial } from '../ministerials/type'
 import * as db from '../constants/db-schema.enum'
 import { FieldWithUnion, FieldsWithMinisterialsFilter } from './type'
-import { Paginator } from 'src/shared/types/types'
+import { PaginatorConfig } from 'src/shared/types/types'
 
 @Injectable()
 export class FieldsRepo {
@@ -30,7 +30,7 @@ export class FieldsRepo {
   }
 
   async findAllFieldsWithUnions(
-    paginator: Paginator<typeof db.Fields>,
+    paginator: PaginatorConfig,
     filters: FieldsWithMinisterialsFilter
   ): Promise<FieldWithUnion[]> {
     const query = this.knex(db.Tables.FIELDS)
@@ -59,10 +59,11 @@ export class FieldsRepo {
       query.where(`${db.Tables.UNIONS}.${db.Unions.UNION_ID}`, filters.unionId)
     }
 
-    query.orderBy(
-      `${db.Tables.FIELDS}.${paginator.column}`,
-      paginator.direction
+    const isUnionColumn = Object.values(db.Unions).includes(
+      paginator.column as db.Unions
     )
+    const tablePrefix = isUnionColumn ? db.Tables.UNIONS : db.Tables.FIELDS
+    query.orderBy(`${tablePrefix}.${paginator.column}`, paginator.direction)
 
     const elementsPerPage = 20
     query

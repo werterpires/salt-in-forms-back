@@ -1,6 +1,6 @@
 export class Paginator<T extends { [key: string]: string }> {
-  column: T[keyof T]
-  direction: 'asc' | 'desc'
+  column!: T[keyof T]
+  direction!: 'asc' | 'desc'
   page: number
 
   constructor(
@@ -34,6 +34,12 @@ export class Paginator<T extends { [key: string]: string }> {
 //   direction: 'asc' | 'desc'
 //   page: number
 // }
+
+export interface PaginatorConfig {
+  column: string
+  direction: 'asc' | 'desc'
+  page: number
+}
 
 export enum Direction {
   ASC = 'asc',

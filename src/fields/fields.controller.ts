@@ -23,12 +23,13 @@ export class FieldsController {
     @Query('fieldName') fieldName?: string,
     @Query('unionId') unionId?: number
   ) {
-    const paginator = new Paginator<typeof db.Fields>(
+    const allowedColumns = { ...db.Fields, ...db.Unions }
+    const paginator = new Paginator<typeof allowedColumns>(
       page,
       direction,
       column,
       db.Fields.FIELD_NAME,
-      db.Fields
+      allowedColumns
     )
 
     const filters: FieldsWithMinisterialsFilter = {
