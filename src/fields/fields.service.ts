@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { FieldsRepo } from './fields.repo'
-import { FindAllResponse, Paginator } from '../shared/types/types'
+import { FindAllResponse, PaginatorConfig } from '../shared/types/types'
 import { buildUnionsWithFields } from './fields.helper'
 import { Union } from 'src/ministerials/type'
-import * as db from 'src/constants/db-schema.enum'
 import { FieldWithMinisterial, FieldsWithMinisterialsFilter } from './type'
 
 @Injectable()
@@ -32,7 +31,7 @@ export class FieldsService {
   }
 
   async findAllFieldsWithMinisterials(
-    paginator: Paginator<typeof db.Fields>,
+    paginator: PaginatorConfig,
     filters: FieldsWithMinisterialsFilter
   ): Promise<FindAllResponse<FieldWithMinisterial>> {
     const fields = await this.fieldsRepo.findAllFieldsWithUnions(
