@@ -98,6 +98,7 @@ export interface SubQuestionToAnswer {
   subValidations: SubValidationToAnswer[]
 }
 
+import { FormCandidateStatus } from 'src/constants/form-candidate-status.const'
 import { AnswerWithoutId } from '../answers/types'
 
 export interface QuestionToAnswer {
@@ -125,6 +126,7 @@ export interface FormToAnswer {
   sFormId: number
   sFormName: string
   sections: SectionToAnswer[]
+  status: FormCandidateStatus
 }
 
 export interface DependentSection {

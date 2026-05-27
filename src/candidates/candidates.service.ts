@@ -27,6 +27,7 @@ import { PendingCandidatesService } from './pending-candidates.service'
 import { ExternalOrderValidationService } from './external-order-validation.service'
 import { getConfirmationEmailTemplate } from './email-templates/confirmation-email.template'
 import { getRegistrationConfirmedTemplate } from './email-templates/registration-confirmed.template'
+import { FormCandidateStatus } from 'src/constants/form-candidate-status.const'
 
 @Injectable()
 export class CandidatesService {
@@ -747,6 +748,8 @@ export class CandidatesService {
       )
     }
 
+    const status = formCandidate.formCandidateStatus as FormCandidateStatus
+
     // Buscar termos ativos para candidatos
     const activeTerms = await this.candidatesRepo.findActiveTermsForCandidate()
 
@@ -769,7 +772,8 @@ export class CandidatesService {
     // Se não há termos pendentes, montar o FormToAnswer
     return await this.buildFormToAnswer(
       formCandidate.sFormId,
-      formCandidate.formCandidateId
+      formCandidate.formCandidateId,
+      status
     )
   }
 
@@ -848,7 +852,8 @@ export class CandidatesService {
    */
   private async buildFormToAnswer(
     sFormId: number,
-    formCandidateId: number
+    formCandidateId: number,
+    status: FormCandidateStatus
   ): Promise<FormToAnswer> {
     // 1. Buscar o formulário
     const form = await this.candidatesRepo.findFormById(sFormId)
@@ -858,119 +863,122 @@ export class CandidatesService {
     }
 
     // 2. Buscar as seções do formulário
-    const sections = await this.candidatesRepo.findSectionsByFormId(sFormId)
-
-    // 3. Para cada seção, buscar as questões
     const sectionsWithQuestions: SectionToAnswer[] = []
 
-    for (const section of sections) {
-      const questions = await this.candidatesRepo.findQuestionsBySectionId(
-        section.formSectionId
-      )
+    if (status >= FormCandidateStatus.SUBMITTED) {
+      const sections = await this.candidatesRepo.findSectionsByFormId(sFormId)
+      // 3. Para cada seção, buscar as questões
 
-      // 4. Para cada questão, buscar options, validations e subquestions
-      const questionsComplete: QuestionToAnswer[] = []
-
-      for (const question of questions) {
-        const options = await this.candidatesRepo.findOptionsByQuestionId(
-          question.questionId
+      for (const section of sections) {
+        const questions = await this.candidatesRepo.findQuestionsBySectionId(
+          section.formSectionId
         )
 
-        const validations =
-          await this.candidatesRepo.findValidationsByQuestionId(
+        // 4. Para cada questão, buscar options, validations e subquestions
+        const questionsComplete: QuestionToAnswer[] = []
+
+        for (const question of questions) {
+          const options = await this.candidatesRepo.findOptionsByQuestionId(
             question.questionId
           )
 
-        const subQuestions =
-          await this.candidatesRepo.findSubQuestionsByQuestionId(
-            question.questionId
-          )
+          const validations =
+            await this.candidatesRepo.findValidationsByQuestionId(
+              question.questionId
+            )
 
-        // Para cada subquestão, buscar suas options e validations
-        const subQuestionsComplete: SubQuestionToAnswer[] = []
+          const subQuestions =
+            await this.candidatesRepo.findSubQuestionsByQuestionId(
+              question.questionId
+            )
 
-        for (const subQuestion of subQuestions) {
-          const subQuestionOptions =
-            await this.candidatesRepo.findSubQuestionOptions(
+          // Para cada subquestão, buscar suas options e validations
+          const subQuestionsComplete: SubQuestionToAnswer[] = []
+
+          for (const subQuestion of subQuestions) {
+            const subQuestionOptions =
+              await this.candidatesRepo.findSubQuestionOptions(
+                subQuestion.subQuestionId
+              )
+
+            const subValidations = await this.candidatesRepo.findSubValidations(
               subQuestion.subQuestionId
             )
 
-          const subValidations = await this.candidatesRepo.findSubValidations(
-            subQuestion.subQuestionId
+            subQuestionsComplete.push({
+              subQuestionId: subQuestion.subQuestionId,
+              subQuestionPosition: subQuestion.subQuestionPosition,
+              subQuestionType: subQuestion.subQuestionType,
+              subQuestionStatement: subQuestion.subQuestionStatement,
+              subQuestionOptions,
+              subValidations
+            })
+          }
+
+          // Buscar questões dependentes (questions que referenciam esta question)
+          const dependentQuestions =
+            await this.candidatesRepo.findDependentQuestionsByQuestionId(
+              question.questionId
+            )
+
+          // Buscar seções dependentes (sections que referenciam esta question)
+          const dependentSections =
+            await this.candidatesRepo.findDependentSectionsByQuestionId(
+              question.questionId
+            )
+
+          // Buscar answer existente ou criar uma fake sem answerId
+          const existingAnswerEncrypted =
+            await this.candidatesRepo.findAnswerByQuestionAndFormCandidate(
+              question.questionId,
+              formCandidateId
+            )
+
+          // Descriptografar answer se existir
+          const existingAnswer = decryptAnswer(
+            existingAnswerEncrypted,
+            this.encryptionService
           )
 
-          subQuestionsComplete.push({
-            subQuestionId: subQuestion.subQuestionId,
-            subQuestionPosition: subQuestion.subQuestionPosition,
-            subQuestionType: subQuestion.subQuestionType,
-            subQuestionStatement: subQuestion.subQuestionStatement,
-            subQuestionOptions,
-            subValidations
+          const answer: AnswerWithoutId = existingAnswer
+            ? {
+                answerValue: existingAnswer.answerValue,
+                validAnswer: existingAnswer.validAnswer
+              }
+            : {
+                answerValue: null,
+                validAnswer: true
+              }
+
+          questionsComplete.push({
+            questionId: question.questionId,
+            questionOrder: question.questionOrder,
+            questionType: question.questionType,
+            questionStatement: question.questionStatement,
+            questionDescription: question.questionDescription,
+            options,
+            validations,
+            subQuestions: subQuestionsComplete,
+            dependentQuestions,
+            dependentSections,
+            answer
           })
         }
 
-        // Buscar questões dependentes (questions que referenciam esta question)
-        const dependentQuestions =
-          await this.candidatesRepo.findDependentQuestionsByQuestionId(
-            question.questionId
-          )
-
-        // Buscar seções dependentes (sections que referenciam esta question)
-        const dependentSections =
-          await this.candidatesRepo.findDependentSectionsByQuestionId(
-            question.questionId
-          )
-
-        // Buscar answer existente ou criar uma fake sem answerId
-        const existingAnswerEncrypted =
-          await this.candidatesRepo.findAnswerByQuestionAndFormCandidate(
-            question.questionId,
-            formCandidateId
-          )
-
-        // Descriptografar answer se existir
-        const existingAnswer = decryptAnswer(
-          existingAnswerEncrypted,
-          this.encryptionService
-        )
-
-        const answer: AnswerWithoutId = existingAnswer
-          ? {
-              answerValue: existingAnswer.answerValue,
-              validAnswer: existingAnswer.validAnswer
-            }
-          : {
-              answerValue: null,
-              validAnswer: true
-            }
-
-        questionsComplete.push({
-          questionId: question.questionId,
-          questionOrder: question.questionOrder,
-          questionType: question.questionType,
-          questionStatement: question.questionStatement,
-          questionDescription: question.questionDescription,
-          options,
-          validations,
-          subQuestions: subQuestionsComplete,
-          dependentQuestions,
-          dependentSections,
-          answer
+        sectionsWithQuestions.push({
+          formSectionId: section.formSectionId,
+          formSectionName: section.formSectionName,
+          formSectionOrder: section.formSectionOrder,
+          questions: questionsComplete
         })
       }
-
-      sectionsWithQuestions.push({
-        formSectionId: section.formSectionId,
-        formSectionName: section.formSectionName,
-        formSectionOrder: section.formSectionOrder,
-        questions: questionsComplete
-      })
     }
 
     return {
       sFormId: form.sFormId,
       sFormName: form.sFormName,
-      sections: sectionsWithQuestions
+      sections: sectionsWithQuestions,
+      status
     }
   }
 
