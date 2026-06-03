@@ -93,7 +93,6 @@ export interface CreateQuestion {
   validations?: Validation[]
   subQuestions?: CreateSubQuestionDto[]
   questionOptions?: QuestionOptionDto[]
-  questionScore?: QuestionScoreDto
 }
 
 export interface UpdateQuestion {
@@ -110,7 +109,6 @@ export interface UpdateQuestion {
   validations?: Validation[]
   subQuestions?: SubQuestion[]
   questionOptions?: QuestionOption[]
-  questionScore?: QuestionScoreDto
 }
 
 export interface QuestionWithDisplayRules {

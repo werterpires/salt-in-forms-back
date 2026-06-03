@@ -93,23 +93,6 @@ export class QuestionsRepo {
         }
       }
 
-      // Inserir questionScore, se houver
-      if (createQuestionData.questionScore) {
-        await this.createQuestionScore(
-          {
-            questionId,
-            scoreType: createQuestionData.questionScore.scoreType,
-            optionScoresJson:
-              createQuestionData.questionScore.optionScoresJson || null,
-            dateComparisonType:
-              createQuestionData.questionScore.dateComparisonType || null,
-            cutoffDate: createQuestionData.questionScore.cutoffDate || null,
-            dateScore: createQuestionData.questionScore.dateScore || null
-          },
-          trx
-        )
-      }
-
       if (
         !createQuestionData.subQuestions ||
         createQuestionData.subQuestions.length === 0
@@ -692,26 +675,6 @@ export class QuestionsRepo {
         }
       }
 
-      // Handle questionScore
-      // Se questionScore é undefined, deletar o existente
-      // Se questionScore existe, deletar o antigo e criar o novo (replace)
-      await this.deleteQuestionScore(updateQuestionData.questionId, trx)
-
-      if (updateQuestionData.questionScore) {
-        await this.createQuestionScore(
-          {
-            questionId: updateQuestionData.questionId,
-            scoreType: updateQuestionData.questionScore.scoreType,
-            optionScoresJson:
-              updateQuestionData.questionScore.optionScoresJson || null,
-            dateComparisonType:
-              updateQuestionData.questionScore.dateComparisonType || null,
-            cutoffDate: updateQuestionData.questionScore.cutoffDate || null,
-            dateScore: updateQuestionData.questionScore.dateScore || null
-          },
-          trx
-        )
-      }
     })
   }
 
