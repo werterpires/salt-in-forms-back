@@ -15,7 +15,12 @@ import { Roles } from 'src/users/decorators/roles.decorator'
 import { ERoles } from 'src/constants/roles.const'
 import * as db from 'src/constants/db-schema.enum'
 import { Paginator } from 'src/shared/types/types'
-import { ProcessesFilter, ProcessStatus, PublicProcessDto } from './types'
+import {
+  ActiveProcessTitleDto,
+  ProcessesFilter,
+  ProcessStatus,
+  PublicProcessDto
+} from './types'
 import { IsPublic } from 'src/shared/auth/decorators/is-public.decorator'
 
 @Controller('processes')
@@ -69,6 +74,12 @@ export class ProcessesController {
   @Get('all')
   async findAllProcessesSimple() {
     return await this.processesService.findAllProcessesSimple()
+  }
+
+  @Roles(ERoles.ADMIN)
+  @Get('active-end-date')
+  async findProcessesWithActiveEndDate(): Promise<ActiveProcessTitleDto[]> {
+    return await this.processesService.findProcessesWithActiveEndDate()
   }
 
   @Roles(ERoles.ADMIN)

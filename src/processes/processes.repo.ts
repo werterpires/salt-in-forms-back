@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { Knex } from 'knex'
 import { InjectConnection } from 'nest-knexjs'
 import {
+  ActiveProcessTitleDto,
   CreateProcess,
   ProcessesFilter,
   ProcessSimple,
@@ -115,6 +116,16 @@ export class ProcessesRepo {
       .andWhere(db.Processes.PROCESS_END_SUBSCRIPTION, '>=', today)
 
     return processes
+  }
+
+  async findProcessesWithActiveEndDate(): Promise<ActiveProcessTitleDto[]> {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    return this.knex(db.Tables.PROCESSES)
+      .select(db.Processes.PROCESS_TITLE)
+      .where(db.Processes.PROCESS_END_DATE, '>=', today)
+      .orderBy(db.Processes.PROCESS_TITLE, 'asc')
   }
 
   async findProcessById(processId: number) {
