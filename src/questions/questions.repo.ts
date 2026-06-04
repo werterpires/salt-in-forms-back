@@ -7,9 +7,11 @@ import {
   UpdateQuestion,
   QuestionOption,
   Validation,
-  QuestionWithDisplayRules
+  QuestionWithDisplayRules,
+  QuestionForScoring
 } from './types'
 import * as db from '../constants/db-schema.enum'
+import { IQuestionScore } from './types/question-score.types'
 
 @Injectable()
 export class QuestionsRepo {
@@ -674,7 +676,6 @@ export class QuestionsRepo {
           }
         }
       }
-
     })
   }
 
@@ -818,7 +819,7 @@ export class QuestionsRepo {
   async findQuestionScoreByQuestionId(
     questionId: number,
     trx?: Knex.Transaction
-  ): Promise<any | null> {
+  ): Promise<IQuestionScore | null> {
     const knexInstance = trx || this.knex
 
     const questionScore = await knexInstance(db.Tables.QUESTION_SCORES)
@@ -840,5 +841,33 @@ export class QuestionsRepo {
     await knexInstance(db.Tables.QUESTION_SCORES)
       .where(db.QuestionScores.QUESTION_ID, questionId)
       .del()
+  }
+
+  async findQuestionsByFormIdWithTypes(
+    sFormId: number,
+    types: number[]
+  ): Promise<QuestionForScoring[]> {
+    const rows = await this.knex(db.Tables.QUESTIONS)
+      .join(
+        db.Tables.FORM_SECTIONS,
+        `${db.Tables.FORM_SECTIONS}.${db.FormSections.FORM_SECTION_ID}`,
+        `${db.Tables.QUESTIONS}.${db.Questions.FORM_SECTION_ID}`
+      )
+      .whereIn(`${db.Tables.QUESTIONS}.${db.Questions.QUESTION_TYPE}`, types)
+      .andWhere(
+        `${db.Tables.FORM_SECTIONS}.${db.FormSections.S_FORM_ID}`,
+        sFormId
+      )
+      .orderBy(`${db.Tables.QUESTIONS}.${db.Questions.QUESTION_ORDER}`, 'asc')
+      .select(
+        `${db.Tables.QUESTIONS}.${db.Questions.QUESTION_ID}`,
+        `${db.Tables.QUESTIONS}.${db.Questions.FORM_SECTION_ID}`,
+        `${db.Tables.QUESTIONS}.${db.Questions.QUESTION_ORDER}`,
+        `${db.Tables.QUESTIONS}.${db.Questions.QUESTION_TYPE}`,
+        `${db.Tables.QUESTIONS}.${db.Questions.QUESTION_STATEMENT}`,
+        `${db.Tables.QUESTIONS}.${db.Questions.QUESTION_DESCRIPTION}`
+      )
+
+    return rows
   }
 }

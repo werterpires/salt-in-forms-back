@@ -6,7 +6,7 @@ import { QuestionsHelper } from './questions.helper'
 import { QuestionsRepo } from './questions.repo'
 import { AnswersRepo } from '../answers/answers.repo'
 import { FormSectionsRepo } from '../form-sections/form-sections.repo'
-import { Question } from './types'
+import { Question, QuestionForScoring } from './types'
 
 @Injectable()
 export class QuestionsService {
@@ -229,6 +229,30 @@ export class QuestionsService {
     }
 
     return question
+  }
+
+  async findByFormIdForScoring(sFormId: number): Promise<QuestionForScoring[]> {
+    const SCORING_TYPES = [1, 2, 7]
+    const questions = await this.questionsRepo.findQuestionsByFormIdWithTypes(
+      sFormId,
+      SCORING_TYPES
+    )
+
+    for (const question of questions) {
+      if (question.questionType === 2) {
+        question.questionOptions =
+          await this.questionsRepo.findQuestionOptionsByQuestionId(
+            question.questionId
+          )
+      }
+
+      question.questionScore =
+        await this.questionsRepo.findQuestionScoreByQuestionId(
+          question.questionId
+        )
+    }
+
+    return questions
   }
 
   async findByIds(questionIds: number[]): Promise<Question[]> {

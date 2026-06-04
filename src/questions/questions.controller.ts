@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common'
 import { QuestionsService } from './questions.service'
 
-import { Question } from './types'
+import { Question, QuestionForScoring } from './types'
 import { CreateQuestionDto } from './dto/create-question.dto'
 import { UpdateQuestionDto } from './dto/update-question.dto'
 import { ReorderQuestionsDto } from './dto/reorder-questions.dto'
@@ -51,6 +51,13 @@ export class QuestionsController {
     @Param('questionId', ParseIntPipe) questionId: number
   ): Promise<void> {
     return this.questionsService.delete(questionId)
+  }
+
+  @Get('scoring/:sFormId')
+  async findByFormIdForScoring(
+    @Param('sFormId', ParseIntPipe) sFormId: number
+  ): Promise<QuestionForScoring[]> {
+    return await this.questionsService.findByFormIdForScoring(sFormId)
   }
 
   @Patch('reorder')
