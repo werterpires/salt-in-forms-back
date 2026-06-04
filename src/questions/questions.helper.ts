@@ -45,8 +45,7 @@ export class QuestionsHelper {
       answerDisplayValue,
       validations: createQuestionDto.validations,
       questionOptions: createQuestionDto.questionOptions,
-      subQuestions: createQuestionDto.subQuestions,
-      questionScore: createQuestionDto.questionScore
+      subQuestions: createQuestionDto.subQuestions
     }
   }
 
@@ -91,7 +90,6 @@ export class QuestionsHelper {
     }
 
     updateQuestionData.questionOptions = questionOptions
-    updateQuestionData.questionScore = updateQuestionDto.questionScore
 
     return updateQuestionData
   }
@@ -115,13 +113,6 @@ export class QuestionsHelper {
 
     // Validar subQuestões
     await this.validateSubquestions(createQuestionDto)
-
-    // Validar questionScore
-    this.validateQuestionScore(
-      createQuestionDto.questionType,
-      createQuestionDto.questionScore,
-      createQuestionDto.questionOptions
-    )
   }
 
   static async validateSubquestions(
@@ -211,12 +202,6 @@ export class QuestionsHelper {
       updateQuestionDto.questionOptions
     )
 
-    // Validar questionScore
-    this.validateQuestionScore(
-      updateQuestionDto.questionType,
-      updateQuestionDto.questionScore,
-      updateQuestionDto.questionOptions
-    )
     // Validar as validações da questão (se existirem)
     updateQuestionDto.validations = await this.validateValidations(
       updateQuestionDto.validations

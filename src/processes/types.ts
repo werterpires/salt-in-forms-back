@@ -32,3 +32,8 @@ export interface PublicProcessDto {
   beginDate: Date
   endSubscriptions: Date
 }
+
+export interface ActiveProcessTitleDto {
+  processId: number
+  processTitle: string
+}

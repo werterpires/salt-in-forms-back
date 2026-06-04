@@ -1058,6 +1058,105 @@ export const ehCPF: ValidationSpcification = {
   }
 }
 
+export const ehCepBrasileiro: ValidationSpcification = {
+  validationType: 29,
+  validationName: 'CEP brasileiro',
+  validationDescription: 'Verifica se o valor é um CEP brasileiro válido',
+  valueOneType: 'undefined',
+  valueTwoType: 'undefined',
+  valueThreeType: 'undefined',
+  valueFourType: 'undefined',
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (val1 || val2 || val3 || val4) {
+      throw new Error('Parâmetros inválidos para a validação "CEP brasileiro"')
+    }
+
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+
+    if (typeof value !== 'string') {
+      return { isValid: false, errorMessage: 'O valor deve ser uma string' }
+    }
+
+    const cep = value.trim()
+    const cepRegex = /^\d{8}$/
+
+    return cepRegex.test(cep)
+      ? { isValid: true, errorMessage: '' }
+      : {
+          isValid: false,
+          errorMessage: 'CEP inválido. Use somente 8 dígitos numéricos'
+        }
+  }
+}
+
+export const ehTelefoneBrasileiro: ValidationSpcification = {
+  validationType: 30,
+  validationName: 'Telefone brasileiro',
+  validationDescription:
+    'Verifica se o valor é um telefone brasileiro válido (fixo ou celular)',
+  valueOneType: 'undefined',
+  valueTwoType: 'undefined',
+  valueThreeType: 'undefined',
+  valueFourType: 'undefined',
+  validationFunction: (
+    value: any,
+    val1: any,
+    val2: any,
+    val3: any,
+    val4: any
+  ): validationResult => {
+    if (val1 || val2 || val3 || val4) {
+      throw new Error(
+        'Parâmetros inválidos para a validação "Telefone brasileiro"'
+      )
+    }
+
+    if (isNilOrEmpty(value)) return { isValid: true, errorMessage: '' }
+
+    if (typeof value !== 'string') {
+      return { isValid: false, errorMessage: 'O valor deve ser uma string' }
+    }
+
+    const phone = value.trim()
+
+    if (!/^\d{10,11}$/.test(phone)) {
+      return {
+        isValid: false,
+        errorMessage:
+          'Telefone inválido. Use somente 10 ou 11 dígitos numéricos'
+      }
+    }
+
+    const ddd = phone.substring(0, 2)
+    if (!/^[1-9]{2}$/.test(ddd)) {
+      return {
+        isValid: false,
+        errorMessage:
+          'Telefone inválido. O DDD deve conter dois dígitos válidos'
+      }
+    }
+
+    const localNumber = phone.substring(2)
+    const isValidLandline =
+      phone.length === 10 && /^[2-8]\d{7}$/.test(localNumber)
+    const isValidMobile = phone.length === 11 && /^9\d{8}$/.test(localNumber)
+
+    return isValidLandline || isValidMobile
+      ? { isValid: true, errorMessage: '' }
+      : {
+          isValid: false,
+          errorMessage:
+            'Telefone inválido. Use apenas números, com DDD e 10 ou 11 dígitos'
+        }
+  }
+}
+
 export const VALIDATION_SPECIFICATIONS_BY_TYPE: Record<
   number,
   ValidationSpcification
@@ -1091,7 +1190,9 @@ const validationSpecs = [
   isFutureDate,
   isPastDate,
   isUnicEmail,
-  ehCPF
+  ehCPF,
+  ehCepBrasileiro,
+  ehTelefoneBrasileiro
 ]
 
 validationSpecs.forEach((spec) => {

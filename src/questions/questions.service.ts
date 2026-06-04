@@ -6,7 +6,8 @@ import { QuestionsHelper } from './questions.helper'
 import { QuestionsRepo } from './questions.repo'
 import { AnswersRepo } from '../answers/answers.repo'
 import { FormSectionsRepo } from '../form-sections/form-sections.repo'
-import { Question } from './types'
+import { Question, QuestionForScoring } from './types'
+import { EQuestionsTypes } from 'src/constants/questions-types.enum'
 
 @Injectable()
 export class QuestionsService {
@@ -62,15 +63,6 @@ export class QuestionsService {
       )
       question.validations =
         await QuestionsHelper.transformValidations(validations)
-
-      // Buscar questionScore
-      const questionScore =
-        await this.questionsRepo.findQuestionScoreByQuestionId(
-          question.questionId
-        )
-      if (questionScore) {
-        question.questionScore = questionScore
-      }
 
       // Buscar subQuestions
       const subQuestions =
@@ -204,15 +196,6 @@ export class QuestionsService {
     question.validations =
       await QuestionsHelper.transformValidations(validations)
 
-    // Buscar questionScore
-    const questionScore =
-      await this.questionsRepo.findQuestionScoreByQuestionId(
-        question.questionId
-      )
-    if (questionScore) {
-      question.questionScore = questionScore
-    }
-
     // Buscar subQuestions
     const subQuestions = await this.questionsRepo.findSubQuestionsByQuestionId(
       question.questionId
@@ -249,6 +232,39 @@ export class QuestionsService {
     return question
   }
 
+  async findByFormIdForScoring(sFormId: number): Promise<QuestionForScoring[]> {
+    const SCORING_TYPES = [
+      EQuestionsTypes.MULTIPLE_CHOICE,
+      EQuestionsTypes.SINGLE_CHOICE,
+      EQuestionsTypes.DATE
+    ]
+    const questions = await this.questionsRepo.findQuestionsByFormIdWithTypes(
+      sFormId,
+      SCORING_TYPES
+    )
+
+    for (const question of questions) {
+      if (
+        (question.questionType as EQuestionsTypes) ===
+          EQuestionsTypes.MULTIPLE_CHOICE ||
+        (question.questionType as EQuestionsTypes) ===
+          EQuestionsTypes.SINGLE_CHOICE
+      ) {
+        question.questionOptions =
+          await this.questionsRepo.findQuestionOptionsByQuestionId(
+            question.questionId
+          )
+      }
+
+      question.questionScore =
+        await this.questionsRepo.findQuestionScoreByQuestionId(
+          question.questionId
+        )
+    }
+
+    return questions
+  }
+
   async findByIds(questionIds: number[]): Promise<Question[]> {
     const questions = await this.questionsRepo.findByIds(questionIds)
 
@@ -270,15 +286,6 @@ export class QuestionsService {
       )
       question.validations =
         await QuestionsHelper.transformValidations(validations)
-
-      // Buscar questionScore
-      const questionScore =
-        await this.questionsRepo.findQuestionScoreByQuestionId(
-          question.questionId
-        )
-      if (questionScore) {
-        question.questionScore = questionScore
-      }
 
       // Buscar subQuestions
       const subQuestions =

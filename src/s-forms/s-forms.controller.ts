@@ -17,6 +17,7 @@ import { Roles } from 'src/users/decorators/roles.decorator'
 import { ERoles } from 'src/constants/roles.const'
 import { Paginator } from 'src/shared/types/types'
 import * as db from 'src/constants/db-schema.enum'
+import { SFormSimple } from './types'
 
 @Controller('s-forms')
 export class SFormsController {
@@ -70,7 +71,9 @@ export class SFormsController {
 
   @Roles(ERoles.ADMIN)
   @Get('simple/:processId')
-  async findAllSimple(@Param('processId', ParseIntPipe) processId: number) {
+  async findAllSimple(
+    @Param('processId', ParseIntPipe) processId: number
+  ): Promise<SFormSimple[]> {
     return await this.sFormsService.findAllSFormsSimpleByProcessId(processId)
   }
 

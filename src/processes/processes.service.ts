@@ -10,7 +10,12 @@ import {
 } from './processes.helper'
 import { FindAllResponse, Paginator } from 'src/shared/types/types'
 import * as db from 'src/constants/db-schema.enum'
-import { Process, ProcessesFilter, ProcessSimple } from './types'
+import {
+  ActiveProcessTitleDto,
+  Process,
+  ProcessesFilter,
+  ProcessSimple
+} from './types'
 
 @Injectable()
 export class ProcessesService {
@@ -85,5 +90,9 @@ export class ProcessesService {
 
   async findActiveProcesses() {
     return await this.processesRepo.findActiveProcesses()
+  }
+
+  async findProcessesWithActiveEndDate(): Promise<ActiveProcessTitleDto[]> {
+    return await this.processesRepo.findProcessesWithActiveEndDate()
   }
 }

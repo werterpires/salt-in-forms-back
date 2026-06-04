@@ -27,6 +27,7 @@ import { AnswersModule } from './answers/answers.module'
 import { FormsCandidatesModule } from './forms-candidates/forms-candidates.module'
 import { FieldsModule } from './fields/fields.module'
 import { RatesModule } from './rates/rates.module'
+import { ScoresModule } from './scores/scores.module'
 import { CustomLoggerModule } from './shared/utils-module/custom-logger/custom-logger.module'
 import * as fs from 'fs'
 
@@ -89,9 +90,9 @@ const knex = KnexModule.forRoot(
       wrapIdentifier: (value, origImpl) => origImpl(toSnakeCase(value)),
       postProcessResponse: (result) => {
         if (Array.isArray(result)) {
-          return result.map((row) => camelcaseKeys(row, { deep: true }))
+          return result.map((row) => camelcaseKeys(row, { deep: false }))
         }
-        return camelcaseKeys(result, { deep: true })
+        return camelcaseKeys(result, { deep: false })
       }
     }
   },
@@ -118,7 +119,8 @@ const knex = KnexModule.forRoot(
     AnswersModule,
     FormsCandidatesModule,
     FieldsModule,
-    RatesModule
+    RatesModule,
+    ScoresModule
   ],
   controllers: [],
   providers: [
