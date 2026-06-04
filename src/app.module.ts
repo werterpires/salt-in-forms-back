@@ -90,9 +90,9 @@ const knex = KnexModule.forRoot(
       wrapIdentifier: (value, origImpl) => origImpl(toSnakeCase(value)),
       postProcessResponse: (result) => {
         if (Array.isArray(result)) {
-          return result.map((row) => camelcaseKeys(row, { deep: true }))
+          return result.map((row) => camelcaseKeys(row, { deep: false }))
         }
-        return camelcaseKeys(result, { deep: true })
+        return camelcaseKeys(result, { deep: false })
       }
     }
   },

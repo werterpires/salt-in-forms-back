@@ -1073,12 +1073,7 @@ export const ehCepBrasileiro: ValidationSpcification = {
     val3: any,
     val4: any
   ): validationResult => {
-    if (
-      val1 !== undefined ||
-      val2 !== undefined ||
-      val3 !== undefined ||
-      val4 !== undefined
-    ) {
+    if (val1 || val2 || val3 || val4) {
       throw new Error('Parâmetros inválidos para a validação "CEP brasileiro"')
     }
 
@@ -1116,12 +1111,7 @@ export const ehTelefoneBrasileiro: ValidationSpcification = {
     val3: any,
     val4: any
   ): validationResult => {
-    if (
-      val1 !== undefined ||
-      val2 !== undefined ||
-      val3 !== undefined ||
-      val4 !== undefined
-    ) {
+    if (val1 || val2 || val3 || val4) {
       throw new Error(
         'Parâmetros inválidos para a validação "Telefone brasileiro"'
       )

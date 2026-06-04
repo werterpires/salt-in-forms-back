@@ -826,6 +826,8 @@ export class QuestionsRepo {
       .where(db.QuestionScores.QUESTION_ID, questionId)
       .first()
 
+    console.log('questionScore', questionScore)
+
     if (!questionScore) return null
 
     // No need to parse JSON - Knex already returns JSONB as object
@@ -867,6 +869,8 @@ export class QuestionsRepo {
         `${db.Tables.QUESTIONS}.${db.Questions.QUESTION_STATEMENT}`,
         `${db.Tables.QUESTIONS}.${db.Questions.QUESTION_DESCRIPTION}`
       )
+
+    console.log('rows', rows)
 
     return rows
   }

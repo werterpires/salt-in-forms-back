@@ -10,6 +10,7 @@ export class ScoresRepo {
   constructor(@InjectConnection('knexx') private readonly knex: Knex) {}
 
   async upsertScore(data: IUpsertScore): Promise<number> {
+    console.log('data', data)
     return this.knex.transaction(async (trx) => {
       await trx(db.Tables.QUESTION_SCORES)
         .where(db.QuestionScores.QUESTION_ID, data.questionId)

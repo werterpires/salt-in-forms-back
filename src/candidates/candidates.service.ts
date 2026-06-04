@@ -865,7 +865,7 @@ export class CandidatesService {
     // 2. Buscar as seções do formulário
     const sectionsWithQuestions: SectionToAnswer[] = []
 
-    if (status >= FormCandidateStatus.SUBMITTED) {
+    if (status < FormCandidateStatus.SUBMITTED) {
       const sections = await this.candidatesRepo.findSectionsByFormId(sFormId)
       // 3. Para cada seção, buscar as questões
 

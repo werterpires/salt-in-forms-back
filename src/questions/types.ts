@@ -131,6 +131,6 @@ export interface QuestionForScoring {
   questionType: number
   questionStatement: string
   questionDescription: string
-  questionOptions?: QuestionOption[]
+  questionOptions: QuestionOption[]
   questionScore?: IQuestionScore | null
 }

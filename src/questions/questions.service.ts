@@ -7,6 +7,7 @@ import { QuestionsRepo } from './questions.repo'
 import { AnswersRepo } from '../answers/answers.repo'
 import { FormSectionsRepo } from '../form-sections/form-sections.repo'
 import { Question, QuestionForScoring } from './types'
+import { EQuestionsTypes } from 'src/constants/questions-types.enum'
 
 @Injectable()
 export class QuestionsService {
@@ -232,14 +233,23 @@ export class QuestionsService {
   }
 
   async findByFormIdForScoring(sFormId: number): Promise<QuestionForScoring[]> {
-    const SCORING_TYPES = [1, 2, 7]
+    const SCORING_TYPES = [
+      EQuestionsTypes.MULTIPLE_CHOICE,
+      EQuestionsTypes.SINGLE_CHOICE,
+      EQuestionsTypes.DATE
+    ]
     const questions = await this.questionsRepo.findQuestionsByFormIdWithTypes(
       sFormId,
       SCORING_TYPES
     )
 
     for (const question of questions) {
-      if (question.questionType === 2) {
+      if (
+        (question.questionType as EQuestionsTypes) ===
+          EQuestionsTypes.MULTIPLE_CHOICE ||
+        (question.questionType as EQuestionsTypes) ===
+          EQuestionsTypes.SINGLE_CHOICE
+      ) {
         question.questionOptions =
           await this.questionsRepo.findQuestionOptionsByQuestionId(
             question.questionId
