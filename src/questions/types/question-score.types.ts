@@ -1,4 +1,7 @@
-import { EScoreType, EDateComparisonType } from '../../constants/score-types.enum'
+import {
+  EScoreType,
+  EDateComparisonType
+} from '../../constants/score-types.enum'
 
 export interface IOptionScoresJson {
   [optionId: string]: number

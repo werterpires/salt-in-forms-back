@@ -123,7 +123,7 @@ export class ProcessesRepo {
     today.setHours(0, 0, 0, 0)
 
     return this.knex(db.Tables.PROCESSES)
-      .select(db.Processes.PROCESS_TITLE)
+      .select(db.Processes.PROCESS_ID, db.Processes.PROCESS_TITLE)
       .where(db.Processes.PROCESS_END_DATE, '>=', today)
       .orderBy(db.Processes.PROCESS_TITLE, 'asc')
   }

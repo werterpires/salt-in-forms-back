@@ -34,5 +34,6 @@ export interface PublicProcessDto {
 }
 
 export interface ActiveProcessTitleDto {
+  processId: number
   processTitle: string
 }
